@@ -1,8 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import AppShell from "@/components/app-shell";
 
-export default async function Home() {
+export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  redirect(user ? "/dashboard" : "/login");
+
+  if (!user) redirect("/login");
+
+  return <AppShell userEmail={user.email!} />;
 }
