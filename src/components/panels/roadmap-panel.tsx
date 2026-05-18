@@ -5,6 +5,7 @@ import { useCourses } from "@/hooks/use-courses";
 import GpaSummary from "@/components/features/course-tracker/gpa-summary";
 import CourseList from "@/components/features/course-tracker/course-list";
 import AddCourseModal from "@/components/features/course-tracker/add-course-modal";
+import ImportFromHtml from "@/components/features/course-tracker/import-from-html";
 
 interface RoadmapPanelProps { userId: string; }
 
@@ -12,8 +13,9 @@ interface RoadmapPanelProps { userId: string; }
 const TARGETS = { general: 30, required: 70, elective: 31 };
 
 export default function RoadmapPanel({ userId }: RoadmapPanelProps) {
-  const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse } = useCourses(userId);
+  const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
   const [showModal, setShowModal] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const takenIds = new Set(userCourses.map((c) => c.course_id));
 
@@ -63,6 +65,9 @@ export default function RoadmapPanel({ userId }: RoadmapPanelProps) {
           {!loading && (
             <span className="es-badge es-badge-green">✓ {passedCredits}/131 TC</span>
           )}
+          <button className="es-btn es-btn-outline es-btn-sm" onClick={() => setShowImport(true)}>
+            📥 Import từ UIT
+          </button>
           <button className="es-btn es-btn-primary es-btn-sm" onClick={() => setShowModal(true)}>
             + Thêm môn
           </button>
@@ -122,6 +127,15 @@ export default function RoadmapPanel({ userId }: RoadmapPanelProps) {
           userId={userId}
           onAdd={addCourse}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {showImport && (
+        <ImportFromHtml
+          userId={userId}
+          allCourses={allCourses}
+          onSuccess={refetch}
+          onClose={() => setShowImport(false)}
         />
       )}
     </>
