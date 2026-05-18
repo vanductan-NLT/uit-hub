@@ -69,10 +69,14 @@ export default function ImportFromHtml({ userId, userEmail, allCourses, onSucces
     if (!result) return;
     setImporting(true);
     const selected = result.courses.filter((c) => checked.has(c.course_id));
-    // Dedup by course_id — keep last occurrence (latest semester) to avoid
-    // "ON CONFLICT DO UPDATE command cannot affect row a second time" when a course was retaken
+    // Dedup by course_id — keep highest-scoring occurrence.
+    // UIT HTML lists newest semester first, so simple last-write would store the older (lower) score
+    // when a student retook a course to improve. Keeping highest score matches UIT GPA calculation.
     const deduped = [...selected.reduce((map, c) => {
-      map.set(c.course_id, c);
+      const existing = map.get(c.course_id);
+      if (!existing || (c.score ?? -1) > (existing.score ?? -1)) {
+        map.set(c.course_id, c);
+      }
       return map;
     }, new Map<string, typeof selected[0]>()).values()];
     try {

@@ -74,7 +74,7 @@ function parseCourseRow(
     const parsed = parseFloat(scoreText);
     if (!isNaN(parsed)) {
       score = parsed;
-      status = score >= 5 ? "completed" : "failed";
+      status = score >= 4 ? "completed" : "failed";
     }
   }
 

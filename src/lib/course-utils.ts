@@ -3,7 +3,7 @@ import type { Course, UserCourseWithCourse } from "@/types/database";
 export function buildPassedIds(userCourses: UserCourseWithCourse[]): Set<string> {
   return new Set(
     userCourses
-      .filter((c) => c.status === "exempted" || (c.score !== null && c.score >= 5.0))
+      .filter((c) => c.status === "exempted" || (c.score !== null && c.score >= 4.0))
       .map((c) => c.course_id)
   );
 }

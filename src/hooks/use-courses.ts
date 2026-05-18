@@ -42,10 +42,10 @@ export function calculateGPA4(courses: UserCourseWithCourse[]): number {
   return totalCredits === 0 ? 0 : Math.round((totalWeighted / totalCredits) * 100) / 100;
 }
 
-// Tín chỉ tích lũy: chỉ tính môn đạt (≥ 5.0) hoặc miễn
+// Tín chỉ tích lũy: môn đạt (≥ 4.0, tức D trở lên theo thang UIT) hoặc miễn
 export function calculatePassedCredits(courses: UserCourseWithCourse[]): number {
   return courses
-    .filter((c) => c.status === "exempted" || (c.score !== null && c.score >= 5.0 && c.status === "completed"))
+    .filter((c) => c.status === "exempted" || (c.score !== null && c.score >= 4.0 && c.status === "completed"))
     .reduce((s, c) => s + c.course.credits, 0);
 }
 
