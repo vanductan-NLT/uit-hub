@@ -66,10 +66,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               <span className="es-nav-icon">🏠</span> Dashboard
             </button>
 
-            <div className="es-nav-label" style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", paddingRight: 8 }}>
-              <span>Cá nhân hóa</span>
-              <ThemeToggle />
-            </div>
+            <div className="es-nav-label" style={{ marginTop: 12 }}>Cá nhân hóa</div>
             {navItems.slice(1).map((item) => (
               <button
                 key={item.id}
@@ -94,6 +91,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               <div className="es-user-name">{mssv}</div>
               <div className="es-user-id">{userEmail.split("@")[0]} · CNTT</div>
             </div>
+            <ThemeToggle />
             <button
               className="es-btn-ghost"
               onClick={(e) => { e.stopPropagation(); setShowLogout(true); }}
