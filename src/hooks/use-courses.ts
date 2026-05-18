@@ -13,6 +13,7 @@ import {
 
 // ── GPA helpers ───────────────────────────────────────────
 
+// UIT grading scale (hệ 10 → hệ 4), per UIT Academic Affairs regulations
 function toGrade4(score: number): number {
   if (score >= 8.5) return 4.0;
   if (score >= 8.0) return 3.5;
@@ -24,8 +25,9 @@ function toGrade4(score: number): number {
   return 0.0;
 }
 
+// GPA includes all scored courses (failed ones count against GPA), excludes exempted
 export function calculateGPA10(courses: UserCourseWithCourse[]): number {
-  const graded = courses.filter((c) => c.score !== null && c.status !== "failed");
+  const graded = courses.filter((c) => c.score !== null && c.status !== "exempted");
   if (graded.length === 0) return 0;
   const totalWeighted = graded.reduce((s, c) => s + (c.score! * c.course.credits), 0);
   const totalCredits = graded.reduce((s, c) => s + c.course.credits, 0);
@@ -33,16 +35,17 @@ export function calculateGPA10(courses: UserCourseWithCourse[]): number {
 }
 
 export function calculateGPA4(courses: UserCourseWithCourse[]): number {
-  const graded = courses.filter((c) => c.score !== null && c.status !== "failed");
+  const graded = courses.filter((c) => c.score !== null && c.status !== "exempted");
   if (graded.length === 0) return 0;
   const totalWeighted = graded.reduce((s, c) => s + (toGrade4(c.score!) * c.course.credits), 0);
   const totalCredits = graded.reduce((s, c) => s + c.course.credits, 0);
   return totalCredits === 0 ? 0 : Math.round((totalWeighted / totalCredits) * 100) / 100;
 }
 
+// Tín chỉ tích lũy: chỉ tính môn đạt (≥ 5.0) hoặc miễn
 export function calculatePassedCredits(courses: UserCourseWithCourse[]): number {
   return courses
-    .filter((c) => c.score !== null && c.score >= 4.0 && c.status === "completed")
+    .filter((c) => c.status === "exempted" || (c.score !== null && c.score >= 5.0 && c.status === "completed"))
     .reduce((s, c) => s + c.course.credits, 0);
 }
 

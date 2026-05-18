@@ -24,7 +24,7 @@ export interface UserCourse {
   score: number | null;
   semester: string | null;       // "HK1-2023-2024"
   academic_year: string | null;  // "2023-2024"
-  status: "completed" | "in_progress" | "failed";
+  status: "completed" | "in_progress" | "failed" | "exempted";
   note: string | null;
   created_at: string;
   updated_at: string;
