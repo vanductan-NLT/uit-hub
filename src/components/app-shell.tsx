@@ -98,7 +98,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
         {/* Main content */}
         <main className="es-main">
           {active === "dashboard" && <DashboardPanel onNav={(p) => setActive(p as Panel)} />}
-          {active === "roadmap" && <RoadmapPanel userId={userId} />}
+          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} />}
           {active === "gpa" && <GpaPanel onNav={(p) => setActive(p as Panel)} />}
           {active === "tracker" && <TrackerPanel />}
           {active === "exam" && <ExamPanel />}

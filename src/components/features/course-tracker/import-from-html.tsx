@@ -7,6 +7,7 @@ import type { Course } from "@/types/database";
 
 interface ImportFromHtmlProps {
   userId: string;
+  userEmail: string;
   allCourses: Course[];
   onSuccess: () => void;
   onClose: () => void;
@@ -21,13 +22,15 @@ const STATUS_LABEL: Record<ParsedCourse["status"], string> = {
   completed: "Đạt", exempted: "Miễn", failed: "Rớt",
 };
 
-const GUIDE_STEPS = [
-  { n: 1, text: "Vào ", link: "https://daa.uit.edu.vn/sinhvien/kqhoctap", linkText: "daa.uit.edu.vn" },
-  { n: 2, text: 'Chuột phải → "Save as..." → lưu file .html', link: null, linkText: null },
-  { n: 3, text: "Kéo thả hoặc chọn file bên dưới", link: null, linkText: null },
-];
+function buildGuideSteps(mssv: string) {
+  const url = `https://daa.uit.edu.vn/print/sinhvien/kqhoctap/?sid=${mssv}`;
+  return [
+    { n: 1, text: "Vào trang điểm → chuột phải → ", link: url, linkText: url, suffix: ' → "Save as..." → lưu file .html' },
+    { n: 2, text: "Kéo thả hoặc chọn file bên dưới", link: null, linkText: null, suffix: null },
+  ];
+}
 
-export default function ImportFromHtml({ userId, allCourses, onSuccess, onClose }: ImportFromHtmlProps) {
+export default function ImportFromHtml({ userId, userEmail, allCourses, onSuccess, onClose }: ImportFromHtmlProps) {
   const [step, setStep] = useState<"guide" | "preview" | "done">("guide");
   const [result, setResult] = useState<ParseResult | null>(null);
   const [checked, setChecked] = useState<Set<string>>(new Set());
@@ -36,6 +39,8 @@ export default function ImportFromHtml({ userId, allCourses, onSuccess, onClose 
   const [importedCount, setImportedCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const knownIds = new Set(allCourses.map((c) => c.id));
+  const mssv = userEmail.split("@")[0];
+  const guideSteps = buildGuideSteps(mssv);
 
   function handleFile(file: File) {
     setParseError(null);
@@ -105,14 +110,15 @@ export default function ImportFromHtml({ userId, allCourses, onSuccess, onClose 
           {step === "guide" && (
             <>
               <div style={{ marginBottom: 20 }}>
-                {GUIDE_STEPS.map((s) => (
+                {guideSteps.map((s) => (
                   <div key={s.n} style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "flex-start" }}>
                     <div style={{ width: 22, height: 22, borderRadius: 99, background: "var(--blue)", color: "#fff", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
                       {s.n}
                     </div>
                     <div style={{ fontSize: 13, color: "var(--ink2)", paddingTop: 2 }}>
                       {s.text}
-                      {s.link && <a href={s.link} target="_blank" rel="noreferrer" style={{ color: "var(--blue)", fontWeight: 600 }}>{s.linkText}</a>}
+                      {s.link && <a href={s.link} target="_blank" rel="noreferrer" style={{ color: "var(--blue)", fontWeight: 600, wordBreak: "break-all" }}>{s.linkText}</a>}
+                      {s.suffix}
                     </div>
                   </div>
                 ))}

@@ -7,12 +7,12 @@ import CourseList from "@/components/features/course-tracker/course-list";
 import AddCourseModal from "@/components/features/course-tracker/add-course-modal";
 import ImportFromHtml from "@/components/features/course-tracker/import-from-html";
 
-interface RoadmapPanelProps { userId: string; }
+interface RoadmapPanelProps { userId: string; userEmail: string; }
 
 // Credits targets per type (curriculum constants)
 const TARGETS = { general: 30, required: 70, elective: 31 };
 
-export default function RoadmapPanel({ userId }: RoadmapPanelProps) {
+export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
   const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -133,6 +133,7 @@ export default function RoadmapPanel({ userId }: RoadmapPanelProps) {
       {showImport && (
         <ImportFromHtml
           userId={userId}
+          userEmail={userEmail}
           allCourses={allCourses}
           onSuccess={refetch}
           onClose={() => setShowImport(false)}
