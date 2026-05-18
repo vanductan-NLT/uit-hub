@@ -23,7 +23,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi" className={`${jakarta.variable} ${jetbrainsMono.variable}`}>
+    <html lang="vi" className={`${jakarta.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body>{children}</body>
     </html>
   );
