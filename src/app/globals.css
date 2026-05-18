@@ -67,30 +67,30 @@
   --es-text: var(--ink);
 }
 
-/* ── DARK MODE TOKENS ── */
+/* ── DARK MODE TOKENS (GitHub Dark-inspired, high contrast) ── */
 [data-theme="dark"] {
-  --bg: #1C1C1E;
-  --white: #28282B;
-  --ink: #E8EAED;
-  --ink2: #BDC1C6;
-  --es-muted: #9AA0A6;
-  --es-border: #3C4043;
-  --es-bg-alt: #3C4043;
-  --es-sidebar-bg: #111113;
-  --blue: #8AB4F8;
-  --blue-d: #669DF6;
-  --blue-lt: #1A2A4A;
-  --blue-mid: #1E3A5F;
-  --green: #81C995;
-  --green-lt: #1B3A2B;
-  --green-mid: #2D6A4F;
-  --amber: #FDD663;
-  --amber-lt: #3A2A00;
-  --amber-mid: #7A5900;
-  --red: #F28B82;
-  --red-lt: #3C1F1E;
-  --purple: #C58AF9;
-  --purple-lt: #2D1B5C;
+  --bg: #0D1117;
+  --white: #161B22;
+  --ink: #E6EDF3;
+  --ink2: #8D96A0;
+  --es-muted: #6E7681;
+  --es-border: #30363D;
+  --es-bg-alt: #21262D;
+  --es-sidebar-bg: #010409;
+  --blue: #58A6FF;
+  --blue-d: #388BFD;
+  --blue-lt: #0D2145;
+  --blue-mid: #1F4080;
+  --green: #3FB950;
+  --green-lt: #0D2D1A;
+  --green-mid: #1A5731;
+  --amber: #E3B341;
+  --amber-lt: #2D1F00;
+  --amber-mid: #5A3E00;
+  --red: #F85149;
+  --red-lt: #2D0F0F;
+  --purple: #BC8CFF;
+  --purple-lt: #1E0F3A;
 }
 
 .dark {
