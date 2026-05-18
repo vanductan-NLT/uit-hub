@@ -28,9 +28,22 @@ export function getSuggestedCourses(
   takenIds: Set<string>,
   passedIds: Set<string>
 ): Course[] {
-  const typeOrder: Record<string, number> = { general: 0, required: 1, elective: 2 };
+  // Courses that are prerequisites of already-taken courses are "superseded" —
+  // e.g. ENG01 when ENG02 is already exempted/taken
+  const supersededIds = new Set<string>();
+  for (const c of allCourses) {
+    if (takenIds.has(c.id)) {
+      for (const pid of c.prerequisites) supersededIds.add(pid);
+    }
+  }
+
+  const typeOrder: Record<string, number> = { required: 0, general: 1, elective: 2 };
   return allCourses
-    .filter((c) => !takenIds.has(c.id) && c.prerequisites.every((pid) => passedIds.has(pid)))
+    .filter((c) =>
+      !takenIds.has(c.id) &&
+      !supersededIds.has(c.id) &&
+      c.prerequisites.every((pid) => passedIds.has(pid))
+    )
     .sort((a, b) => {
       const td = (typeOrder[a.course_type] ?? 3) - (typeOrder[b.course_type] ?? 3);
       return td !== 0 ? td : a.id.localeCompare(b.id);
