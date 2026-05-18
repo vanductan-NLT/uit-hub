@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EduSphere UIT",
+  title: "UIT Hub",
   description: "Cá nhân hóa lộ trình học tập UIT",
 };
 
