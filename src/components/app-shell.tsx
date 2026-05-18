@@ -30,7 +30,7 @@ function getDisplayName(email: string) {
   return email.split("@")[0];
 }
 
-export default function AppShell({ userEmail }: { userEmail: string }) {
+export default function AppShell({ userId, userEmail }: { userId: string; userEmail: string }) {
   const [active, setActive] = useState<Panel>("dashboard");
   const [showLogout, setShowLogout] = useState(false);
   const router = useRouter();
@@ -98,7 +98,7 @@ export default function AppShell({ userEmail }: { userEmail: string }) {
         {/* Main content */}
         <main className="es-main">
           {active === "dashboard" && <DashboardPanel onNav={(p) => setActive(p as Panel)} />}
-          {active === "roadmap" && <RoadmapPanel />}
+          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} />}
           {active === "gpa" && <GpaPanel onNav={(p) => setActive(p as Panel)} />}
           {active === "tracker" && <TrackerPanel />}
           {active === "exam" && <ExamPanel />}

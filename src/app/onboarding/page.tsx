@@ -1,21 +1,21 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import AppShell from "@/components/app-shell";
+import OnboardingWizard from "./onboarding-wizard";
 
-export default async function DashboardPage() {
+export default async function OnboardingPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  // Redirect new users to onboarding if profile not set up
+  // If profile already exists, skip onboarding
   const { data: profile } = await supabase
     .from("user_profiles")
     .select("id")
     .eq("id", user.id)
     .single();
 
-  if (!profile) redirect("/onboarding");
+  if (profile) redirect("/dashboard");
 
-  return <AppShell userId={user.id} userEmail={user.email!} />;
+  return <OnboardingWizard userId={user.id} userEmail={user.email!} />;
 }
