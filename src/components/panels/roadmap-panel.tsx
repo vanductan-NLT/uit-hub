@@ -1,144 +1,129 @@
 "use client";
 
-export default function RoadmapPanel() {
+import { useState } from "react";
+import { useCourses } from "@/hooks/use-courses";
+import GpaSummary from "@/components/features/course-tracker/gpa-summary";
+import CourseList from "@/components/features/course-tracker/course-list";
+import AddCourseModal from "@/components/features/course-tracker/add-course-modal";
+
+interface RoadmapPanelProps { userId: string; }
+
+// Credits targets per type (curriculum constants)
+const TARGETS = { general: 30, required: 70, elective: 31 };
+
+export default function RoadmapPanel({ userId }: RoadmapPanelProps) {
+  const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse } = useCourses(userId);
+  const [showModal, setShowModal] = useState(false);
+
+  const takenIds = new Set(userCourses.map((c) => c.course_id));
+
+  // Credits breakdown by type (passed only)
+  const creditsByType = userCourses
+    .filter((c) => c.score !== null && c.score >= 4.0 && c.status === "completed")
+    .reduce<Record<string, number>>((acc, c) => {
+      const t = c.course.course_type;
+      acc[t] = (acc[t] ?? 0) + c.course.credits;
+      return acc;
+    }, {});
+
+  const progress = [
+    { label: "Tín chỉ tích lũy", value: `${passedCredits}/131`, pct: Math.min(100, Math.round((passedCredits / 131) * 100)), cls: "" },
+    { label: "Môn đại cương", value: `${creditsByType.general ?? 0}/${TARGETS.general}TC`, pct: Math.min(100, Math.round(((creditsByType.general ?? 0) / TARGETS.general) * 100)), cls: "green" },
+    { label: "Môn chuyên ngành", value: `${(creditsByType.required ?? 0) + (creditsByType.elective ?? 0)}/${TARGETS.required + TARGETS.elective}TC`, pct: Math.min(100, Math.round((((creditsByType.required ?? 0) + (creditsByType.elective ?? 0)) / (TARGETS.required + TARGETS.elective)) * 100)), cls: "amber" },
+  ];
+
+  if (error) {
+    return (
+      <>
+        <div className="es-topbar">
+          <div className="es-topbar-left">
+            <div className="es-topbar-title">Lộ trình môn học</div>
+          </div>
+        </div>
+        <div className="es-content">
+          <div className="es-alert-strip danger">
+            <span>⚠️</span>
+            <div className="es-alert-text">{error}</div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="es-topbar">
         <div className="es-topbar-left">
           <div className="es-topbar-title">Lộ trình môn học</div>
-          <div className="es-topbar-sub">Theo ngành CNTT – Chuyên ngành Kỹ thuật phần mềm</div>
+          <div className="es-topbar-sub">
+            {loading ? "Đang tải..." : `${userCourses.length} môn đã nhập · ngành ${userId ? "CNTT" : ""}`}
+          </div>
         </div>
         <div className="es-topbar-right">
-          <span className="es-badge es-badge-green">✓ 67/131 TC</span>
-          <button className="es-btn es-btn-outline es-btn-sm">Đổi chuyên ngành</button>
+          {!loading && (
+            <span className="es-badge es-badge-green">✓ {passedCredits}/131 TC</span>
+          )}
+          <button className="es-btn es-btn-primary es-btn-sm" onClick={() => setShowModal(true)}>
+            + Thêm môn
+          </button>
         </div>
       </div>
 
       <div className="es-content">
-        <div className="es-grid-2" style={{ alignItems: "start" }}>
-          <div>
-            <div className="es-prereq-alert">
-              <span style={{ fontSize: 18 }}>⚠️</span>
-              <div className="es-prereq-text">
-                <strong>Kiến trúc máy tính</strong> là tiên quyết của <strong>Hệ điều hành</strong>. Bạn chưa học môn này — nên ưu tiên HK3.
-              </div>
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <div className="es-semester-label">HK1 · 2023–2024</div>
-              {[
-                { name: "Toán cao cấp A1", credits: "4TC · Toán – Cơ sở", grade: "A", dot: "dot-done" },
-                { name: "Lập trình hướng đối tượng", credits: "4TC · Lập trình – Cơ sở", grade: "B+", dot: "dot-done" },
-                { name: "Nhập môn CNPM", credits: "4TC · SE – Cơ sở", grade: "B", dot: "dot-done" },
-              ].map((c) => (
-                <div className="es-course-row" key={c.name}>
-                  <div className={`es-course-dot ${c.dot}`} />
-                  <div style={{ flex: 1 }}>
-                    <div className="es-course-name">{c.name}</div>
-                    <div className="es-course-credits">{c.credits}</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div className={`es-grade-pill ${c.grade.startsWith("A") ? "grade-a" : "grade-b"}`}>{c.grade}</div>
-                    <span className="es-badge es-badge-green">Đạt</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginBottom: 20 }}>
-              <div className="es-semester-label">HK2 · 2024–2025 · Hiện tại</div>
-              {[
-                { name: "Cấu trúc dữ liệu & Giải thuật", credits: "4TC · Lập trình – Core", dot: "dot-current", badge: <span className="es-badge es-badge-blue">Đang học</span> },
-                { name: "Lập trình Web", credits: "3TC · Web – Core", dot: "dot-current", badge: <span className="es-badge es-badge-blue">Đang học</span> },
-                { name: "Kiến trúc máy tính", credits: "3TC · Hệ thống – Tiên quyết", dot: "dot-warn", badge: <span className="es-badge es-badge-amber">Nên học HK này</span> },
-              ].map((c) => (
-                <div className="es-course-row" key={c.name} style={c.dot === "dot-current" ? { borderColor: "var(--blue)", boxShadow: "0 0 0 3px rgba(37,99,235,.06)" } : {}}>
-                  <div className={`es-course-dot ${c.dot}`} />
-                  <div style={{ flex: 1 }}>
-                    <div className="es-course-name">{c.name}</div>
-                    <div className="es-course-credits">{c.credits}</div>
-                  </div>
-                  <div>{c.badge}</div>
-                </div>
-              ))}
-            </div>
-
+        {loading ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 240, color: "var(--es-muted)", fontSize: 14 }}>
+            Đang tải dữ liệu...
+          </div>
+        ) : (
+          <div className="es-grid-2" style={{ alignItems: "start" }}>
+            {/* Left: course list */}
             <div>
-              <div className="es-semester-label">HK3 · Gợi ý</div>
-              <div className="es-course-row">
-                <div className="es-course-dot dot-locked" />
-                <div style={{ flex: 1 }}>
-                  <div className="es-course-name">Hệ điều hành</div>
-                  <div className="es-course-credits">3TC · Hệ thống – Tiên quyết: Kiến trúc MT</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>🔒</span>
-                  <span className="es-badge es-badge-gray">Chưa đủ TQ</span>
-                </div>
-              </div>
-              {[
-                { name: "Cơ sở dữ liệu", credits: "4TC · Database – Core", badge: <span className="es-badge es-badge-blue">Có thể học</span> },
-                { name: "Mạng máy tính", credits: "3TC · Hệ thống – Core", badge: <span className="es-badge es-badge-blue">Có thể học</span> },
-              ].map((c) => (
-                <div className="es-course-row" key={c.name}>
-                  <div className="es-course-dot" style={{ background: "var(--blue-mid)" }} />
-                  <div style={{ flex: 1 }}>
-                    <div className="es-course-name">{c.name}</div>
-                    <div className="es-course-credits">{c.credits}</div>
-                  </div>
-                  {c.badge}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="es-card" style={{ marginBottom: 14 }}>
-              <div className="es-section-hdr"><div className="es-section-title">Tiến độ chương trình</div></div>
-              {[
-                { label: "Tín chỉ tích lũy", value: "67/131", pct: 51, cls: "" },
-                { label: "Môn đại cương", value: "18/28TC", pct: 64, cls: "green" },
-                { label: "Môn chuyên ngành", value: "22/75TC", pct: 29, cls: "amber" },
-              ].map((p) => (
-                <div key={p.label} style={{ marginBottom: 14 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                    <span style={{ fontSize: 13, color: "var(--ink2)" }}>{p.label}</span>
-                    <span className="es-mono" style={{ fontSize: 13, fontWeight: 700 }}>{p.value}</span>
-                  </div>
-                  <div className="es-prog-wrap"><div className={`es-prog-fill ${p.cls}`} style={{ width: `${p.pct}%` }} /></div>
-                </div>
-              ))}
+              <CourseList
+                userCourses={userCourses}
+                onEdit={(id, score, semester) => editCourse(id, { score, semester })}
+                onDelete={removeCourse}
+                onAddClick={() => setShowModal(true)}
+              />
             </div>
 
-            <div className="es-card">
-              <div className="es-section-hdr"><div className="es-section-title">HK sau nên đăng ký</div></div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div className="es-card-sm" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>⭐</span>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>Cơ sở dữ liệu</div>
-                    <div style={{ fontSize: 11, color: "var(--es-muted)" }}>4TC · Cao nhất trong lộ trình còn lại</div>
-                  </div>
+            {/* Right: GPA + progress */}
+            <div>
+              <GpaSummary
+                gpa10={gpa10}
+                gpa4={gpa4}
+                passedCredits={passedCredits}
+              />
+
+              <div className="es-card">
+                <div className="es-section-hdr">
+                  <div className="es-section-title">Tiến độ chương trình</div>
                 </div>
-                <div className="es-card-sm" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>📡</span>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>Mạng máy tính</div>
-                    <div style={{ fontSize: 11, color: "var(--es-muted)" }}>3TC · Không cần tiên quyết</div>
+                {progress.map((p) => (
+                  <div key={p.label} style={{ marginBottom: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <span style={{ fontSize: 13, color: "var(--ink2)" }}>{p.label}</span>
+                      <span className="es-mono" style={{ fontSize: 13, fontWeight: 700 }}>{p.value}</span>
+                    </div>
+                    <div className="es-prog-wrap">
+                      <div className={`es-prog-fill${p.cls ? ` ${p.cls}` : ""}`} style={{ width: `${p.pct}%` }} />
+                    </div>
                   </div>
-                </div>
-                <div className="es-card-sm" style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--amber-lt)", borderColor: "var(--amber-mid)" }}>
-                  <span style={{ fontSize: 18 }}>⚡</span>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#92400E" }}>Kiến trúc máy tính</div>
-                    <div style={{ fontSize: 11, color: "#B45309" }}>Học sớm để mở khoá Hệ điều hành</div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {showModal && (
+        <AddCourseModal
+          allCourses={allCourses}
+          takenCourseIds={takenIds}
+          userId={userId}
+          onAdd={addCourse}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </>
   );
 }
