@@ -1,25 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCourses } from "@/hooks/use-courses";
 import GpaSummary from "@/components/features/course-tracker/gpa-summary";
 import CourseList from "@/components/features/course-tracker/course-list";
 import AddCourseModal from "@/components/features/course-tracker/add-course-modal";
 import ImportFromHtml from "@/components/features/course-tracker/import-from-html";
+import CourseSuggestions from "@/components/features/course-tracker/course-suggestions";
+import CourseTimeline from "@/components/features/course-tracker/course-timeline";
+import {
+  buildPassedIds,
+  buildTakenIds,
+  getSuggestedCourses,
+  estimateRemainingTime,
+} from "@/lib/course-utils";
 
 interface RoadmapPanelProps { userId: string; userEmail: string; }
 
-// Credits targets per type (curriculum constants)
 const TARGETS = { general: 30, required: 70, elective: 31 };
 
 export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
   const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [activeTab, setActiveTab] = useState<"list" | "timeline">("list");
 
-  const takenIds = new Set(userCourses.map((c) => c.course_id));
+  const takenIds = useMemo(() => buildTakenIds(userCourses), [userCourses]);
+  const passedIds = useMemo(() => buildPassedIds(userCourses), [userCourses]);
+  const allCoursesMap = useMemo(() => new Map(allCourses.map((c) => [c.id, c])), [allCourses]);
+  const suggestions = useMemo(() => getSuggestedCourses(allCourses, takenIds, passedIds), [allCourses, takenIds, passedIds]);
+  const { avgCreditsPerSem, remainingSemesters } = useMemo(
+    () => estimateRemainingTime(userCourses, passedCredits),
+    [userCourses, passedCredits]
+  );
 
-  // Credits breakdown by type (passed only)
   const creditsByType = userCourses
     .filter((c) => c.score !== null && c.score >= 4.0 && c.status === "completed")
     .reduce<Record<string, number>>((acc, c) => {
@@ -80,43 +94,75 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
             Đang tải dữ liệu...
           </div>
         ) : (
-          <div className="es-grid-2" style={{ alignItems: "start" }}>
-            {/* Left: course list */}
-            <div>
-              <CourseList
-                userCourses={userCourses}
-                onEdit={(id, score, semester) => editCourse(id, { score, semester })}
-                onDelete={removeCourse}
-                onAddClick={() => setShowModal(true)}
-              />
+          <>
+            {/* Tab bar */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              <button
+                className={`es-filter-btn${activeTab === "list" ? " active" : ""}`}
+                onClick={() => setActiveTab("list")}
+              >
+                📋 Danh sách
+              </button>
+              <button
+                className={`es-filter-btn${activeTab === "timeline" ? " active" : ""}`}
+                onClick={() => setActiveTab("timeline")}
+              >
+                🗓 Lộ trình
+              </button>
             </div>
 
-            {/* Right: GPA + progress */}
-            <div>
-              <GpaSummary
-                gpa10={gpa10}
-                gpa4={gpa4}
-                passedCredits={passedCredits}
-              />
-
-              <div className="es-card">
-                <div className="es-section-hdr">
-                  <div className="es-section-title">Tiến độ chương trình</div>
+            {activeTab === "list" ? (
+              <div className="es-grid-2" style={{ alignItems: "start" }}>
+                {/* Left: course list */}
+                <div>
+                  <CourseList
+                    userCourses={userCourses}
+                    onEdit={(id, score, semester) => editCourse(id, { score, semester })}
+                    onDelete={removeCourse}
+                    onAddClick={() => setShowModal(true)}
+                  />
                 </div>
-                {progress.map((p) => (
-                  <div key={p.label} style={{ marginBottom: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                      <span style={{ fontSize: 13, color: "var(--ink2)" }}>{p.label}</span>
-                      <span className="es-mono" style={{ fontSize: 13, fontWeight: 700 }}>{p.value}</span>
+
+                {/* Right: GPA + progress + suggestions */}
+                <div>
+                  <GpaSummary gpa10={gpa10} gpa4={gpa4} passedCredits={passedCredits} />
+
+                  <div className="es-card">
+                    <div className="es-section-hdr">
+                      <div className="es-section-title">Tiến độ chương trình</div>
                     </div>
-                    <div className="es-prog-wrap">
-                      <div className={`es-prog-fill${p.cls ? ` ${p.cls}` : ""}`} style={{ width: `${p.pct}%` }} />
-                    </div>
+                    {progress.map((p) => (
+                      <div key={p.label} style={{ marginBottom: 14 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                          <span style={{ fontSize: 13, color: "var(--ink2)" }}>{p.label}</span>
+                          <span className="es-mono" style={{ fontSize: 13, fontWeight: 700 }}>{p.value}</span>
+                        </div>
+                        <div className="es-prog-wrap">
+                          <div className={`es-prog-fill${p.cls ? ` ${p.cls}` : ""}`} style={{ width: `${p.pct}%` }} />
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* F1: graduation estimate */}
+                    {passedCredits >= 131 ? (
+                      <div style={{ fontSize: 13, color: "var(--green)", fontWeight: 600, paddingTop: 4 }}>
+                        Đủ điều kiện tốt nghiệp 🎓
+                      </div>
+                    ) : remainingSemesters !== null ? (
+                      <div style={{ fontSize: 12, color: "var(--es-muted)", paddingTop: 4 }}>
+                        Còn khoảng <strong style={{ color: "var(--ink2)" }}>{remainingSemesters} học kỳ</strong>
+                        {" · "}trung bình {avgCreditsPerSem} TC/HK
+                      </div>
+                    ) : null}
                   </div>
-                ))}
+
+                  <CourseSuggestions suggestions={suggestions} />
+                </div>
               </div>
-            </div>
-          </div>
+            ) : (
+              <CourseTimeline userCourses={userCourses} suggestions={suggestions} />
+            )}
+          </>
         )}
       </div>
 
@@ -124,6 +170,8 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
         <AddCourseModal
           allCourses={allCourses}
           takenCourseIds={takenIds}
+          passedIds={passedIds}
+          allCoursesMap={allCoursesMap}
           userId={userId}
           onAdd={addCourse}
           onClose={() => setShowModal(false)}

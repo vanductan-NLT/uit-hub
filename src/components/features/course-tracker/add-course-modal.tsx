@@ -2,10 +2,13 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import type { Course } from "@/types/database";
+import { getMissingPrereqs } from "@/lib/course-utils";
 
 interface AddCourseModalProps {
   allCourses: Course[];
   takenCourseIds: Set<string>;
+  passedIds: Set<string>;
+  allCoursesMap: Map<string, Course>;
   userId: string;
   onAdd: (input: {
     course_id: string;
@@ -26,6 +29,8 @@ const STATUS_LABELS = {
 export default function AddCourseModal({
   allCourses,
   takenCourseIds,
+  passedIds,
+  allCoursesMap,
   onAdd,
   onClose,
 }: AddCourseModalProps) {
@@ -40,6 +45,11 @@ export default function AddCourseModal({
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { searchRef.current?.focus(); }, []);
+
+  const missingPrereqs = useMemo(
+    () => selected ? getMissingPrereqs(selected, passedIds, allCoursesMap) : [],
+    [selected, passedIds, allCoursesMap]
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -170,6 +180,17 @@ export default function AddCourseModal({
               </div>
             )}
           </div>
+
+          {/* Prereq warning */}
+          {missingPrereqs.length > 0 && (
+            <div className="es-prereq-alert" style={{ marginBottom: 14 }}>
+              <span>⚠️</span>
+              <div className="es-prereq-text">
+                Chưa hoàn thành môn tiên quyết:{" "}
+                {missingPrereqs.map((c) => c.name).join(", ")}
+              </div>
+            </div>
+          )}
 
           {/* Status */}
           <div style={{ marginBottom: 14 }}>
