@@ -63,6 +63,34 @@
   --r: 10px;
   --r-sm: 7px;
   --r-lg: 14px;
+  --es-sidebar-bg: #0A0F1E;
+  --es-text: var(--ink);
+}
+
+/* ── DARK MODE TOKENS ── */
+[data-theme="dark"] {
+  --bg: #1C1C1E;
+  --white: #28282B;
+  --ink: #E8EAED;
+  --ink2: #BDC1C6;
+  --es-muted: #9AA0A6;
+  --es-border: #3C4043;
+  --es-bg-alt: #3C4043;
+  --es-sidebar-bg: #111113;
+  --blue: #8AB4F8;
+  --blue-d: #669DF6;
+  --blue-lt: #1A2A4A;
+  --blue-mid: #1E3A5F;
+  --green: #81C995;
+  --green-lt: #1B3A2B;
+  --green-mid: #2D6A4F;
+  --amber: #FDD663;
+  --amber-lt: #3A2A00;
+  --amber-mid: #7A5900;
+  --red: #F28B82;
+  --red-lt: #3C1F1E;
+  --purple: #C58AF9;
+  --purple-lt: #2D1B5C;
 }
 
 .dark {
@@ -145,6 +173,14 @@
 
 @layer base {
   * { box-sizing: border-box; }
+  /* Google-style smooth theme transition */
+  *, *::before, *::after {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+  }
+  /* Don't animate things that shouldn't transition */
+  .es-prog-fill, button, input, select { transition: none; }
+  .es-prog-fill { transition: width 0.4s ease; }
+  button { transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s; }
   body {
     font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
     background: var(--bg);
@@ -163,7 +199,7 @@
 /* ── SIDEBAR ── */
 .es-sidebar {
   width: var(--sidebar-w); flex-shrink: 0;
-  background: var(--ink);
+  background: var(--es-sidebar-bg);
   display: flex; flex-direction: column;
   overflow-y: auto;
 }
