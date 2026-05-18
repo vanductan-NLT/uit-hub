@@ -1,118 +1,188 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
+import { useCourses } from "@/hooks/use-courses";
+import CourseScoreEditor from "@/components/features/gpa-forecast/course-score-editor";
+import {
+  forecastCumulativeGPA4,
+  sortByRisk,
+  calculateRequiredCK,
+  calculatePartialScore,
+} from "@/lib/gpa-forecast-utils";
 
-const subjects = [
-  { name: "CTDL&GT", tc: "4TC", gk: 6.2, bt: 7.0, needStr: "≥ 7.0", needOk: false, forecast: "B", badge: "amber" },
-  { name: "Lập trình Web", tc: "3TC", gk: 8.5, bt: 9.0, needStr: "≥ 7.5", needOk: true, forecast: "A", badge: "green" },
-  { name: "Đại số TT", tc: "3TC", gk: 5.5, bt: 6.0, needStr: "≥ 8.0", needOk: false, forecast: "B–", badge: "amber" },
-  { name: "Vật lý ĐC", tc: "3TC", gk: 7.0, bt: 7.5, needStr: "≥ 6.5", needOk: true, forecast: "B+", badge: "blue" },
-  { name: "Nhập môn CNPM", tc: "4TC", gk: 7.8, bt: 8.0, needStr: "≥ 7.0", needOk: true, forecast: "A–", badge: "green" },
-];
+interface Props {
+  userId: string;
+  onNav: (p: string) => void;
+}
 
-export default function GpaPanel({ onNav }: { onNav: (p: string) => void }) {
+export default function GpaPanel({ userId, onNav }: Props) {
+  const { userCourses, loading, error, gpa4, updateComponentScores } = useCourses(userId);
+
+  const completedCourses = useMemo(
+    () => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"),
+    [userCourses]
+  );
+  const inProgressCourses = useMemo(
+    () => userCourses.filter((c) => c.status === "in_progress"),
+    [userCourses]
+  );
+  const sortedInProgress = useMemo(() => sortByRisk(inProgressCourses), [inProgressCourses]);
+
+  const forecastGPA4 = useMemo(
+    () => forecastCumulativeGPA4(completedCourses, inProgressCourses),
+    [completedCourses, inProgressCourses]
+  );
+
+  const riskyCount = useMemo(
+    () =>
+      inProgressCourses.filter((c) => {
+        const scores = c.component_scores ?? {};
+        const ck = calculateRequiredCK(c.course, scores, 7.0);
+        const partial = calculatePartialScore(c.course, scores);
+        return (ck !== null && ck > 8.5) || (partial !== null && partial < 5.5) || (ck === null && partial === null);
+      }).length,
+    [inProgressCourses]
+  );
+
+  const delta = (forecastGPA4 - gpa4).toFixed(2);
+  const deltaPositive = forecastGPA4 >= gpa4;
+
+  if (loading) {
+    return (
+      <div className="es-content" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300 }}>
+        <span style={{ color: "var(--es-muted)" }}>Đang tải...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="es-content">
+        <div className="es-alert-strip warn"><span>⚠️</span><span>{error}</span></div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="es-topbar">
         <div className="es-topbar-left">
           <div className="es-topbar-title">Dự báo GPA</div>
-          <div className="es-topbar-sub">HK2 2024–2025 · Dựa trên điểm thành phần đã có</div>
+          <div className="es-topbar-sub">
+            {inProgressCourses.length > 0
+              ? `${inProgressCourses[0].semester ?? "HK hiện tại"} · Dựa trên điểm thành phần đã có`
+              : "Dựa trên điểm thành phần đã có"}
+          </div>
         </div>
         <div className="es-topbar-right">
-          <span className="es-badge es-badge-amber">⚠️ 2 môn cần chú ý</span>
+          {riskyCount > 0 && (
+            <span className="es-badge es-badge-amber">⚠️ {riskyCount} môn cần chú ý</span>
+          )}
         </div>
       </div>
 
       <div className="es-content">
-        <div className="es-grid-2" style={{ alignItems: "start" }}>
-          <div>
-            <div className="es-card" style={{ marginBottom: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--es-muted)" }}>GPA tích lũy hiện tại</span>
-                <span className="es-badge es-badge-green">Khá</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 4 }}>
-                <div className="es-gpa-number">3.28</div>
-                <div className="es-gpa-max">/4.0</div>
-              </div>
-              <div style={{ marginBottom: 12 }}>
-                <div className="es-prog-wrap" style={{ height: 8 }}><div className="es-prog-fill green" style={{ width: "82%" }} /></div>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                {[
-                  { label: "Dự báo cuối HK", val: "3.31", bg: "var(--green-lt)", color: "var(--green)" },
-                  { label: "Mục tiêu GPA", val: "3.50", bg: "var(--blue-lt)", color: "var(--blue)" },
-                  { label: "Cần cải thiện", val: "+0.19", bg: "var(--amber-lt)", color: "var(--amber)" },
-                ].map((item) => (
-                  <div key={item.label} style={{ flex: 1, textAlign: "center", padding: 8, background: item.bg, borderRadius: "var(--r-sm)" }}>
-                    <div style={{ fontSize: 11, color: item.color, fontWeight: 600 }}>{item.label}</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: item.color }}>{item.val}</div>
+        {inProgressCourses.length === 0 ? (
+          <div className="es-card" style={{ textAlign: "center", padding: 40, color: "var(--es-muted)" }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>📝</div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Chưa có môn đang học</div>
+            <div style={{ fontSize: 13 }}>
+              Thêm môn học với trạng thái <strong>Đang học</strong> ở trang Lộ trình để bắt đầu dự báo GPA.
+            </div>
+          </div>
+        ) : (
+          <div className="es-grid-2" style={{ alignItems: "start" }}>
+            {/* Left: GPA summary + risky alerts */}
+            <div>
+              <div className="es-card" style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--es-muted)" }}>GPA tích lũy hiện tại</span>
+                  <span className={`es-badge ${gpa4 >= 3.2 ? "es-badge-green" : gpa4 >= 2.5 ? "es-badge-amber" : "es-badge-red"}`}>
+                    {gpa4 >= 3.6 ? "Xuất sắc" : gpa4 >= 3.2 ? "Giỏi" : gpa4 >= 2.5 ? "Khá" : "Trung bình"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 4 }}>
+                  <div className="es-gpa-number">{gpa4.toFixed(2)}</div>
+                  <div className="es-gpa-max">/4.0</div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <div className="es-prog-wrap" style={{ height: 8 }}>
+                    <div className="es-prog-fill green" style={{ width: `${(gpa4 / 4) * 100}%` }} />
                   </div>
-                ))}
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[
+                    { label: "Dự báo cuối HK", val: forecastGPA4.toFixed(2), bg: "var(--green-lt)", color: "var(--green)" },
+                    { label: "Thay đổi", val: `${deltaPositive ? "+" : ""}${delta}`, bg: deltaPositive ? "var(--blue-lt)" : "var(--amber-lt)", color: deltaPositive ? "var(--blue)" : "var(--amber)" },
+                    { label: "Cần cải thiện", val: `+${Math.max(0, 3.6 - forecastGPA4).toFixed(2)}`, bg: "var(--amber-lt)", color: "var(--amber)" },
+                  ].map((item) => (
+                    <div key={item.label} style={{ flex: 1, textAlign: "center", padding: 8, background: item.bg, borderRadius: "var(--r-sm)" }}>
+                      <div style={{ fontSize: 11, color: item.color, fontWeight: 600 }}>{item.label}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: item.color }}>{item.val}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {/* Risky course alerts */}
+              {sortedInProgress.slice(0, 3).map((c) => {
+                const scores = c.component_scores ?? {};
+                const partial = calculatePartialScore(c.course, scores);
+                const ckForB = calculateRequiredCK(c.course, scores, 7.0);
+                const isOk = ckForB !== null && ckForB <= 7.5;
+                return (
+                  <div key={c.id} className={`es-forecast-card ${isOk ? "ok" : "warn"}`}>
+                    <div className="es-forecast-icon">{isOk ? "✅" : "⚡"}</div>
+                    <div style={{ flex: 1 }}>
+                      <div className="es-forecast-title">
+                        {c.course.name}
+                        {ckForB !== null && !isOk && ` — Cần ${ckForB > 10 ? "điểm không khả thi" : `≥ ${ckForB.toFixed(1)}`} ở cuối kỳ để đạt B`}
+                        {isOk && " — Đang đúng hướng"}
+                      </div>
+                      <div className="es-forecast-desc">
+                        {Object.entries(scores)
+                          .filter(([, v]) => v !== null)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join(" · ")}
+                        {partial !== null && ` · Điểm hiện tại: ${partial.toFixed(2)}`}
+                      </div>
+                    </div>
+                    {!isOk && (
+                      <button className="es-forecast-action" onClick={() => onNav("exam")}>
+                        Lên lịch ôn →
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="es-forecast-card warn">
-              <div className="es-forecast-icon">⚡</div>
-              <div style={{ flex: 1 }}>
-                <div className="es-forecast-title">CTDL&GT — Cần 7.0+ ở cuối kỳ để đạt B</div>
-                <div className="es-forecast-desc">Điểm GK: 6.2 · BT: 7.0 · Trọng số cuối kỳ: 50%</div>
+            {/* Right: score editors per course */}
+            <div className="es-card">
+              <div className="es-section-hdr">
+                <div>
+                  <div className="es-section-title">Nhập điểm thành phần</div>
+                  <div className="es-section-sub">Cập nhật để dự báo chính xác hơn · Lưu tự động</div>
+                </div>
               </div>
-              <button className="es-forecast-action" onClick={() => onNav("exam")}>Lên lịch ôn →</button>
-            </div>
-            <div className="es-forecast-card ok">
-              <div className="es-forecast-icon">✅</div>
-              <div style={{ flex: 1 }}>
-                <div className="es-forecast-title">Lập trình Web — Đang đúng hướng đạt A</div>
-                <div className="es-forecast-desc">Điểm GK: 8.5 · BT: 9.0 · Cần 7.5+ cuối kỳ</div>
-              </div>
-              <button className="es-forecast-action">Duy trì →</button>
-            </div>
-            <div className="es-forecast-card warn">
-              <div className="es-forecast-icon">⚠️</div>
-              <div style={{ flex: 1 }}>
-                <div className="es-forecast-title">Đại số tuyến tính — Có thể rớt xuống C</div>
-                <div className="es-forecast-desc">Điểm GK: 5.5 · BT: 6.0 · Cần 8.0+ để giữ B</div>
-              </div>
-              <button className="es-forecast-action" onClick={() => onNav("resources")}>Tìm tài nguyên →</button>
-            </div>
-          </div>
-
-          <div className="es-card">
-            <div className="es-section-hdr">
-              <div>
-                <div className="es-section-title">Chi tiết từng môn</div>
-                <div className="es-section-sub">Dựa trên điểm đã có + dự báo cuối kỳ</div>
-              </div>
-            </div>
-            <table className="es-score-table">
-              <thead>
-                <tr>
-                  <th>Môn học</th><th>GK</th><th>BT</th><th>CK cần</th><th>Dự báo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subjects.map((s) => (
-                  <tr key={s.name}>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{s.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--es-muted)" }}>{s.tc}</div>
-                    </td>
-                    <td>{s.gk}</td>
-                    <td>{s.bt}</td>
-                    <td><span className={s.needOk ? "score-ok" : "score-need"}>{s.needStr}</span></td>
-                    <td><span className={`es-badge es-badge-${s.badge}`}>{s.forecast}</span></td>
-                  </tr>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
+                {sortedInProgress.map((c) => (
+                  <CourseScoreEditor
+                    key={c.id}
+                    course={c}
+                    onUpdate={(scores) => updateComponentScores(c.id, scores)}
+                    onStudyPlan={() => onNav("exam")}
+                  />
                 ))}
-              </tbody>
-            </table>
-            <div className="es-divider" />
-            <div style={{ fontSize: 12, color: "var(--es-muted)", display: "flex", alignItems: "center", gap: 6 }}>
-              <span>💡</span>
-              <span>Trọng số: GK 30% · BT 20% · CK 50%. Tự cập nhật điểm để dự báo chính xác hơn.</span>
+              </div>
+              <div className="es-divider" />
+              <div style={{ fontSize: 12, color: "var(--es-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+                <span>💡</span>
+                <span>Trọng số từng thành phần theo quy định môn học. Nhập xong từng ô → tự lưu.</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );
