@@ -9,8 +9,9 @@ import GpaPanel from "@/components/panels/gpa-panel";
 import TrackerPanel from "@/components/panels/tracker-panel";
 import ExamPanel from "@/components/panels/exam-panel";
 import ResourcesPanel from "@/components/panels/resources-panel";
+import ProfilePanel from "@/components/panels/profile-panel";
 
-type Panel = "dashboard" | "roadmap" | "gpa" | "tracker" | "exam" | "resources";
+type Panel = "dashboard" | "roadmap" | "gpa" | "tracker" | "exam" | "resources" | "profile";
 
 const navItems: { id: Panel; icon: string; label: string; badge?: string }[] = [
   { id: "dashboard", icon: "🏠", label: "Dashboard" },
@@ -78,17 +79,22 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
             ))}
           </div>
 
-          <div className="es-sidebar-user">
+          <div
+            className={`es-sidebar-user${active === "profile" ? " active" : ""}`}
+            onClick={() => setActive("profile")}
+            style={{ cursor: "pointer" }}
+            title="Xem hồ sơ"
+          >
             <div className="es-user-avatar">{initials}</div>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div className="es-user-name">{mssv}</div>
               <div className="es-user-id">{userEmail.split("@")[0]} · CNTT</div>
             </div>
             <button
               className="es-btn-ghost"
-              onClick={() => setShowLogout(true)}
+              onClick={(e) => { e.stopPropagation(); setShowLogout(true); }}
               title="Đăng xuất"
-              style={{ padding: "4px 6px", fontSize: 16, marginLeft: "auto" }}
+              style={{ padding: "4px 6px", fontSize: 16 }}
             >
               ↪
             </button>
@@ -99,10 +105,11 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
         <main className="es-main">
           {active === "dashboard" && <DashboardPanel onNav={(p) => setActive(p as Panel)} />}
           {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} />}
-          {active === "gpa" && <GpaPanel onNav={(p) => setActive(p as Panel)} />}
+          {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => setActive(p as Panel)} />}
           {active === "tracker" && <TrackerPanel />}
           {active === "exam" && <ExamPanel />}
           {active === "resources" && <ResourcesPanel />}
+          {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} />}
         </main>
       </div>
 

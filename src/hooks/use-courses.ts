@@ -61,6 +61,7 @@ export interface UseCourseState {
   passedCredits: number;
   addCourse: (input: Omit<UpsertUserCourseInput, "user_id">) => Promise<void>;
   editCourse: (id: string, patch: Parameters<typeof updateUserCourse>[1]) => Promise<void>;
+  updateComponentScores: (id: string, scores: Record<string, number | null>) => Promise<void>;
   removeCourse: (id: string) => Promise<void>;
   refetch: () => Promise<void>;
 }
@@ -96,6 +97,7 @@ export function useCourses(userId: string): UseCourseState {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         note: null,
+        component_scores: {},
         ...input,
         course: allCourses.find((c) => c.id === input.course_id)!,
       };
@@ -127,6 +129,13 @@ export function useCourses(userId: string): UseCourseState {
     [fetchAll]
   );
 
+  const updateComponentScores = useCallback(
+    async (id: string, scores: Record<string, number | null>) => {
+      await editCourse(id, { component_scores: scores });
+    },
+    [editCourse]
+  );
+
   const removeCourse = useCallback(
     async (id: string) => {
       const snapshot = userCourses;
@@ -151,6 +160,7 @@ export function useCourses(userId: string): UseCourseState {
     passedCredits: calculatePassedCredits(userCourses),
     addCourse,
     editCourse,
+    updateComponentScores,
     removeCourse,
     refetch: fetchAll,
   };

@@ -34,6 +34,7 @@ export interface UpsertUserCourseInput {
   semester: string | null;
   academic_year: string | null;
   status: "completed" | "in_progress" | "failed";
+  component_scores?: Record<string, number | null>;
   note?: string | null;
 }
 
@@ -50,7 +51,7 @@ export async function upsertUserCourse(input: UpsertUserCourseInput): Promise<Us
 
 export async function updateUserCourse(
   id: string,
-  patch: Partial<Pick<UpsertUserCourseInput, "score" | "semester" | "academic_year" | "status" | "note">>
+  patch: Partial<Pick<UpsertUserCourseInput, "score" | "semester" | "academic_year" | "status" | "component_scores" | "note">>
 ): Promise<UserCourseWithCourse> {
   const supabase = createClient();
   const { data, error } = await supabase
