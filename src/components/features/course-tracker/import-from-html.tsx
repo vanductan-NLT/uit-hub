@@ -179,7 +179,7 @@ export default function ImportFromHtml({ userId, userEmail, allCourses, onSucces
                     {result.courses.map((c) => {
                       const unknown = !knownIds.has(c.course_id);
                       return (
-                        <tr key={c.course_id} style={{ background: unknown ? "var(--amber-lt)" : "var(--white)", borderBottom: "1px solid var(--es-border)" }}>
+                        <tr key={`${c.course_id}-${c.semester}`} style={{ background: unknown ? "var(--amber-lt)" : "var(--white)", borderBottom: "1px solid var(--es-border)" }}>
                           <td style={{ padding: "8px 10px" }}>
                             <input type="checkbox" checked={checked.has(c.course_id)}
                               onChange={(e) => setChecked((prev) => { const s = new Set(prev); e.target.checked ? s.add(c.course_id) : s.delete(c.course_id); return s; })} />
