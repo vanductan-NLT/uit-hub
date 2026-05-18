@@ -10,6 +10,7 @@ import TrackerPanel from "@/components/panels/tracker-panel";
 import ExamPanel from "@/components/panels/exam-panel";
 import ResourcesPanel from "@/components/panels/resources-panel";
 import ProfilePanel from "@/components/panels/profile-panel";
+import ThemeToggle from "@/components/ui/theme-toggle";
 
 type Panel = "dashboard" | "roadmap" | "gpa" | "tracker" | "exam" | "resources" | "profile";
 
@@ -65,7 +66,10 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               <span className="es-nav-icon">🏠</span> Dashboard
             </button>
 
-            <div className="es-nav-label" style={{ marginTop: 12 }}>Cá nhân hóa</div>
+            <div className="es-nav-label" style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", paddingRight: 8 }}>
+              <span>Cá nhân hóa</span>
+              <ThemeToggle />
+            </div>
             {navItems.slice(1).map((item) => (
               <button
                 key={item.id}
