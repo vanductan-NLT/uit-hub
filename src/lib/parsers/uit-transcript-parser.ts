@@ -81,6 +81,15 @@ function parseCourseRow(
   return { course_id, course_name, credits, score, status, semester, academic_year };
 }
 
+// Summary rows use colspan so actual td count < 10 — scan from the end for a numeric value
+function lastNumericTd(tds: NodeListOf<Element>): number {
+  for (let i = tds.length - 1; i >= 0; i--) {
+    const v = parseFloat(cleanText(tds[i]));
+    if (!isNaN(v)) return v;
+  }
+  return 0;
+}
+
 function parseSummary(rows: NodeListOf<Element>) {
   let total_credits_studied = 0;
   let total_credits_accumulated = 0;
@@ -91,13 +100,13 @@ function parseSummary(rows: NodeListOf<Element>) {
     const text = cleanText(row);
     const tds = row.querySelectorAll("td");
     if (text.includes("Số tín chỉ đã học")) {
-      total_credits_studied = parseInt(cleanText(tds[3])) || 0;
+      total_credits_studied = parseInt(cleanText(tds[3])) || lastNumericTd(tds);
     } else if (text.includes("Số tín chỉ tích lũy")) {
-      total_credits_accumulated = parseInt(cleanText(tds[3])) || 0;
+      total_credits_accumulated = parseInt(cleanText(tds[3])) || lastNumericTd(tds);
     } else if (text.includes("Điểm trung bình chung tích lũy")) {
-      gpa_accumulated = parseFloat(cleanText(tds[8])) || 0;
+      gpa_accumulated = lastNumericTd(tds);
     } else if (text.includes("Điểm trung bình chung")) {
-      gpa = parseFloat(cleanText(tds[8])) || 0;
+      gpa = lastNumericTd(tds);
     }
   }
 
