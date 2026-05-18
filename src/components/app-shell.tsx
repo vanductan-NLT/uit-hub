@@ -53,9 +53,9 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
         <nav className="es-sidebar">
           <div className="es-sidebar-top">
             <div className="es-brand">
-              <div className="es-brand-icon">E</div>
+              <img src="/uit-logo.png" alt="UIT" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
               <div>
-                <div className="es-brand-name">EduSphere</div>
+                <div className="es-brand-name">UIT Hub</div>
                 <div className="es-brand-sub">UIT · 2024–2025</div>
               </div>
             </div>

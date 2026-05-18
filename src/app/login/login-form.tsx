@@ -35,9 +35,9 @@ export default function LoginForm() {
         {/* Left: form */}
         <div className="es-login-left">
           <div className="es-login-brand">
-            <div className="es-login-brand-icon">E</div>
+            <img src="/uit-logo.png" alt="UIT" style={{ width: 40, height: 40, objectFit: "contain" }} />
             <div>
-              <div className="es-login-brand-name">EduSphere</div>
+              <div className="es-login-brand-name">UIT Hub</div>
               <div className="es-login-brand-sub">UIT · 2024–2025</div>
             </div>
           </div>

@@ -64,12 +64,8 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
       <div style={{ width: "100%", maxWidth: 480 }}>
         {/* Brand */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{
-            width: 44, height: 44, background: "var(--blue)", borderRadius: 12,
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 10,
-          }}>E</div>
-          <div style={{ fontSize: 13, color: "var(--es-muted)" }}>EduSphere · UIT</div>
+          <img src="/uit-logo.png" alt="UIT" style={{ width: 44, height: 44, objectFit: "contain", marginBottom: 10, display: "block", margin: "0 auto 10px" }} />
+          <div style={{ fontSize: 13, color: "var(--es-muted)" }}>UIT Hub · UIT</div>
         </div>
 
         <StepDots current={step} />
@@ -79,7 +75,7 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
           {step === 1 && (
             <>
               <div style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", marginBottom: 6, letterSpacing: "-.3px" }}>
-                Chào mừng đến EduSphere 👋
+                Chào mừng đến UIT Hub 👋
               </div>
               <div style={{ fontSize: 14, color: "var(--es-muted)", marginBottom: 28 }}>
                 Cho mình biết thêm về bạn để cá nhân hóa lộ trình học.
@@ -152,7 +148,7 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
                   Lộ trình sẵn sàng!
                 </div>
                 <div style={{ fontSize: 14, color: "var(--es-muted)" }}>
-                  EduSphere đã cá nhân hóa lộ trình học của bạn.
+                  UIT Hub đã cá nhân hóa lộ trình học của bạn.
                 </div>
               </div>
 
@@ -173,7 +169,7 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
               </div>
 
               <button className="es-login-btn" onClick={() => router.push("/dashboard")}>
-                Vào EduSphere →
+                Vào UIT Hub →
               </button>
             </>
           )}
