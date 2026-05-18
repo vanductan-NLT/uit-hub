@@ -28,13 +28,22 @@ export function getSuggestedCourses(
   takenIds: Set<string>,
   passedIds: Set<string>
 ): Course[] {
-  // Courses that are prerequisites of already-taken courses are "superseded" —
-  // e.g. ENG01 when ENG02 is already exempted/taken
+  // Recursively mark all ancestors of taken courses as superseded —
+  // e.g. ENG03 taken → ENG02 superseded → ENG01 superseded
+  const courseMap = new Map(allCourses.map((c) => [c.id, c]));
   const supersededIds = new Set<string>();
-  for (const c of allCourses) {
-    if (takenIds.has(c.id)) {
-      for (const pid of c.prerequisites) supersededIds.add(pid);
+  function markSuperseded(id: string) {
+    const c = courseMap.get(id);
+    if (!c) return;
+    for (const pid of c.prerequisites) {
+      if (!supersededIds.has(pid)) {
+        supersededIds.add(pid);
+        markSuperseded(pid);
+      }
     }
+  }
+  for (const c of allCourses) {
+    if (takenIds.has(c.id)) markSuperseded(c.id);
   }
 
   const typeOrder: Record<string, number> = { required: 0, general: 1, elective: 2 };
