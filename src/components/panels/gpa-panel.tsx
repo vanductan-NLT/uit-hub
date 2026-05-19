@@ -41,7 +41,8 @@ export default function GpaPanel({ userId, onNav }: Props) {
         const scores = c.component_scores ?? {};
         const ck = calculateRequiredCK(c.course, scores, 7.0);
         const partial = calculatePartialScore(c.course, scores);
-        return partial !== null && ((ck !== null && ck > 8.5) || partial < 5.5);
+        const ckEntered = (scores["Cuối kỳ"] ?? null) !== null;
+        return !ckEntered && partial !== null && ((ck !== null && ck > 8.5) || partial < 5.5);
       }).length,
     [inProgressCourses]
   );
