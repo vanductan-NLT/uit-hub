@@ -16,11 +16,11 @@ import {
   estimateRemainingTime,
 } from "@/lib/course-utils";
 
-interface RoadmapPanelProps { userId: string; userEmail: string; }
+interface RoadmapPanelProps { userId: string; userEmail: string; totalCreditsRequired?: number; }
 
 const TARGETS = { general: 30, required: 70, elective: 31 };
 
-export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
+export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131 }: RoadmapPanelProps) {
   const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -46,7 +46,7 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
     }, {});
 
   const progress = [
-    { label: "Tín chỉ tích lũy", value: `${passedCredits}/131`, pct: Math.min(100, Math.round((passedCredits / 131) * 100)), cls: "" },
+    { label: "Tín chỉ tích lũy", value: `${passedCredits}/${totalCreditsRequired}`, pct: Math.min(100, Math.round((passedCredits / totalCreditsRequired) * 100)), cls: "" },
     { label: "Môn đại cương", value: `${creditsByType.general ?? 0}/${TARGETS.general}TC`, pct: Math.min(100, Math.round(((creditsByType.general ?? 0) / TARGETS.general) * 100)), cls: "green" },
     { label: "Môn chuyên ngành", value: `${(creditsByType.required ?? 0) + (creditsByType.elective ?? 0)}/${TARGETS.required + TARGETS.elective}TC`, pct: Math.min(100, Math.round((((creditsByType.required ?? 0) + (creditsByType.elective ?? 0)) / (TARGETS.required + TARGETS.elective)) * 100)), cls: "amber" },
   ];
@@ -80,7 +80,7 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
         </div>
         <div className="es-topbar-right">
           {!loading && (
-            <span className="es-badge es-badge-green">✓ {passedCredits}/131 TC</span>
+            <span className="es-badge es-badge-green">✓ {passedCredits}/{totalCreditsRequired} TC</span>
           )}
           {/* Import dropdown */}
           <div style={{ position: "relative" }}>
@@ -191,7 +191,7 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
                     ))}
 
                     {/* F1: graduation estimate */}
-                    {passedCredits >= 131 ? (
+                    {passedCredits >= totalCreditsRequired ? (
                       <div style={{ fontSize: 13, color: "var(--green)", fontWeight: 600, paddingTop: 4 }}>
                         Đủ điều kiện tốt nghiệp 🎓
                       </div>

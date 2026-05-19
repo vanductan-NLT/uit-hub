@@ -4,14 +4,13 @@ import { useMemo } from "react";
 import type { UserCourseWithCourse } from "@/types/database";
 import { calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
 
-const TOTAL_PROGRAM_CREDITS = 131;
-
 interface Props {
   onNav: (panel: string) => void;
-  userEmail: string;
+  displayName: string;
   loading: boolean;
   gpa4: number;
   passedCredits: number;
+  totalCreditsRequired: number;
   inProgressCourses: UserCourseWithCourse[];
   completedCourses: UserCourseWithCourse[];
 }
@@ -24,13 +23,12 @@ function gradeLabel(gpa4: number) {
   return gpa4 > 0 ? "Yếu" : "—";
 }
 
-export default function DashboardPanel({ onNav, userEmail, loading, gpa4, passedCredits, inProgressCourses, completedCourses }: Props) {
+export default function DashboardPanel({ onNav, displayName, loading, gpa4, passedCredits, totalCreditsRequired, inProgressCourses, completedCourses }: Props) {
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Chào buổi sáng" : hour < 18 ? "Chào buổi chiều" : "Chào buổi tối";
   const dayNames = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
   const dateStr = `${dayNames[now.getDay()]}, ${now.getDate()} tháng ${now.getMonth() + 1} · HK2 2024–2025`;
-  const displayName = userEmail.split("@")[0];
 
   const riskyCourses = useMemo(() =>
     inProgressCourses
@@ -38,7 +36,7 @@ export default function DashboardPanel({ onNav, userEmail, loading, gpa4, passed
         const scores = c.component_scores ?? {};
         return { c, ckNeeded: calculateRequiredCK(c.course, scores, 7.0), partial: calculatePartialScore(c.course, scores) };
       })
-      .filter(({ ckNeeded, partial }) => (ckNeeded !== null && ckNeeded > 8.5) || (partial !== null && partial < 5.5)),
+      .filter(({ ckNeeded, partial }) => partial !== null && ((ckNeeded !== null && ckNeeded > 8.5) || partial < 5.5)),
     [inProgressCourses]
   );
 
@@ -106,10 +104,10 @@ export default function DashboardPanel({ onNav, userEmail, loading, gpa4, passed
             <div className="es-stat-label">Tín chỉ tích lũy</div>
             <div className="es-stat-value">
               {loading ? "…" : passedCredits}
-              {!loading && <span style={{ fontSize: 16, color: "var(--es-muted)" }}>/{TOTAL_PROGRAM_CREDITS}</span>}
+              {!loading && <span style={{ fontSize: 16, color: "var(--es-muted)" }}>/{totalCreditsRequired}</span>}
             </div>
             <div className="es-stat-delta" style={{ color: "var(--es-muted)" }}>
-              {loading ? "" : `${Math.round((passedCredits / TOTAL_PROGRAM_CREDITS) * 100)}% chương trình`}
+              {loading ? "" : `${Math.round((passedCredits / totalCreditsRequired) * 100)}% chương trình`}
             </div>
           </div>
           <div className="es-stat-card">

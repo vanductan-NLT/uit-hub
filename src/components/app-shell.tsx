@@ -1,27 +1,27 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import DashboardPanel from "@/components/panels/dashboard-panel";
 import RoadmapPanel from "@/components/panels/roadmap-panel";
 import GpaPanel from "@/components/panels/gpa-panel";
-import TrackerPanel from "@/components/panels/tracker-panel";
 import ExamPanel from "@/components/panels/exam-panel";
 import ResourcesPanel from "@/components/panels/resources-panel";
 import ProfilePanel from "@/components/panels/profile-panel";
 import ThemeToggle from "@/components/ui/theme-toggle";
 import { useCourses } from "@/hooks/use-courses";
 import { calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
+import { getUserProfile } from "@/lib/supabase/courses-api";
+import type { UserProfile } from "@/types/database";
 
-type Panel = "dashboard" | "roadmap" | "gpa" | "tracker" | "exam" | "resources" | "profile";
+type Panel = "dashboard" | "roadmap" | "gpa" | "exam" | "resources" | "profile";
 
 const navItems: { id: Panel; icon: string; label: string; badge?: string }[] = [
   { id: "dashboard", icon: "🏠", label: "Dashboard" },
   { id: "roadmap", icon: "🗺️", label: "Lộ trình môn học" },
   { id: "gpa", icon: "📈", label: "Dự báo GPA" },
-  { id: "tracker", icon: "✅", label: "Tracker tiến độ" },
-  { id: "exam", icon: "📅", label: "Kế hoạch ôn thi", badge: "3" },
+  { id: "exam", icon: "📅", label: "Kế hoạch ôn thi" },
   { id: "resources", icon: "📚", label: "Tài nguyên học tập" },
 ];
 
@@ -41,6 +41,10 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
   const router = useRouter();
   const supabase = createClient();
 
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  useEffect(() => { getUserProfile(userId).then(setUserProfile); }, [userId]);
+  const totalCreditsRequired = userProfile?.total_credits_required ?? 131;
+
   const { userCourses, loading: coursesLoading, gpa4, passedCredits } = useCourses(userId);
   const inProgressCourses = useMemo(() => userCourses.filter((c) => c.status === "in_progress"), [userCourses]);
   const completedCourses = useMemo(() => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"), [userCourses]);
@@ -49,7 +53,8 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
       const scores = c.component_scores ?? {};
       const ck = calculateRequiredCK(c.course, scores, 7.0);
       const partial = calculatePartialScore(c.course, scores);
-      return (ck !== null && ck > 8.5) || (partial !== null && partial < 5.5);
+      // only flag risky when at least one score is entered — avoids false positives on empty courses
+      return partial !== null && ((ck !== null && ck > 8.5) || partial < 5.5);
     }).length,
     [inProgressCourses]
   );
@@ -64,9 +69,12 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
     setSidebarOpen(false);
   }
 
-  const initials = getInitials(userEmail);
-  const displayName = getDisplayName(userEmail);
-  const mssv = displayName.match(/^\d+$/) ? displayName : displayName;
+  const profileName = userProfile?.full_name || null;
+  const initials = profileName
+    ? profileName.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase().slice(0, 2)
+    : getInitials(userEmail);
+  const displayName = profileName || getDisplayName(userEmail);
+  const mssv = userProfile?.student_id || displayName;
 
   return (
     <>
@@ -124,7 +132,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
             <div className="es-user-avatar">{initials}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="es-user-name">{mssv}</div>
-              <div className="es-user-id">{userEmail.split("@")[0]} · CNTT</div>
+              <div className="es-user-id">{displayName} · {userProfile?.major ?? "CNTT"}</div>
             </div>
             <ThemeToggle />
             <button
@@ -143,17 +151,17 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
           {active === "dashboard" && (
             <DashboardPanel
               onNav={(p) => navigate(p as Panel)}
-              userEmail={userEmail}
+              displayName={displayName}
               loading={coursesLoading}
               gpa4={gpa4}
               passedCredits={passedCredits}
+              totalCreditsRequired={totalCreditsRequired}
               inProgressCourses={inProgressCourses}
               completedCourses={completedCourses}
             />
           )}
-          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} />}
+          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
-          {active === "tracker" && <TrackerPanel />}
           {active === "exam" && <ExamPanel />}
           {active === "resources" && <ResourcesPanel />}
           {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} />}
