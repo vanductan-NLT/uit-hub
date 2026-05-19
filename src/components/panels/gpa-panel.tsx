@@ -140,15 +140,16 @@ export default function GpaPanel({ userId, onNav }: Props) {
               {sortedInProgress.slice(0, 3).map((c) => {
                 const scores = c.component_scores ?? {};
                 const partial = calculatePartialScore(c.course, scores);
-                const ckForB = calculateRequiredCK(c.course, scores, 7.0);
-                const isOk = ckForB !== null && ckForB <= 7.5;
+                const ckEntered = scores["Cuối kỳ"] !== null && scores["Cuối kỳ"] !== undefined;
+                const ckForB = ckEntered ? null : calculateRequiredCK(c.course, scores, 7.0);
+                const isOk = ckEntered || (ckForB !== null && ckForB <= 7.5);
                 return (
                   <div key={c.id} className={`es-forecast-card ${isOk ? "ok" : "warn"}`}>
                     <div className="es-forecast-icon">{isOk ? "✅" : "⚡"}</div>
                     <div style={{ flex: 1 }}>
                       <div className="es-forecast-title">
                         {c.course.name}
-                        {ckForB !== null && !isOk && ` — Cần ${ckForB > 10 ? "điểm không khả thi" : `≥ ${ckForB.toFixed(1)}`} ở cuối kỳ để đạt B`}
+                        {!ckEntered && ckForB !== null && !isOk && ` — Cần ${ckForB > 10 ? "điểm không khả thi" : `≥ ${ckForB.toFixed(1)}`} ở cuối kỳ để đạt B`}
                         {isOk && " — Đang đúng hướng"}
                       </div>
                       <div className="es-forecast-desc">
@@ -159,7 +160,7 @@ export default function GpaPanel({ userId, onNav }: Props) {
                         {partial !== null && ` · Điểm hiện tại: ${partial.toFixed(2)}`}
                       </div>
                     </div>
-                    {!isOk && (
+                    {!isOk && !ckEntered && (
                       <button className="es-forecast-action" onClick={() => onNav("exam")}>
                         Lên lịch ôn →
                       </button>
