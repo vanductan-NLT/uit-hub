@@ -37,8 +37,10 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
         return { c, ckNeeded: calculateRequiredCK(c.course, scores, 7.0), partial: calculatePartialScore(c.course, scores) };
       })
       .filter(({ c, ckNeeded, partial }) => {
+        if (!partial) return false;
         const ckEntered = (c.component_scores?.["Cuối kỳ"] ?? null) !== null;
-        return !ckEntered && partial !== null && ((ckNeeded !== null && ckNeeded > 8.5) || partial < 5.5);
+        if (ckEntered) return partial < 5.5;
+        return (ckNeeded !== null && ckNeeded > 8.5) || partial < 5.5;
       }),
     [inProgressCourses]
   );

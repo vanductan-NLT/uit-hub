@@ -41,8 +41,10 @@ export default function GpaPanel({ userId, onNav }: Props) {
         const scores = c.component_scores ?? {};
         const ck = calculateRequiredCK(c.course, scores, 7.0);
         const partial = calculatePartialScore(c.course, scores);
+        if (!partial) return false;
         const ckEntered = (scores["Cuối kỳ"] ?? null) !== null;
-        return !ckEntered && partial !== null && ((ck !== null && ck > 8.5) || partial < 5.5);
+        if (ckEntered) return partial < 5.5;
+        return (ck !== null && ck > 8.5) || partial < 5.5;
       }).length,
     [inProgressCourses]
   );
@@ -141,16 +143,19 @@ export default function GpaPanel({ userId, onNav }: Props) {
               {sortedInProgress.map((c) => {
                 const scores = c.component_scores ?? {};
                 const partial = calculatePartialScore(c.course, scores);
-                const ckEntered = scores["Cuối kỳ"] !== null && scores["Cuối kỳ"] !== undefined;
+                const ckEntered = (scores["Cuối kỳ"] ?? null) !== null;
                 const ckForB = ckEntered ? null : calculateRequiredCK(c.course, scores, 7.0);
-                const isOk = ckEntered || (ckForB !== null && ckForB <= 7.5);
+                const isOk = ckEntered
+                  ? (partial !== null && partial >= 5.5)
+                  : (ckForB !== null && ckForB <= 7.5);
                 return (
-                  <div key={c.id} className={`es-forecast-card ${isOk ? "ok" : "warn"}`}>
-                    <div className="es-forecast-icon">{isOk ? "✅" : "⚡"}</div>
+                  <div key={c.id} className={`es-forecast-card ${isOk ? "ok" : ckEntered ? "danger" : "warn"}`}>
+                    <div className="es-forecast-icon">{isOk ? "✅" : ckEntered ? "🚨" : "⚡"}</div>
                     <div style={{ flex: 1 }}>
                       <div className="es-forecast-title">
                         {c.course.name}
                         {!ckEntered && ckForB !== null && !isOk && ` — Cần ${ckForB > 10 ? "điểm không khả thi" : `≥ ${ckForB.toFixed(1)}`} ở cuối kỳ để đạt B`}
+                        {ckEntered && !isOk && partial !== null && ` — Điểm cuối: ${partial.toFixed(2)} (dưới C)`}
                         {isOk && " — Đang đúng hướng"}
                       </div>
                       <div className="es-forecast-desc">

@@ -77,8 +77,12 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
     }
   }
 
+  const cardCls = riskBadge.cls === "es-badge-red" ? "danger"
+    : riskBadge.cls === "es-badge-amber" ? "warn"
+    : "ok";
+
   return (
-    <div className="es-forecast-card" style={{ flexDirection: "column", gap: 10, padding: "12px 14px" }}>
+    <div className={`es-forecast-card ${cardCls}`} style={{ flexDirection: "column", gap: 10, padding: "12px 14px" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
         <div>
