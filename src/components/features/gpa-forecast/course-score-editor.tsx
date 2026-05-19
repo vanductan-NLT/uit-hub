@@ -77,7 +77,9 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
     }
   }
 
-  const cardCls = riskBadge.cls === "es-badge-red" ? "danger"
+  // If partial score is already low (< 5.5), force danger regardless of badge
+  const cardCls = (partial !== null && partial < 5.5) ? "danger"
+    : riskBadge.cls === "es-badge-red" ? "danger"
     : riskBadge.cls === "es-badge-amber" ? "warn"
     : "ok";
 

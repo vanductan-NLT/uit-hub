@@ -414,7 +414,8 @@
 .es-forecast-card { border-radius: var(--r); padding: 14px 16px; border: 1px solid var(--es-border); margin-bottom: 10px; display: flex; align-items: center; gap: 14px; }
 .es-forecast-card.warn { background: var(--amber-lt); border-color: var(--amber-mid); }
 .es-forecast-card.ok { background: var(--green-lt); border-color: var(--green-mid); }
-.es-forecast-card.danger { background: var(--red-lt); border-color: var(--red); }
+.es-forecast-card.danger { background: #FEE2E2; border-color: var(--red); border-width: 2px; }
+.dark .es-forecast-card.danger { background: #3B0F0F; border-color: var(--red); border-width: 2px; }
 .es-forecast-icon { font-size: 24px; flex-shrink: 0; }
 .es-forecast-title { font-size: 13px; font-weight: 700; color: var(--ink); }
 .es-forecast-desc { font-size: 12px; color: var(--ink2); margin-top: 2px; }
