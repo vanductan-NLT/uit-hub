@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useCourses } from "@/hooks/use-courses";
 import CourseScoreEditor from "@/components/features/gpa-forecast/course-score-editor";
+import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
 import {
   forecastCumulativeGPA4,
   sortByRisk,
@@ -16,7 +17,8 @@ interface Props {
 }
 
 export default function GpaPanel({ userId, onNav }: Props) {
-  const { userCourses, loading, error, gpa4, updateComponentScores } = useCourses(userId);
+  const { userCourses, allCourses, loading, error, gpa4, updateComponentScores, addCourse, refetch } = useCourses(userId);
+  const [showDkhpImport, setShowDkhpImport] = useState(false);
 
   const completedCourses = useMemo(
     () => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"),
@@ -86,8 +88,18 @@ export default function GpaPanel({ userId, onNav }: Props) {
           <div className="es-card" style={{ textAlign: "center", padding: 40, color: "var(--es-muted)" }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>📝</div>
             <div style={{ fontWeight: 600, marginBottom: 4 }}>Chưa có môn đang học</div>
-            <div style={{ fontSize: 13 }}>
-              Thêm môn học với trạng thái <strong>Đang học</strong> ở trang Lộ trình để bắt đầu dự báo GPA.
+            <div style={{ fontSize: 13, marginBottom: 20 }}>
+              Tải danh sách môn học kỳ này từ cổng thông tin UIT để bắt đầu dự báo GPA.
+            </div>
+            <button
+              className="es-btn es-btn-primary"
+              onClick={() => setShowDkhpImport(true)}
+              style={{ margin: "0 auto" }}
+            >
+              📋 Tải môn đang học
+            </button>
+            <div style={{ fontSize: 12, marginTop: 12, color: "var(--es-muted)" }}>
+              hoặc thêm thủ công ở trang <button onClick={() => onNav("roadmap")} style={{ background: "none", border: "none", padding: 0, color: "var(--blue)", cursor: "pointer", fontSize: 12 }}>Lộ trình</button>
             </div>
           </div>
         ) : (
@@ -97,8 +109,8 @@ export default function GpaPanel({ userId, onNav }: Props) {
               <div className="es-card" style={{ marginBottom: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: "var(--es-muted)" }}>GPA tích lũy hiện tại</span>
-                  <span className={`es-badge ${gpa4 >= 3.2 ? "es-badge-green" : gpa4 >= 2.5 ? "es-badge-amber" : "es-badge-red"}`}>
-                    {gpa4 >= 3.6 ? "Xuất sắc" : gpa4 >= 3.2 ? "Giỏi" : gpa4 >= 2.5 ? "Khá" : "Trung bình"}
+                  <span className={`es-badge ${gpa4 >= 3.2 ? "es-badge-green" : gpa4 >= 2.8 ? "es-badge-amber" : "es-badge-red"}`}>
+                    {gpa4 >= 3.6 ? "Xuất sắc" : gpa4 >= 3.2 ? "Giỏi" : gpa4 >= 2.8 ? "Khá" : gpa4 >= 2.0 ? "Trung bình" : "Yếu"}
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 4 }}>
@@ -184,6 +196,15 @@ export default function GpaPanel({ userId, onNav }: Props) {
           </div>
         )}
       </div>
+
+      {showDkhpImport && (
+        <ImportFromDkhp
+          allCourses={allCourses}
+          onAdd={addCourse}
+          onSuccess={refetch}
+          onClose={() => setShowDkhpImport(false)}
+        />
+      )}
     </>
   );
 }

@@ -13,18 +13,6 @@ import {
 
 // ── GPA helpers ───────────────────────────────────────────
 
-// UIT grading scale (hệ 10 → hệ 4), per UIT Academic Affairs regulations
-function toGrade4(score: number): number {
-  if (score >= 8.5) return 4.0;
-  if (score >= 8.0) return 3.5;
-  if (score >= 7.0) return 3.0;
-  if (score >= 6.5) return 2.5;
-  if (score >= 5.5) return 2.0;
-  if (score >= 5.0) return 1.5;
-  if (score >= 4.0) return 1.0;
-  return 0.0;
-}
-
 // GPA includes all scored courses (failed ones count against GPA), excludes exempted
 export function calculateGPA10(courses: UserCourseWithCourse[]): number {
   const graded = courses.filter((c) => c.score !== null && c.status !== "exempted");
@@ -34,12 +22,9 @@ export function calculateGPA10(courses: UserCourseWithCourse[]): number {
   return totalCredits === 0 ? 0 : Math.round((totalWeighted / totalCredits) * 100) / 100;
 }
 
+// GPA4 = GPA10 / 2.5 (Quamon/SVUIT linear formula)
 export function calculateGPA4(courses: UserCourseWithCourse[]): number {
-  const graded = courses.filter((c) => c.score !== null && c.status !== "exempted");
-  if (graded.length === 0) return 0;
-  const totalWeighted = graded.reduce((s, c) => s + (toGrade4(c.score!) * c.course.credits), 0);
-  const totalCredits = graded.reduce((s, c) => s + c.course.credits, 0);
-  return totalCredits === 0 ? 0 : Math.round((totalWeighted / totalCredits) * 100) / 100;
+  return Math.round((calculateGPA10(courses) / 2.5) * 100) / 100;
 }
 
 // Tín chỉ tích lũy: môn đạt (≥ 4.0, tức D trở lên theo thang UIT) hoặc miễn
@@ -104,7 +89,10 @@ export function useCourses(userId: string): UseCourseState {
       setUserCourses((prev) => [...prev, optimistic]);
       try {
         const saved = await upsertUserCourse({ ...input, user_id: userId });
-        setUserCourses((prev) => prev.map((c) => (c.id === optimistic.id ? saved : c)));
+        setUserCourses((prev) => [
+          ...prev.filter((c) => c.id !== optimistic.id && c.id !== saved.id),
+          saved,
+        ]);
       } catch (e) {
         setUserCourses((prev) => prev.filter((c) => c.id !== optimistic.id));
         throw e;
