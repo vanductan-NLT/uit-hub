@@ -53,8 +53,9 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
       const scores = c.component_scores ?? {};
       const ck = calculateRequiredCK(c.course, scores, 7.0);
       const partial = calculatePartialScore(c.course, scores);
-      // only flag risky when at least one score is entered — avoids false positives on empty courses
-      return partial !== null && ((ck !== null && ck > 8.5) || partial < 5.5);
+      // only flag risky when CK not yet entered and at least one score exists
+      const ckEntered = (scores["Cuối kỳ"] ?? null) !== null;
+      return !ckEntered && partial !== null && ((ck !== null && ck > 8.5) || partial < 5.5);
     }).length,
     [inProgressCourses]
   );

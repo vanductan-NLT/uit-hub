@@ -137,7 +137,7 @@ export default function GpaPanel({ userId, onNav }: Props) {
               </div>
 
               {/* Risky course alerts */}
-              {sortedInProgress.slice(0, 3).map((c) => {
+              {sortedInProgress.map((c) => {
                 const scores = c.component_scores ?? {};
                 const partial = calculatePartialScore(c.course, scores);
                 const ckEntered = scores["Cuối kỳ"] !== null && scores["Cuối kỳ"] !== undefined;
