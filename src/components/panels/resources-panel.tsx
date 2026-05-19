@@ -1,86 +1,150 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import type { Course, UserCourseWithCourse, ResourceType } from "@/types/database";
+import { useResources } from "@/hooks/use-resources";
+import ResourceList from "@/components/features/study-resources/resource-list";
+import CourseFilter from "@/components/features/study-resources/course-filter";
+import SubmitResourceModal from "@/components/features/study-resources/submit-resource-modal";
 
-const filters = ["Tất cả", "📺 Video", "📄 Slide & PDF", "📝 Bài tập", "🔗 Bộ đề thi"];
-
-const forYou = [
-  { icon: "📺", badge: <span className="es-badge es-badge-blue">Video</span>, name: "Đồ thị – DFS & BFS (Abdul Bari)", desc: "Giải thích trực quan DFS, BFS với animation. Phù hợp ch.6 CTDL đang học.", meta: "YouTube · 45 phút", tag: <span className="es-badge es-badge-green">Phù hợp nhất</span> },
-  { icon: "📄", badge: <span className="es-badge es-badge-gray">Slide UIT</span>, name: "Slide CTDL&GT – Chương 6 (UIT 2024)", desc: "Slide chính thức của khoa, có bài tập mẫu và đề thi các năm trước.", meta: "courses.uit.edu.vn · PDF", tag: <span className="es-badge es-badge-purple">Chính thức</span> },
-  { icon: "📝", badge: <span className="es-badge es-badge-amber">Bài tập</span>, name: "50 bài tập Đồ thị có lời giải", desc: "Tổng hợp bài tập từ đề thi cũ UIT, sắp xếp theo độ khó tăng dần.", meta: "GitHub · 2023", tag: <span className="es-badge es-badge-amber">Ôn thi</span> },
-  { icon: "🔗", badge: <span className="es-badge es-badge-red">Đề thi cũ</span>, name: "Bộ đề thi CTDL&GT 2019–2023", desc: "12 đề thi chính thức kèm đáp án. Thi ngày 03/06, nên ôn ngay tuần này.", meta: "UIT Drive · 12 đề", tag: <span className="es-badge es-badge-red">Ưu tiên</span> },
+const typeFilters: { label: string; value: ResourceType | null }[] = [
+  { label: "Tất cả", value: null },
+  { label: "📺 Video", value: "video" },
+  { label: "📄 Slide & PDF", value: "slide" },
+  { label: "📝 Bài tập", value: "exercise" },
+  { label: "🔗 Đề thi cũ", value: "exam" },
 ];
 
-const weakAreas = [
-  { icon: "📺", badge: <span className="es-badge es-badge-blue">Video</span>, name: "3Blue1Brown – Essence of Linear Algebra", desc: "Series 16 video giải thích trực quan về không gian vector, ma trận. Cực kỳ dễ hiểu.", meta: "YouTube · 4–20 phút/video", tag: <span className="es-badge es-badge-green">Được yêu thích</span> },
-  { icon: "📄", badge: <span className="es-badge es-badge-gray">Slide UIT</span>, name: "Tóm tắt Đại số tuyến tính – UIT", desc: "Tóm tắt lý thuyết 8 chương, kèm công thức quan trọng và ví dụ minh họa.", meta: "courses.uit.edu.vn · 45 trang", tag: <span className="es-badge es-badge-purple">Chính thức</span> },
-];
-
-function ResourceCard({ icon, badge, name, desc, meta, tag }: { icon: string; badge: React.ReactNode; name: string; desc: string; meta: string; tag: React.ReactNode }) {
-  return (
-    <div className="es-resource-card">
-      <div className="es-resource-type-row">
-        <span className="es-resource-icon">{icon}</span>
-        {badge}
-      </div>
-      <div className="es-resource-name">{name}</div>
-      <div className="es-resource-desc">{desc}</div>
-      <div className="es-resource-footer">
-        <span className="es-resource-meta">{meta}</span>
-        {tag}
-      </div>
-    </div>
-  );
+interface Props {
+  userId: string;
+  inProgressCourses: UserCourseWithCourse[];
+  allCourses: Course[];
 }
 
-export default function ResourcesPanel() {
-  const [activeFilter, setActiveFilter] = useState("Tất cả");
+export default function ResourcesPanel({ userId, inProgressCourses, allCourses }: Props) {
+  const { resources, loading, refetch } = useResources();
+  const [activeType, setActiveType] = useState<ResourceType | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [showSubmit, setShowSubmit] = useState(false);
+
+  const inProgressIds = useMemo(
+    () => inProgressCourses.map((c) => c.course_id),
+    [inProgressCourses]
+  );
+
+  const filtered = useMemo(() => {
+    let list = resources;
+    if (activeType) list = list.filter((r) => r.resource_type === activeType);
+    if (selectedCourse) list = list.filter((r) => r.course_id === selectedCourse);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (r) => r.title.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [resources, activeType, selectedCourse, search]);
+
+  const suggested = useMemo(
+    () => filtered.filter((r) => inProgressIds.includes(r.course_id)),
+    [filtered, inProgressIds]
+  );
+
+  const rest = useMemo(
+    () => filtered.filter((r) => !inProgressIds.includes(r.course_id)),
+    [filtered, inProgressIds]
+  );
+
+  const coursesWithResources = useMemo(() => {
+    const ids = new Set(resources.map((r) => r.course_id));
+    return allCourses.filter((c) => ids.has(c.id));
+  }, [resources, allCourses]);
 
   return (
     <>
       <div className="es-topbar">
         <div className="es-topbar-left">
           <div className="es-topbar-title">Tài nguyên học tập</div>
-          <div className="es-topbar-sub">Gợi ý theo môn học & chương đang học · Nguồn: UIT + Internet</div>
+          <div className="es-topbar-sub">Nguồn: BHTCNPM · Gợi ý theo môn đang học</div>
         </div>
-        <div className="es-topbar-right">
+        <div className="es-topbar-right" style={{ display: "flex", gap: 8 }}>
           <input
             placeholder="Tìm kiếm tài nguyên..."
-            style={{ padding: "6px 12px", borderRadius: "var(--r-sm)", border: "1px solid var(--es-border)", fontFamily: "inherit", fontSize: 13, width: 220, outline: "none" }}
-            onFocus={(e) => (e.target.style.borderColor = "var(--blue)")}
-            onBlur={(e) => (e.target.style.borderColor = "var(--es-border)")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              padding: "6px 12px", borderRadius: "var(--r-sm)",
+              border: "1px solid var(--es-border)", fontFamily: "inherit",
+              fontSize: 13, width: 200, outline: "none",
+              background: "var(--white)", color: "var(--ink)",
+            }}
           />
+          <button className="es-btn es-btn-primary es-btn-sm" onClick={() => setShowSubmit(true)}>
+            + Đóng góp
+          </button>
         </div>
       </div>
 
       <div className="es-content">
-        <div className="es-alert-strip info" style={{ marginBottom: 16 }}>
-          <span>🤖</span>
-          <span className="es-alert-text">Gợi ý dựa trên: Bạn đang học <strong>CTDL – Chương 6 (Đồ thị)</strong> và cần cải thiện <strong>Đại số tuyến tính</strong></span>
+        {inProgressCourses.length > 0 && !selectedCourse && !search && (
+          <div className="es-alert-strip info" style={{ marginBottom: 16 }}>
+            <span>🤖</span>
+            <span className="es-alert-text">
+              Gợi ý dựa trên: Bạn đang học{" "}
+              <strong>
+                {inProgressCourses.slice(0, 3).map((c) => c.course?.name).join(", ")}
+                {inProgressCourses.length > 3 && ` và ${inProgressCourses.length - 3} môn khác`}
+              </strong>
+            </span>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
+          <div className="es-resource-filters">
+            {typeFilters.map((f) => (
+              <button
+                key={f.label}
+                className={`es-filter-btn${activeType === f.value ? " active" : ""}`}
+                onClick={() => setActiveType(f.value)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <CourseFilter courses={coursesWithResources} selected={selectedCourse} onChange={setSelectedCourse} />
         </div>
 
-        <div className="es-resource-filters">
-          {filters.map((f) => (
-            <button key={f} className={`es-filter-btn${activeFilter === f ? " active" : ""}`} onClick={() => setActiveFilter(f)}>{f}</button>
-          ))}
-        </div>
-
-        <div className="es-section-hdr" style={{ marginBottom: 10 }}>
-          <div className="es-section-title">⭐ Gợi ý cho bạn</div>
-          <span className="es-badge es-badge-blue">Dựa trên tiến độ học</span>
-        </div>
-        <div className="es-resource-grid" style={{ marginBottom: 20 }}>
-          {forYou.map((r) => <ResourceCard key={r.name} {...r} />)}
-        </div>
-
-        <div className="es-section-hdr" style={{ marginBottom: 10 }}>
-          <div className="es-section-title">⚠️ Hỗ trợ môn cần cải thiện</div>
-          <span className="es-badge es-badge-amber">Đại số tuyến tính</span>
-        </div>
-        <div className="es-resource-grid">
-          {weakAreas.map((r) => <ResourceCard key={r.name} {...r} />)}
-        </div>
+        {loading ? (
+          <div style={{ padding: 40, textAlign: "center", color: "var(--es-muted)" }}>
+            Đang tải tài nguyên...
+          </div>
+        ) : (
+          <>
+            {suggested.length > 0 && (
+              <ResourceList
+                resources={suggested}
+                title="⭐ Gợi ý cho bạn"
+                badge={<span className="es-badge es-badge-blue">Dựa trên tiến độ học</span>}
+              />
+            )}
+            <ResourceList
+              resources={rest.length > 0 ? rest : suggested.length === 0 ? filtered : rest}
+              title={suggested.length > 0 ? "📚 Tài nguyên khác" : "📚 Tất cả tài nguyên"}
+              emptyText="Không tìm thấy tài nguyên phù hợp."
+            />
+          </>
+        )}
       </div>
+
+      {showSubmit && (
+        <SubmitResourceModal
+          userId={userId}
+          courses={allCourses}
+          onClose={() => setShowSubmit(false)}
+          onSubmitted={refetch}
+        />
+      )}
     </>
   );
 }

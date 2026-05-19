@@ -674,3 +674,13 @@
   /* Topbar action buttons: icon-only mode */
   .es-topbar-right .es-btn-sm { padding: 5px 8px; }
 }
+
+/* ── ADMIN TABLE ── */
+.es-admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.es-admin-table th { text-align: left; padding: 8px 10px; font-weight: 600; color: var(--ink2); border-bottom: 2px solid var(--es-border); font-size: 12px; white-space: nowrap; }
+.es-admin-table td { padding: 8px 10px; border-bottom: 1px solid var(--es-border); color: var(--ink); }
+.es-admin-table tr:hover td { background: color-mix(in srgb, var(--blue) 4%, transparent); }
+
+/* ── FORM INPUT (shared) ── */
+.es-input { padding: 8px 12px; border-radius: var(--r-sm); border: 1px solid var(--es-border); font-family: inherit; font-size: 13px; outline: none; background: var(--white); color: var(--ink); width: 100%; }
+.es-input:focus { border-color: var(--blue); }
