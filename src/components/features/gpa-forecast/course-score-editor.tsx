@@ -60,12 +60,13 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
   }
 
   const partial = calculatePartialScore(course.course, parsedScores);
-  const requiredCKforB = calculateRequiredCK(course.course, parsedScores, 7.0);
-  const requiredCKforA = calculateRequiredCK(course.course, parsedScores, 8.5);
+  const ckEntered = parsedScores["Cuối kỳ"] !== null;
+  const requiredCKforB = ckEntered ? null : calculateRequiredCK(course.course, parsedScores, 7.0);
+  const requiredCKforA = ckEntered ? null : calculateRequiredCK(course.course, parsedScores, 8.5);
   const riskScore = getRiskScore({ ...course, component_scores: parsedScores });
   const riskBadge = getRiskBadge(riskScore, course.course.credits);
   const forecastBadge = getForecastBadge(requiredCKforB);
-  const isRisky = riskScore / (10 * course.course.credits) >= 0.5;
+  const isRisky = !ckEntered && riskScore / (10 * course.course.credits) >= 0.5;
 
   async function handleBlur() {
     setSaving(true);
