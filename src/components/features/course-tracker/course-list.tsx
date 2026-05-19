@@ -118,14 +118,15 @@ export default function CourseList({ userCourses, onEdit, onDelete, onAddClick }
                 </div>
 
                 {isEditing ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
                     <input
                       type="number"
                       min={0} max={10} step={0.1}
                       value={editing.score}
                       onChange={(e) => setEditing({ ...editing, score: e.target.value })}
+                      placeholder="Điểm"
                       style={{
-                        width: 64, padding: "4px 8px", border: "1.5px solid var(--blue)",
+                        width: 68, padding: "4px 8px", border: "1.5px solid var(--blue)",
                         borderRadius: "var(--r-sm)", fontSize: 13, fontFamily: "inherit",
                         outline: "none",
                       }}
@@ -137,25 +138,27 @@ export default function CourseList({ userCourses, onEdit, onDelete, onAddClick }
                       value={editing.semester}
                       onChange={(e) => setEditing({ ...editing, semester: e.target.value })}
                       style={{
-                        width: 110, padding: "4px 8px", border: "1.5px solid var(--es-border)",
+                        width: 120, padding: "4px 8px", border: "1.5px solid var(--es-border)",
                         borderRadius: "var(--r-sm)", fontSize: 12, fontFamily: "inherit",
                         outline: "none",
                       }}
                     />
-                    <button
-                      className="es-btn es-btn-primary es-btn-sm"
-                      onClick={() => handleSave(uc.id)}
-                      disabled={saving}
-                    >
-                      {saving ? "..." : "Lưu"}
-                    </button>
-                    <button
-                      className="es-btn-ghost"
-                      onClick={() => setEditing(null)}
-                      style={{ fontSize: 12 }}
-                    >
-                      Huỷ
-                    </button>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        className="es-btn es-btn-primary es-btn-sm"
+                        onClick={() => handleSave(uc.id)}
+                        disabled={saving}
+                      >
+                        {saving ? "..." : "Lưu"}
+                      </button>
+                      <button
+                        className="es-btn-ghost"
+                        onClick={() => setEditing(null)}
+                        style={{ fontSize: 12 }}
+                      >
+                        Huỷ
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

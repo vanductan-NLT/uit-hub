@@ -85,7 +85,7 @@ export default function CourseTimeline({ userCourses, suggestions }: CourseTimel
             label={label}
             chips={shown.map((uc) => (
               <Chip
-                key={uc.course_id}
+                key={uc.id}
                 label={uc.course_id}
                 title={`${uc.course.name} · ${uc.score ?? "—"}`}
                 style={chipStyle(uc.status, uc.score)}
@@ -101,7 +101,7 @@ export default function CourseTimeline({ userCourses, suggestions }: CourseTimel
           label="Chưa xác định"
           chips={unassigned.slice(0, CHIP_MAX).map((uc) => (
             <Chip
-              key={uc.course_id}
+              key={uc.id}
               label={uc.course_id}
               title={uc.course.name}
               style={chipStyle(uc.status, uc.score)}

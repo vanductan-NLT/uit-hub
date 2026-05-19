@@ -20,16 +20,23 @@ export const metadata: Metadata = {
   description: "Cá nhân hóa lộ trình học tập UIT",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi" className={`${jakarta.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
-      {/* Anti-flash: set theme before React hydration to prevent white flash */}
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();` }} />
-      </head>
-      <body>{children}</body>
+      <body>
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();` }}
+        />
+        {children}
+      </body>
       <Script src="https://www.googletagmanager.com/gtag/js?id=G-069BHYPWZ9" strategy="afterInteractive" />
       <Script id="gtag-init" strategy="afterInteractive">{`
         window.dataLayer = window.dataLayer || [];

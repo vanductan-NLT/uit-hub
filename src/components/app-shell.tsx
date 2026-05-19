@@ -35,6 +35,7 @@ function getDisplayName(email: string) {
 export default function AppShell({ userId, userEmail }: { userId: string; userEmail: string }) {
   const [active, setActive] = useState<Panel>("dashboard");
   const [showLogout, setShowLogout] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -43,15 +44,31 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
     router.push("/login");
   }
 
+  function navigate(panel: Panel) {
+    setActive(panel);
+    setSidebarOpen(false);
+  }
+
   const initials = getInitials(userEmail);
   const displayName = getDisplayName(userEmail);
   const mssv = displayName.match(/^\d+$/) ? displayName : displayName;
 
   return (
     <>
+      {/* Mobile: hamburger button (fixed, hidden on desktop via CSS) */}
+      <button className="es-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Mở menu">
+        ☰
+      </button>
+
+      {/* Mobile: sidebar backdrop */}
+      <div
+        className={`es-sidebar-overlay${sidebarOpen ? " open" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
       <div className="es-app">
         {/* Sidebar */}
-        <nav className="es-sidebar">
+        <nav className={`es-sidebar${sidebarOpen ? " open" : ""}`}>
           <div className="es-sidebar-top">
             <div className="es-brand">
               <img src="/uit-logo.png" alt="UIT" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
@@ -62,7 +79,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
             </div>
 
             <div className="es-nav-label">Tổng quan</div>
-            <button className={`es-nav-item${active === "dashboard" ? " active" : ""}`} onClick={() => setActive("dashboard")}>
+            <button className={`es-nav-item${active === "dashboard" ? " active" : ""}`} onClick={() => navigate("dashboard")}>
               <span className="es-nav-icon">🏠</span> Dashboard
             </button>
 
@@ -71,7 +88,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               <button
                 key={item.id}
                 className={`es-nav-item${active === item.id ? " active" : ""}`}
-                onClick={() => setActive(item.id)}
+                onClick={() => navigate(item.id)}
               >
                 <span className="es-nav-icon">{item.icon}</span>
                 {item.label}
@@ -82,7 +99,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
 
           <div
             className={`es-sidebar-user${active === "profile" ? " active" : ""}`}
-            onClick={() => setActive("profile")}
+            onClick={() => navigate("profile")}
             style={{ cursor: "pointer" }}
             title="Xem hồ sơ"
           >
@@ -105,9 +122,9 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
 
         {/* Main content */}
         <main className="es-main">
-          {active === "dashboard" && <DashboardPanel onNav={(p) => setActive(p as Panel)} />}
+          {active === "dashboard" && <DashboardPanel onNav={(p) => navigate(p as Panel)} />}
           {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} />}
-          {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => setActive(p as Panel)} />}
+          {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
           {active === "tracker" && <TrackerPanel />}
           {active === "exam" && <ExamPanel />}
           {active === "resources" && <ResourcesPanel />}

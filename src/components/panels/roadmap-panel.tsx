@@ -6,6 +6,7 @@ import GpaSummary from "@/components/features/course-tracker/gpa-summary";
 import CourseList from "@/components/features/course-tracker/course-list";
 import AddCourseModal from "@/components/features/course-tracker/add-course-modal";
 import ImportFromHtml from "@/components/features/course-tracker/import-from-html";
+import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
 import CourseSuggestions from "@/components/features/course-tracker/course-suggestions";
 import CourseTimeline from "@/components/features/course-tracker/course-timeline";
 import {
@@ -23,6 +24,8 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
   const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showDkhpImport, setShowDkhpImport] = useState(false);
+  const [showImportMenu, setShowImportMenu] = useState(false);
   const [activeTab, setActiveTab] = useState<"list" | "timeline">("list");
 
   const takenIds = useMemo(() => buildTakenIds(userCourses), [userCourses]);
@@ -79,9 +82,44 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
           {!loading && (
             <span className="es-badge es-badge-green">✓ {passedCredits}/131 TC</span>
           )}
-          <button className="es-btn es-btn-outline es-btn-sm" onClick={() => setShowImport(true)}>
-            📥 Import từ UIT
-          </button>
+          {/* Import dropdown */}
+          <div style={{ position: "relative" }}>
+            <button
+              className="es-btn es-btn-outline es-btn-sm"
+              onClick={() => setShowImportMenu((v) => !v)}
+            >
+              ↓ Import
+            </button>
+            {showImportMenu && (
+              <>
+                <div
+                  style={{ position: "fixed", inset: 0, zIndex: 49 }}
+                  onClick={() => setShowImportMenu(false)}
+                />
+                <div style={{
+                  position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 50,
+                  background: "var(--white)", border: "1px solid var(--es-border)",
+                  borderRadius: "var(--r)", boxShadow: "0 4px 16px rgba(0,0,0,.1)",
+                  minWidth: 210, overflow: "hidden",
+                }}>
+                  <button
+                    style={{ display: "block", width: "100%", padding: "11px 14px", textAlign: "left", fontSize: 13, cursor: "pointer", background: "none", border: "none", fontFamily: "inherit", color: "var(--ink)", borderBottom: "1px solid var(--es-border)" }}
+                    onClick={() => { setShowDkhpImport(true); setShowImportMenu(false); }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>📋 Lịch học kỳ này</div>
+                    <div style={{ fontSize: 11, color: "var(--es-muted)" }}>Từ trang ĐKHP · student.uit.edu.vn</div>
+                  </button>
+                  <button
+                    style={{ display: "block", width: "100%", padding: "11px 14px", textAlign: "left", fontSize: 13, cursor: "pointer", background: "none", border: "none", fontFamily: "inherit", color: "var(--ink)" }}
+                    onClick={() => { setShowImport(true); setShowImportMenu(false); }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>📊 Bảng điểm lịch sử</div>
+                    <div style={{ fontSize: 11, color: "var(--es-muted)" }}>Từ DAA · daa.uit.edu.vn</div>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <button className="es-btn es-btn-primary es-btn-sm" onClick={() => setShowModal(true)}>
             + Thêm môn
           </button>
@@ -95,20 +133,29 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
           </div>
         ) : (
           <>
-            {/* Tab bar */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-              <button
-                className={`es-filter-btn${activeTab === "list" ? " active" : ""}`}
-                onClick={() => setActiveTab("list")}
-              >
-                📋 Danh sách
-              </button>
-              <button
-                className={`es-filter-btn${activeTab === "timeline" ? " active" : ""}`}
-                onClick={() => setActiveTab("timeline")}
-              >
-                🗓 Lộ trình
-              </button>
+            {/* Tab bar — Google Material underline style */}
+            <div style={{ display: "flex", borderBottom: "1px solid var(--es-border)", marginBottom: 20 }}>
+              {(["list", "timeline"] as const).map((tab) => {
+                const label = tab === "list" ? "Danh sách" : "Lộ trình";
+                const isActive = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      padding: "10px 20px", fontSize: 14,
+                      fontWeight: isActive ? 700 : 500,
+                      color: isActive ? "var(--blue)" : "var(--es-muted)",
+                      background: "none", border: "none", cursor: "pointer",
+                      borderBottom: `2px solid ${isActive ? "var(--blue)" : "transparent"}`,
+                      marginBottom: -1, fontFamily: "inherit",
+                      transition: "color 0.15s, border-color 0.15s",
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
 
             {activeTab === "list" ? (
@@ -185,6 +232,15 @@ export default function RoadmapPanel({ userId, userEmail }: RoadmapPanelProps) {
           allCourses={allCourses}
           onSuccess={refetch}
           onClose={() => setShowImport(false)}
+        />
+      )}
+
+      {showDkhpImport && (
+        <ImportFromDkhp
+          allCourses={allCourses}
+          onAdd={addCourse}
+          onSuccess={refetch}
+          onClose={() => setShowDkhpImport(false)}
         />
       )}
     </>

@@ -61,26 +61,32 @@ export default function CourseSuggestions({ suggestions }: CourseSuggestionsProp
         </div>
       ) : (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {visible.map((c) => (
-              <div
-                key={c.id}
-                title={c.name}
-                style={{
-                  padding: "8px 10px", borderRadius: "var(--r-sm)",
-                  border: "1px solid var(--es-border)", background: "var(--bg)",
-                  cursor: "default",
-                }}
-              >
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--blue)", fontFamily: "var(--font-mono-var), monospace", marginBottom: 2 }}>
-                  {c.id}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {visible.map((c) => {
+              const typeLabel = c.course_type === "required" ? "Bắt buộc" : c.course_type === "general" ? "Đại cương" : "Tự chọn";
+              return (
+                <div
+                  key={c.id}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 10px", borderRadius: "var(--r-sm)",
+                    border: "1px solid var(--es-border)", background: "var(--bg)",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {c.name}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--es-muted)", marginTop: 2, fontFamily: "var(--font-mono-var), monospace" }}>
+                      {c.id} · {c.credits}TC
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 99, background: "var(--es-border)", color: "var(--ink2)", flexShrink: 0, whiteSpace: "nowrap" }}>
+                    {typeLabel}
+                  </span>
                 </div>
-                <div style={{ fontSize: 12, color: "var(--ink)", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
-                  {c.name}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--es-muted)", marginTop: 4 }}>{c.credits}TC</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {!showAll && overflow > 0 && (
