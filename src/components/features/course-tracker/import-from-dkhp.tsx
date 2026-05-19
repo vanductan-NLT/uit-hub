@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { Course } from "@/types/database";
 import { parseUitDkhp, type DkhpCourse, type DkhpParseResult } from "@/lib/parsers/uit-dkhp-parser";
 import { insertCourseAdmin } from "@/lib/supabase/course-admin-actions";
+import { getCourseComponents } from "@/lib/data/course-weight-registry";
 import type { UpsertUserCourseInput } from "@/lib/supabase/courses-api";
 
 interface Props {
@@ -69,7 +70,8 @@ export default function ImportFromDkhp({ allCourses, onAdd, onSuccess, onClose }
       try {
         // Auto-create unknown courses with default components before importing
         if (!knownIds.has(c.course_id)) {
-          await insertCourseAdmin({ id: c.course_id, name: c.course_name, credits: c.credits });
+          const components = getCourseComponents(c.course_id) ?? undefined;
+          await insertCourseAdmin({ id: c.course_id, name: c.course_name, credits: c.credits, components });
           created++;
         }
         await onAdd({
@@ -108,7 +110,7 @@ export default function ImportFromDkhp({ allCourses, onAdd, onSuccess, onClose }
           )}
           {createdCount > 0 && (
             <div style={{ fontSize: 12, color: "var(--es-muted)", marginBottom: 20 }}>
-              {createdCount} môn mới đã được thêm vào hệ thống (điểm thành phần mặc định: Cuối kỳ 100%)
+              {createdCount} môn mới đã được thêm vào hệ thống
             </div>
           )}
           <button className="es-btn es-btn-primary" onClick={onClose}>Đóng</button>
@@ -138,7 +140,7 @@ export default function ImportFromDkhp({ allCourses, onAdd, onSuccess, onClose }
           {unknown.length > 0 && (
             <div className="es-alert-strip warn" style={{ marginBottom: 12 }}>
               <span>ℹ️</span>
-              <span>{unknown.length} môn chưa có trong hệ thống — sẽ được tạo tự động khi import (điểm thành phần mặc định: Cuối kỳ 100%)</span>
+              <span>{unknown.length} môn chưa có trong hệ thống — sẽ được tạo tự động khi import</span>
             </div>
           )}
 

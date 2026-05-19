@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import DashboardPanel from "@/components/panels/dashboard-panel";
@@ -11,13 +11,15 @@ import ExamPanel from "@/components/panels/exam-panel";
 import ResourcesPanel from "@/components/panels/resources-panel";
 import ProfilePanel from "@/components/panels/profile-panel";
 import ThemeToggle from "@/components/ui/theme-toggle";
+import { useCourses } from "@/hooks/use-courses";
+import { calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
 
 type Panel = "dashboard" | "roadmap" | "gpa" | "tracker" | "exam" | "resources" | "profile";
 
 const navItems: { id: Panel; icon: string; label: string; badge?: string }[] = [
   { id: "dashboard", icon: "🏠", label: "Dashboard" },
   { id: "roadmap", icon: "🗺️", label: "Lộ trình môn học" },
-  { id: "gpa", icon: "📈", label: "Dự báo GPA", badge: "!" },
+  { id: "gpa", icon: "📈", label: "Dự báo GPA" },
   { id: "tracker", icon: "✅", label: "Tracker tiến độ" },
   { id: "exam", icon: "📅", label: "Kế hoạch ôn thi", badge: "3" },
   { id: "resources", icon: "📚", label: "Tài nguyên học tập" },
@@ -38,6 +40,19 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  const { userCourses, loading: coursesLoading, gpa4, passedCredits } = useCourses(userId);
+  const inProgressCourses = useMemo(() => userCourses.filter((c) => c.status === "in_progress"), [userCourses]);
+  const completedCourses = useMemo(() => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"), [userCourses]);
+  const riskyCount = useMemo(
+    () => inProgressCourses.filter((c) => {
+      const scores = c.component_scores ?? {};
+      const ck = calculateRequiredCK(c.course, scores, 7.0);
+      const partial = calculatePartialScore(c.course, scores);
+      return (ck !== null && ck > 8.5) || (partial !== null && partial < 5.5);
+    }).length,
+    [inProgressCourses]
+  );
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -92,7 +107,10 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               >
                 <span className="es-nav-icon">{item.icon}</span>
                 {item.label}
-                {item.badge && <span className="es-nav-badge">{item.badge}</span>}
+                {item.id === "gpa"
+                  ? riskyCount > 0 && <span className="es-nav-badge">{riskyCount}</span>
+                  : item.badge && <span className="es-nav-badge">{item.badge}</span>
+                }
               </button>
             ))}
           </div>
@@ -122,7 +140,17 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
 
         {/* Main content */}
         <main className="es-main">
-          {active === "dashboard" && <DashboardPanel onNav={(p) => navigate(p as Panel)} />}
+          {active === "dashboard" && (
+            <DashboardPanel
+              onNav={(p) => navigate(p as Panel)}
+              userEmail={userEmail}
+              loading={coursesLoading}
+              gpa4={gpa4}
+              passedCredits={passedCredits}
+              inProgressCourses={inProgressCourses}
+              completedCourses={completedCourses}
+            />
+          )}
           {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
           {active === "tracker" && <TrackerPanel />}
