@@ -136,6 +136,14 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
                 }
               </button>
             ))}
+          {userProfile?.role === "admin" && (
+            <>
+              <div className="es-nav-label" style={{ marginTop: 12 }}>Quản trị</div>
+              <a href="/admin" className="es-nav-item" style={{ textDecoration: "none" }}>
+                <span className="es-nav-icon">🛡️</span> Admin Panel
+              </a>
+            </>
+          )}
           </div>
 
           <div
@@ -179,7 +187,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
           {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
           {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} />}
-          {active === "resources" && <ResourcesPanel />}
+          {active === "resources" && <ResourcesPanel userId={userId} inProgressCourses={inProgressCourses} allCourses={allCourses} />}
           {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} />}
         </main>
       </div>

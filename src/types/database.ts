@@ -41,6 +41,7 @@ export interface UserProfile {
   intake_year: number | null;
   target_graduation_year: number | null;
   total_credits_required: number;
+  role: "student" | "admin";
   created_at: string;
   updated_at: string;
 }
@@ -89,4 +90,29 @@ export interface ExamScheduleWithCourse extends ExamSchedule {
 
 export interface StudySessionWithExam extends StudySession {
   exam: ExamScheduleWithCourse;
+}
+
+// ── Module 4: Study Resources ───────────────────────────
+
+export type ResourceType = "video" | "slide" | "exercise" | "exam";
+export type ResourceStatus = "published" | "pending" | "rejected";
+
+export interface StudyResource {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string | null;
+  url: string;
+  resource_type: ResourceType;
+  source: string | null;
+  status: ResourceStatus;
+  submitted_by: string | null;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+  course?: Course;
+}
+
+export interface StudyResourceWithCourse extends StudyResource {
+  course: Course;
 }

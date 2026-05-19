@@ -159,6 +159,11 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
               {loading ? "…" : `${completedCourses.length} môn đã hoàn thành`}
             </div>
           </div>
+          <div className="es-quick-action" onClick={() => onNav("resources")}>
+            <div className="es-quick-action-icon">📚</div>
+            <div className="es-quick-action-name">Tài nguyên học tập</div>
+            <div className="es-quick-action-desc">Slide, đề thi, bài tập theo môn</div>
+          </div>
         </div>
       </div>
     </>

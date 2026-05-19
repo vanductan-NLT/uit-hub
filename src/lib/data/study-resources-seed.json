@@ -1,0 +1,122 @@
+[
+  {
+    "course_id": "IT001",
+    "title": "Tài liệu Nhập môn lập trình (SVUIT)",
+    "description": "Folder Drive tổng hợp slide, đề thi, tài liệu tham khảo môn IT001 do SVUIT biên soạn.",
+    "url": "https://drive.google.com/drive/folders/1QzBwFVnh_SvDCNp6QeH8Sv_L_ZjSY7ve?usp=sharing",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "IT002",
+    "title": "Tài liệu Lập trình hướng đối tượng (SVUIT)",
+    "description": "Folder Drive tổng hợp slide OOP, đề thi, bài tập lớn IT002 do SVUIT biên soạn.",
+    "url": "https://drive.google.com/drive/folders/1dfvlPL4aFIBKbovS5yHHGC8WMqokoxnl?usp=sharing",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "IT002",
+    "title": "Bài tập lớn OOP – IT002 (SVUIT)",
+    "description": "Tổng hợp bài tập lớn OOP các lớp, tham khảo cấu trúc project và hướng làm bài.",
+    "url": "https://drive.google.com/drive/folders/1KBYp1CeA4hVOd4Ddfoj97pPHlEnWM0JF?usp=sharing",
+    "resource_type": "exercise",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "IT003",
+    "title": "Tài liệu Cấu trúc dữ liệu và giải thuật (SVUIT)",
+    "description": "Folder Drive tổng hợp slide CTDL&GT, đề thi, tài liệu tham khảo IT003.",
+    "url": "https://drive.google.com/drive/folders/1lbJ-RoobA4siIV2Cq-v64ddAmGK4XCBP?usp=sharing",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "IT004",
+    "title": "Tài liệu Cơ sở dữ liệu (SVUIT)",
+    "description": "Folder Drive tổng hợp slide CSDL, đề thi, bài tập SQL IT004.",
+    "url": "https://drive.google.com/drive/folders/1lKEm-LJrxY0QrZvvxx0gpiCslhTEv3aJ?usp=sharing",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "IT005",
+    "title": "Tài liệu Nhập môn Mạng máy tính (SVUIT)",
+    "description": "Folder Drive tổng hợp tài liệu mạng máy tính IT005: slide, đề thi, lab.",
+    "url": "https://drive.google.com/drive/folders/15npxooeDWdVEpDeeGuqFoz957aFsEZ7V?usp=drive_link",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "IT006",
+    "title": "Tài liệu Kiến trúc máy tính (SVUIT)",
+    "description": "Folder Drive tổng hợp tài liệu kiến trúc máy tính IT006: slide, đề thi.",
+    "url": "https://drive.google.com/drive/folders/10uq4gyAYqqRAmOgljYOS1nTXuMqoztob",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "IT007",
+    "title": "Tài liệu Hệ điều hành (SVUIT)",
+    "description": "Folder Drive tổng hợp tài liệu HĐH IT007: slide, đề thi, lab thực hành.",
+    "url": "https://drive.google.com/drive/folders/1Fv5QgPX6cuuvXp40pAEqgwweRLpMlHOM?usp=sharing",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "MA003",
+    "title": "Tài liệu Đại số tuyến tính (SVUIT)",
+    "description": "Folder Drive tổng hợp slide ĐSTT, đề thi các năm, tài liệu ôn tập MA003.",
+    "url": "https://drive.google.com/drive/folders/1qNEgT43jABoGXc4_jXfiboyLK7FYqasH?usp=drive_link",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "MA004",
+    "title": "Tài liệu Cấu trúc rời rạc (SVUIT)",
+    "description": "Folder Drive tổng hợp tài liệu CTRR MA004: slide, đề thi, bài tập.",
+    "url": "https://drive.google.com/drive/folders/1klMvU9T4sjxro-maB3MatOerBeozMoyP?usp=sharing",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "MA005",
+    "title": "Tài liệu Xác suất thống kê (SVUIT)",
+    "description": "Folder Drive tổng hợp tài liệu XSTK MA005: slide, đề thi, công thức.",
+    "url": "https://drive.google.com/drive/folders/1yQLsDqyI0H7SWSm7VtCrH-q6gVZx2C9-?usp=drive_link",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "MA006",
+    "title": "Tài liệu Giải tích (SVUIT)",
+    "description": "Folder Drive tổng hợp tài liệu Giải tích MA006: slide, đề thi, bài tập.",
+    "url": "https://drive.google.com/drive/folders/1Fg1KRbawUe6emuC6D5tR-GmTC0b4WdkV?usp=drive_link",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "CS105",
+    "title": "Tài liệu Nhập môn Khoa học máy tính (SVUIT)",
+    "description": "Folder Drive tổng hợp slide, đề thi, tài liệu tham khảo môn CS105 do SVUIT biên soạn.",
+    "url": "https://drive.google.com/drive/folders/1RPZQTj0K5RGdA7Sv3QAj3uO6AyiLQ3xq?usp=sharing",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "SE104",
+    "title": "Tài liệu Nhập môn Công nghệ phần mềm (SVUIT)",
+    "description": "Folder Drive tổng hợp slide SE104, đề thi, bài tập nhóm môn Nhập môn CNPM.",
+    "url": "https://drive.google.com/drive/folders/1bXZ2PjKs_RZkqAPtkgkdVq43hvG-Qx-c?usp=drive_link",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  },
+  {
+    "course_id": "IT012",
+    "title": "Tài liệu Phân tích và Thiết kế hệ thống (SVUIT)",
+    "description": "Folder Drive tổng hợp tài liệu PT&TKHT IT012: slide, đề thi, tài liệu tham khảo.",
+    "url": "https://drive.google.com/drive/folders/1FZ52KfxIUuOPXF2mU5Rb3po0Lzps-LAp?usp=drive_link",
+    "resource_type": "slide",
+    "source": "SVUIT"
+  }
+]
