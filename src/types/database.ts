@@ -49,3 +49,44 @@ export interface UserProfile {
 export interface UserCourseWithCourse extends UserCourse {
   course: Course;
 }
+
+// ── Module 3: Exam Schedule ──────────────────────────────
+
+export interface ExamSchedule {
+  id: string;
+  user_id: string;
+  course_id: string;
+  class_code: string | null;
+  exam_period: "GK" | "CK";
+  semester: string;
+  academic_year: string;
+  exam_date: string;
+  start_time: string | null;
+  exam_time_raw: string | null;
+  room: string | null;
+  exam_type: string | null;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+  course?: Course;
+}
+
+export interface StudySession {
+  id: string;
+  user_id: string;
+  exam_id: string;
+  session_date: string;
+  is_completed: boolean;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  exam?: ExamSchedule;
+}
+
+export interface ExamScheduleWithCourse extends ExamSchedule {
+  course: Course;
+}
+
+export interface StudySessionWithExam extends StudySession {
+  exam: ExamScheduleWithCourse;
+}

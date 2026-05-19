@@ -13,6 +13,7 @@ import ThemeToggle from "@/components/ui/theme-toggle";
 import { useCourses } from "@/hooks/use-courses";
 import { calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
 import { getUserProfile } from "@/lib/supabase/courses-api";
+import { getNearestExamDays } from "@/lib/supabase/exam-api";
 import type { UserProfile } from "@/types/database";
 
 type Panel = "dashboard" | "roadmap" | "gpa" | "exam" | "resources" | "profile";
@@ -45,9 +46,17 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
   useEffect(() => { getUserProfile(userId).then(setUserProfile); }, [userId]);
   const totalCreditsRequired = userProfile?.total_credits_required ?? 131;
 
-  const { userCourses, loading: coursesLoading, gpa4, passedCredits } = useCourses(userId);
+  const { userCourses, allCourses, loading: coursesLoading, gpa4, passedCredits } = useCourses(userId);
   const inProgressCourses = useMemo(() => userCourses.filter((c) => c.status === "in_progress"), [userCourses]);
   const completedCourses = useMemo(() => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"), [userCourses]);
+
+  const [nearestExamDays, setNearestExamDays] = useState<number | null>(null);
+  useEffect(() => { getNearestExamDays(userId).then(setNearestExamDays); }, [userId]);
+
+  const currentSemester = useMemo(() => {
+    const ip = inProgressCourses[0];
+    return ip?.semester ?? null;
+  }, [inProgressCourses]);
   const riskyCount = useMemo(
     () => inProgressCourses.filter((c) => {
       const scores = c.component_scores ?? {};
@@ -121,6 +130,8 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
                 {item.label}
                 {item.id === "gpa"
                   ? riskyCount > 0 && <span className="es-nav-badge">{riskyCount}</span>
+                  : item.id === "exam"
+                  ? nearestExamDays !== null && nearestExamDays >= 0 && <span className="es-nav-badge">{nearestExamDays}d</span>
                   : item.badge && <span className="es-nav-badge">{item.badge}</span>
                 }
               </button>
@@ -162,11 +173,12 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               totalCreditsRequired={totalCreditsRequired}
               inProgressCourses={inProgressCourses}
               completedCourses={completedCourses}
+              nearestExamDays={nearestExamDays}
             />
           )}
           {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
-          {active === "exam" && <ExamPanel />}
+          {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} />}
           {active === "resources" && <ResourcesPanel />}
           {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} />}
         </main>

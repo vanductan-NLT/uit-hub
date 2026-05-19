@@ -13,6 +13,7 @@ interface Props {
   totalCreditsRequired: number;
   inProgressCourses: UserCourseWithCourse[];
   completedCourses: UserCourseWithCourse[];
+  nearestExamDays: number | null;
 }
 
 function gradeLabel(gpa4: number) {
@@ -23,7 +24,7 @@ function gradeLabel(gpa4: number) {
   return gpa4 > 0 ? "Yếu" : "—";
 }
 
-export default function DashboardPanel({ onNav, displayName, loading, gpa4, passedCredits, totalCreditsRequired, inProgressCourses, completedCourses }: Props) {
+export default function DashboardPanel({ onNav, displayName, loading, gpa4, passedCredits, totalCreditsRequired, inProgressCourses, completedCourses, nearestExamDays }: Props) {
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Chào buổi sáng" : hour < 18 ? "Chào buổi chiều" : "Chào buổi tối";
@@ -145,7 +146,11 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
           <div className="es-quick-action" onClick={() => onNav("exam")}>
             <div className="es-quick-action-icon">📅</div>
             <div className="es-quick-action-name">Lịch ôn thi</div>
-            <div className="es-quick-action-desc">Xem kế hoạch ôn thi</div>
+            <div className="es-quick-action-desc">
+              {nearestExamDays !== null && nearestExamDays >= 0
+                ? `Thi gần nhất: ${nearestExamDays} ngày`
+                : "Xem kế hoạch ôn thi"}
+            </div>
           </div>
           <div className="es-quick-action" onClick={() => onNav("roadmap")}>
             <div className="es-quick-action-icon">🗺️</div>
