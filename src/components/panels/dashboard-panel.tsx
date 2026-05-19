@@ -130,11 +130,6 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
           <div className="es-section-title">Hành động nhanh</div>
         </div>
         <div className="es-quick-actions">
-          <div className="es-quick-action" onClick={() => onNav("tracker")}>
-            <div className="es-quick-action-icon">✅</div>
-            <div className="es-quick-action-name">Tick chương hôm nay</div>
-            <div className="es-quick-action-desc">Cập nhật tiến độ học</div>
-          </div>
           <div className="es-quick-action" onClick={() => onNav("gpa")}>
             <div className="es-quick-action-icon">🔮</div>
             <div className="es-quick-action-name">Kiểm tra dự báo</div>
