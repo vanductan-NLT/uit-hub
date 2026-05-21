@@ -38,14 +38,6 @@ export default function StarfieldCanvas() {
     // Disable animation for users who prefer reduced motion
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      stars = makeStars(); // re-scatter on resize so stars fill new dimensions
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
     // ── Build star field ──
     const makeStars = (): Star[] =>
       Array.from({ length: 320 }, () => ({
@@ -63,6 +55,14 @@ export default function StarfieldCanvas() {
       }));
 
     let stars = makeStars();
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      stars = makeStars(); // re-scatter on resize so stars fill new dimensions
+    };
+    resize();
+    window.addEventListener("resize", resize);
 
     // ── Shooting stars pool (3 slots) ──
     const shooters: ShootingStar[] = Array.from({ length: 3 }, (_, i) => ({

@@ -25,7 +25,7 @@ const FEATURES = [
     emoji: "🔥",
     badge: "STREAK",
     title: "Tracker tiến độ",
-    punchline: "Streak học tập mỗi ngày",
+    punchline: "Theo dõi từng chương syllabus",
     desc: "Theo dõi từng chương theo syllabus UIT — giữ lửa học không tắt.",
     color: "#34D399",
     shadowColor: "rgba(5,150,105,0.55)",
