@@ -491,6 +491,260 @@
 .es-resource-meta { font-size: 11px; color: var(--es-muted); font-family: var(--font-mono-var), 'JetBrains Mono', monospace; }
 
 /* ── LOGIN ── */
+/* ── GALACTIC LOGIN BACKGROUND ── */
+.es-galactic-bg {
+  position: absolute; inset: 0; z-index: 1;
+  background: radial-gradient(ellipse at 20% 50%, rgba(37, 99, 235, 0.2) 0%, transparent 40%),
+              radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+              linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+  overflow: hidden;
+}
+
+.es-galactic-stars {
+  position: absolute; inset: 0; z-index: 2;
+  background-image: 
+    radial-gradient(2px 2px at 10px 20px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 30px 60px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 50px 80px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 70px 40px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 90px 10px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 15px 100px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 80px 70px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 40px 30px, rgba(255, 255, 255, 0.7), transparent);
+  background-size: 200px 200px;
+  background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 40px 40px, 20px 50px, 200px 0, 100px 150px;
+  animation: twinkling 5s ease-in-out infinite, panStars 60s linear infinite;
+}
+
+.es-stairs-container {
+  position: absolute; inset: 0; z-index: 3;
+  pointer-events: none;
+}
+
+.es-constellations {
+  position: absolute; inset: 0; z-index: 2.5;
+  pointer-events: none;
+  animation: panStars 60s linear infinite;
+}
+
+.es-constellation-group {
+  transform-origin: center;
+  animation-timing-function: ease-in-out;
+}
+
+.es-dipper {
+  animation: constellationRotate1 15s ease-in-out infinite, constellationFloat1 8s ease-in-out infinite;
+  transform-origin: 310px 115px;
+}
+
+.es-orion {
+  animation: constellationRotate2 20s ease-in-out infinite, constellationFloat2 10s ease-in-out infinite;
+  transform-origin: 1625px 315px;
+}
+
+.es-triangle {
+  animation: constellationRotate3 12s ease-in-out infinite, constellationFloat3 7s ease-in-out infinite;
+  transform-origin: 383px 817px;
+}
+
+@keyframes constellationRotate1 {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.05); }
+}
+
+@keyframes constellationRotate2 {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-10deg) scale(1.03); }
+}
+
+@keyframes constellationRotate3 {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(20deg) scale(1.08); }
+}
+
+@keyframes constellationFloat1 {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes constellationFloat2 {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes constellationFloat3 {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.es-stair {
+  position: absolute;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(37, 99, 235, 0.7) 100%);
+  filter: drop-shadow(0 0 20px rgba(37, 99, 235, 0.6)) 
+          drop-shadow(-2px 0 4px rgba(37, 99, 235, 0.8))
+          drop-shadow(2px 0 4px rgba(100, 150, 255, 0.6));
+  border-radius: 4px;
+}
+
+.es-stair-1 {
+  width: 40px; height: 40px;
+  animation: stairFloat1 8s ease-in-out infinite;
+}
+
+.es-stair-2 {
+  width: 50px; height: 50px;
+  animation: stairFloat2 10s ease-in-out infinite;
+}
+
+.es-stair-3 {
+  width: 35px; height: 35px;
+  animation: stairFloat3 9s ease-in-out infinite;
+}
+
+.es-stair-4 {
+  width: 45px; height: 45px;
+  animation: stairFloat4 11s ease-in-out infinite;
+}
+
+.es-stair-5 {
+  width: 38px; height: 38px;
+  animation: stairFloat5 12s ease-in-out infinite;
+}
+
+@keyframes twinkling {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes panStars {
+  0% { background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 40px 40px, 20px 50px, 200px 0, 100px 150px; }
+  100% { background-position: -200px 0, -160px 60px, -70px 270px, -130px 100px, -160px 40px, -180px 50px, 0 0, -100px 150px; }
+}
+
+@keyframes stairFloat1 {
+  0%, 100% { transform: translate(10%, 10%) rotate(0deg); opacity: 0.3; }
+  50% { transform: translate(15%, 25%) rotate(15deg); opacity: 0.8; }
+}
+
+@keyframes stairFloat2 {
+  0%, 100% { transform: translate(80%, 60%) rotate(0deg); opacity: 0.4; }
+  50% { transform: translate(85%, 40%) rotate(-20deg); opacity: 0.7; }
+}
+
+@keyframes stairFloat3 {
+  0%, 100% { transform: translate(20%, 70%) rotate(0deg); opacity: 0.5; }
+  50% { transform: translate(25%, 55%) rotate(25deg); opacity: 0.8; }
+}
+
+@keyframes stairFloat4 {
+  0%, 100% { transform: translate(75%, 20%) rotate(0deg); opacity: 0.3; }
+  50% { transform: translate(70%, 35%) rotate(-15deg); opacity: 0.75; }
+}
+
+@keyframes stairFloat5 {
+  0%, 100% { transform: translate(40%, 80%) rotate(0deg); opacity: 0.4; }
+  50% { transform: translate(45%, 65%) rotate(20deg); opacity: 0.7; }
+}
+
+/* ── CENTERED LOGIN (UPDATED) ── */
+.es-login-centered {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 20px; gap: 48px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 20% 50%, rgba(37, 99, 235, 0.2) 0%, transparent 40%),
+              radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+              linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+}
+
+.es-login-content {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; gap: 48px;
+}
+
+.es-login-centered-logo {
+  display: flex; align-items: center; gap: 16px;
+  animation: slideDown 0.6s ease-out;
+}
+
+.es-login-centered-logo img {
+  width: 72px; height: 72px; object-fit: contain;
+}
+
+.es-login-centered-brand {
+  font-size: 44px; font-weight: 800; color: #fff; letter-spacing: -1px; text-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
+}
+
+.es-login-centered-brand-sub {
+  font-size: 14px; color: rgba(255, 255, 255, 0.7); font-family: var(--font-mono-var), 'JetBrains Mono', monospace; margin-top: 4px; letter-spacing: 0.5px;
+}
+
+.es-login-centered-form {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 40px 48px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 1px rgba(37, 99, 235, 0.4);
+  animation: slideUp 0.6s ease-out;
+}
+
+.es-login-centered-heading {
+  font-size: 24px; font-weight: 700; color: #fff; letter-spacing: -.5px; margin-bottom: 8px; text-align: center;
+}
+
+.es-login-centered-sub {
+  font-size: 14px; color: rgba(255, 255, 255, 0.7); margin-bottom: 28px; text-align: center;
+}
+
+.es-login-centered-tagline {
+  text-align: center;
+  animation: fadeIn 0.8s ease-out 0.2s both;
+  max-width: 420px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.es-login-centered-tagline-h {
+  font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.5px; margin-bottom: 8px; text-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
+}
+
+.es-login-centered-tagline-sub {
+  font-size: 14px; color: rgba(255, 255, 255, 0.75);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── OLD LOGIN (DEPRECATED) ── */
 .es-login-screen {
   position: fixed; inset: 0; z-index: 1000;
   background: #F4F6FB; display: flex; align-items: center; justify-content: center;
