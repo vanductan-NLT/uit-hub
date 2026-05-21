@@ -41,6 +41,7 @@ export default function StarfieldCanvas() {
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      stars = makeStars(); // re-scatter on resize so stars fill new dimensions
     };
     resize();
     window.addEventListener("resize", resize);
@@ -152,9 +153,6 @@ export default function StarfieldCanvas() {
         ctx.fill();
       }
     };
-
-    // Re-scatter stars on resize so they fill the new dimensions
-    window.addEventListener("resize", () => { stars = makeStars(); });
 
     draw();
     return () => {
