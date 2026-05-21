@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginForm() {
@@ -31,14 +31,29 @@ export default function LoginForm() {
 
   return (
     <div className="es-login-centered">
-      {/* Logo */}
-      <div className="es-login-centered-logo">
-        <img src="/uit-logo.png" alt="UIT" />
-        <div>
-          <div className="es-login-centered-brand">UIT Hub</div>
-          <div className="es-login-centered-brand-sub">UIT · 2024–2025</div>
+      {/* Animated galactic background with stairs */}
+      <div className="es-galactic-bg">
+        <div className="es-galactic-stars"></div>
+        <div className="es-stairs-container">
+          <div className="es-stair es-stair-1"></div>
+          <div className="es-stair es-stair-2"></div>
+          <div className="es-stair es-stair-3"></div>
+          <div className="es-stair es-stair-4"></div>
+          <div className="es-stair es-stair-5"></div>
         </div>
       </div>
+
+      {/* Content wrapper */}
+      <div className="es-login-content">
+        {/* Logo */}
+        <div className="es-login-centered-logo">
+          <img src="/uit-logo.png" alt="UIT" />
+          <div>
+            <div className="es-login-centered-brand">UIT Hub</div>
+            <div className="es-login-centered-brand-sub">UIT · 2024–2025</div>
+          </div>
+        </div>
+
 
       {/* Form Container */}
       <div className="es-login-centered-form">
@@ -74,6 +89,7 @@ export default function LoginForm() {
         <div className="es-login-centered-tagline-sub">
           Dự báo GPA · Tracker tiến độ · Kế hoạch ôn thi · Tài nguyên học tập
         </div>
+      </div>
       </div>
     </div>
   );
