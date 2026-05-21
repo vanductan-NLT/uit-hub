@@ -525,6 +525,56 @@
   animation: panStars 60s linear infinite;
 }
 
+.es-constellation-group {
+  transform-origin: center;
+  animation-timing-function: ease-in-out;
+}
+
+.es-dipper {
+  animation: constellationRotate1 15s ease-in-out infinite, constellationFloat1 8s ease-in-out infinite;
+  transform-origin: 310px 115px;
+}
+
+.es-orion {
+  animation: constellationRotate2 20s ease-in-out infinite, constellationFloat2 10s ease-in-out infinite;
+  transform-origin: 1625px 315px;
+}
+
+.es-triangle {
+  animation: constellationRotate3 12s ease-in-out infinite, constellationFloat3 7s ease-in-out infinite;
+  transform-origin: 383px 817px;
+}
+
+@keyframes constellationRotate1 {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(15deg) scale(1.05); }
+}
+
+@keyframes constellationRotate2 {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(-10deg) scale(1.03); }
+}
+
+@keyframes constellationRotate3 {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(20deg) scale(1.08); }
+}
+
+@keyframes constellationFloat1 {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes constellationFloat2 {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes constellationFloat3 {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 .es-stair {
   position: absolute;
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(37, 99, 235, 0.7) 100%);

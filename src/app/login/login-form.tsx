@@ -38,7 +38,7 @@ export default function LoginForm() {
         {/* Constellation lines SVG */}
         <svg className="es-constellations" viewBox="0 0 1920 1080" preserveAspectRatio="none">
           {/* Big Dipper constellation */}
-          <g strokeWidth="1" stroke="rgba(59, 130, 246, 0.4)" fill="none" strokeLinecap="round">
+          <g className="es-constellation-group es-dipper" strokeWidth="1" stroke="rgba(59, 130, 246, 0.4)" fill="none" strokeLinecap="round">
             <line x1="200" y1="150" x2="280" y2="180" />
             <line x1="280" y1="180" x2="350" y2="160" />
             <line x1="350" y1="160" x2="400" y2="140" />
@@ -56,7 +56,7 @@ export default function LoginForm() {
           </g>
           
           {/* Orion constellation */}
-          <g strokeWidth="1" stroke="rgba(59, 130, 246, 0.4)" fill="none" strokeLinecap="round">
+          <g className="es-constellation-group es-orion" strokeWidth="1" stroke="rgba(59, 130, 246, 0.4)" fill="none" strokeLinecap="round">
             <line x1="1600" y1="300" x2="1650" y2="280" />
             <line x1="1650" y1="280" x2="1700" y2="260" />
             <line x1="1700" y1="260" x2="1680" y2="350" />
@@ -73,7 +73,7 @@ export default function LoginForm() {
           </g>
           
           {/* Simple triangle constellation */}
-          <g strokeWidth="1" stroke="rgba(100, 150, 255, 0.5)" fill="none" strokeLinecap="round">
+          <g className="es-constellation-group es-triangle" strokeWidth="1" stroke="rgba(100, 150, 255, 0.5)" fill="none" strokeLinecap="round">
             <line x1="300" y1="800" x2="450" y2="750" />
             <line x1="450" y1="750" x2="400" y2="900" />
             <line x1="400" y1="900" x2="300" y2="800" />
