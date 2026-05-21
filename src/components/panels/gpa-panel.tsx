@@ -130,8 +130,8 @@ export default function GpaPanel({ userId, onNav }: Props) {
                     { label: "Dự báo cuối HK", val: forecastGPA4.toFixed(2), bg: "var(--green-lt)", color: "var(--green)" },
                     { label: "Thay đổi", val: `${deltaPositive ? "+" : ""}${delta}`, bg: deltaPositive ? "var(--blue-lt)" : "var(--amber-lt)", color: deltaPositive ? "var(--blue)" : "var(--amber)" },
                     { label: "Cần cải thiện", val: `+${Math.max(0, 3.6 - forecastGPA4).toFixed(2)}`, bg: "var(--amber-lt)", color: "var(--amber)" },
-                  ].map((item) => (
-                    <div key={item.label} style={{ flex: 1, textAlign: "center", padding: 8, background: item.bg, borderRadius: "var(--r-sm)" }}>
+                  ].map((item, i) => (
+                    <div key={item.label} className={`animate-spring-in stagger-${i + 1}`} style={{ flex: 1, textAlign: "center", padding: 8, background: item.bg, borderRadius: "var(--r-sm)" }}>
                       <div style={{ fontSize: 11, color: item.color, fontWeight: 600 }}>{item.label}</div>
                       <div style={{ fontSize: 18, fontWeight: 700, color: item.color }}>{item.val}</div>
                     </div>

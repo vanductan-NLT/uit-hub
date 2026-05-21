@@ -2,15 +2,18 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import GalacticBackground from "@/components/features/login/galactic-background";
-import FeatureShowcase from "@/components/features/login/feature-showcase";
+import LandingNav from "@/components/features/login/landing-nav";
+import LandingHero from "@/components/features/login/landing-hero";
+import LandingFeatureSections from "@/components/features/login/landing-feature-sections";
+import LandingStatsRow from "@/components/features/login/landing-stats-row";
+import LandingFooterCta from "@/components/features/login/landing-footer-cta";
 
 export default function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
-  async function handleGoogleLogin() {
+  async function handleLogin() {
     setError("");
     setLoading(true);
     const { error: authErr } = await supabase.auth.signInWithOAuth({
@@ -27,69 +30,21 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="es-split-login">
-      {/* Space bg: stars + constellations + stairs */}
-      <GalacticBackground />
+    <div className="lp-root">
+      <LandingNav onLogin={handleLogin} loading={loading} />
 
-      {/* LEFT — login panel (primary action, seen first) */}
-      <div className="es-login-panel">
-        <div className="es-login-panel-inner">
-          {/* Brand */}
-          <div className="es-login-centered-logo" style={{ marginBottom: 36 }}>
-            <img src="/uit-logo.png" alt="UIT" width={56} height={56} />
-            <div>
-              <div className="es-login-centered-brand">UIT Hub</div>
-              <div className="es-login-centered-brand-sub">UIT · 2024–2025</div>
-            </div>
-          </div>
-
-          {/* Heading */}
-          <div className="es-login-centered-heading">Chào mừng trở lại</div>
-          <div className="es-login-centered-sub" style={{ marginBottom: 28 }}>
-            Đăng nhập để tiếp tục lộ trình học tập của bạn
-          </div>
-
-          {error && (
-            <div className="es-lp-error" role="alert">{error}</div>
-          )}
-
-          {/* Google sign-in */}
-          <button
-            className="es-gg-btn-dark"
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            aria-label="Đăng nhập bằng Google"
-          >
-            {loading ? (
-              <span style={{ opacity: 0.7 }}>Đang chuyển hướng…</span>
-            ) : (
-              <>
-                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" style={{ flexShrink: 0 }}>
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.33 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-                  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.67 14.62 48 24 48z"/>
-                </svg>
-                Tiếp tục với Google
-              </>
-            )}
-          </button>
-
-          <p className="es-login-hint" style={{ marginTop: 16 }}>
-            Chỉ chấp nhận email có đuôi <strong>@gm.uit.edu.vn</strong>
-          </p>
-
-          {/* Tagline */}
-          <div className="es-login-centered-tagline" style={{ marginTop: 48 }}>
-            <div className="es-login-centered-tagline-sub">
-              Dự báo GPA · Tracker tiến độ · Kế hoạch ôn thi · Tài nguyên học tập
-            </div>
-          </div>
+      {error && (
+        <div role="alert" className="lp-global-error">
+          {error}
         </div>
-      </div>
+      )}
 
-      {/* RIGHT — feature showcase */}
-      <FeatureShowcase />
+      <main>
+        <LandingHero onLogin={handleLogin} loading={loading} />
+        <LandingFeatureSections />
+        <LandingStatsRow />
+        <LandingFooterCta onLogin={handleLogin} loading={loading} />
+      </main>
     </div>
   );
 }

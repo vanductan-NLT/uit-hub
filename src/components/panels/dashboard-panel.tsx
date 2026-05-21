@@ -101,12 +101,12 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
         ))}
 
         <div className="es-grid-4" style={{ margin: "20px 0 0" }}>
-          <div className="es-stat-card">
+          <div className="es-stat-card animate-spring-in stagger-1" style={{ "--stat-accent": "var(--blue)" } as React.CSSProperties}>
             <div className="es-stat-label">GPA tích lũy</div>
             <div className="es-stat-value">{loading ? "…" : gpa4.toFixed(2)}</div>
             <div className="es-stat-delta" style={{ color: "var(--es-muted)" }}>{loading ? "" : gradeLabel(gpa4)}</div>
           </div>
-          <div className="es-stat-card">
+          <div className="es-stat-card animate-spring-in stagger-2" style={{ "--stat-accent": "var(--duo-green)" } as React.CSSProperties}>
             <div className="es-stat-label">Tín chỉ tích lũy</div>
             <div className="es-stat-value">
               {loading ? "…" : passedCredits}
@@ -116,14 +116,14 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
               {loading ? "" : `${Math.round((passedCredits / totalCreditsRequired) * 100)}% chương trình`}
             </div>
           </div>
-          <div className="es-stat-card">
+          <div className="es-stat-card animate-spring-in stagger-3" style={{ "--stat-accent": "var(--duo-orange)" } as React.CSSProperties}>
             <div className="es-stat-label">Môn đã hoàn thành</div>
             <div className="es-stat-value">{loading ? "…" : completedCourses.length}</div>
             <div className="es-stat-delta" style={{ color: "var(--es-muted)" }}>
               {loading ? "" : `${aGradeCount} môn điểm A`}
             </div>
           </div>
-          <div className="es-stat-card">
+          <div className="es-stat-card animate-spring-in stagger-4" style={{ "--stat-accent": riskyCount > 0 ? "var(--duo-yellow)" : "var(--duo-green)" } as React.CSSProperties}>
             <div className="es-stat-label">Môn HK này</div>
             <div className="es-stat-value">{loading ? "…" : inProgressCourses.length}</div>
             <div className="es-stat-delta" style={{ color: riskyCount > 0 ? "var(--amber)" : "var(--green)" }}>

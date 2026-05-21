@@ -125,10 +125,11 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
             <div className="es-card" style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 20 }}>
                 <div style={{
-                  width: 64, height: 64, borderRadius: "50%",
+                  width: 72, height: 72, borderRadius: "50%",
                   background: "var(--blue)", color: "#fff",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 22, fontWeight: 700, flexShrink: 0,
+                  fontSize: 24, fontWeight: 800, flexShrink: 0,
+                  boxShadow: "0 0 0 4px var(--blue-lt), 0 0 0 6px var(--blue)",
                 }}>
                   {initials}
                 </div>
@@ -145,11 +146,11 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
               {/* GPA stats */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                 {[
-                  { label: "GPA hệ 10", val: gpa10.toFixed(2), color: "var(--blue)" },
-                  { label: "GPA hệ 4", val: gpa4.toFixed(2), color: "var(--green)" },
-                  { label: "Tín chỉ tích lũy", val: `${passedCredits}`, color: "var(--ink)" },
-                ].map((item) => (
-                  <div key={item.label} style={{
+                  { label: "GPA hệ 10", val: gpa10.toFixed(2), color: "var(--blue)", accent: "var(--blue)" },
+                  { label: "GPA hệ 4", val: gpa4.toFixed(2), color: "var(--green)", accent: "var(--duo-green)" },
+                  { label: "Tín chỉ tích lũy", val: `${passedCredits}`, color: "var(--ink)", accent: "var(--duo-orange)" },
+                ].map((item, i) => (
+                  <div key={item.label} className={`animate-spring-in stagger-${i + 1}`} style={{
                     flex: 1, textAlign: "center", padding: "10px 6px",
                     background: "var(--es-bg-alt, #f8f9fa)", borderRadius: "var(--r-sm)",
                   }}>

@@ -167,12 +167,12 @@ export default function ExamPanel({ userId, userCourses, allCourses, currentSeme
             <div className="es-card" style={{ marginBottom: 14 }}>
               <div className="es-section-hdr"><div className="es-section-title">Thống kê ôn tập</div></div>
               <div className="es-grid-2" style={{ gap: 10 }}>
-                <div className="es-stat-card">
+                <div className="es-stat-card animate-spring-in stagger-1" style={{ "--stat-accent": "var(--blue)" } as React.CSSProperties}>
                   <div className="es-stat-label">Buổi ôn đã lên lịch</div>
                   <div className="es-stat-value">{stats.totalSessions}</div>
                   <div className="es-stat-delta" style={{ color: "var(--es-muted)" }}>cho {exams.length} môn thi</div>
                 </div>
-                <div className="es-stat-card">
+                <div className="es-stat-card animate-spring-in stagger-2" style={{ "--stat-accent": "var(--duo-green)" } as React.CSSProperties}>
                   <div className="es-stat-label">Đã hoàn thành</div>
                   <div className="es-stat-value">{stats.completedSessions}</div>
                   <div className="es-stat-delta delta-up" style={{ color: stats.completedSessions > 0 ? "var(--green)" : "var(--es-muted)" }}>
