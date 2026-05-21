@@ -511,12 +511,18 @@
     radial-gradient(1px 1px at 40px 30px, rgba(255, 255, 255, 0.7), transparent);
   background-size: 200px 200px;
   background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 40px 40px, 20px 50px, 200px 0, 100px 150px;
-  animation: twinkling 5s ease-in-out infinite;
+  animation: twinkling 5s ease-in-out infinite, panStars 60s linear infinite;
 }
 
 .es-stairs-container {
   position: absolute; inset: 0; z-index: 3;
   pointer-events: none;
+}
+
+.es-constellations {
+  position: absolute; inset: 0; z-index: 2.5;
+  pointer-events: none;
+  animation: panStars 60s linear infinite;
 }
 
 .es-stair {
@@ -556,6 +562,11 @@
 @keyframes twinkling {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
+}
+
+@keyframes panStars {
+  0% { background-position: 0 0, 40px 60px, 130px 270px, 70px 100px, 40px 40px, 20px 50px, 200px 0, 100px 150px; }
+  100% { background-position: -200px 0, -160px 60px, -70px 270px, -130px 100px, -160px 40px, -180px 50px, 0 0, -100px 150px; }
 }
 
 @keyframes stairFloat1 {
