@@ -18,6 +18,9 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        duo: "bg-[var(--blue)] text-white font-bold rounded-full shadow-[0_4px_0_var(--blue-shadow)] hover:brightness-105 active:translate-y-[3px] active:shadow-[0_1px_0_var(--blue-shadow)] transition-[transform,box-shadow,filter] duration-75 border-none",
+        "duo-success": "bg-[var(--duo-green)] text-white font-bold rounded-full shadow-[0_4px_0_var(--duo-green-shadow)] hover:brightness-105 active:translate-y-[3px] active:shadow-[0_1px_0_var(--duo-green-shadow)] transition-[transform,box-shadow,filter] duration-75 border-none",
+        "duo-outline": "bg-[var(--white)] text-[var(--blue)] font-bold rounded-full border-2 border-[var(--es-border)] shadow-[0_4px_0_var(--es-border)] hover:border-[var(--blue)] active:translate-y-[3px] active:shadow-[0_1px_0_var(--es-border)] transition-[transform,box-shadow] duration-75",
       },
       size: {
         default:

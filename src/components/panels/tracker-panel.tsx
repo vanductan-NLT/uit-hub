@@ -78,7 +78,7 @@ export default function TrackerPanel() {
 
       <div className="es-content">
         <div className="es-streak-banner">
-          <span style={{ fontSize: 36 }}>🔥</span>
+          <span className="es-streak-fire">🔥</span>
           <div style={{ flex: 1 }}>
             <div className="es-streak-count">8 ngày streak</div>
             <div className="es-streak-label">Bạn đang on track — đừng bỏ lỡ hôm nay</div>
