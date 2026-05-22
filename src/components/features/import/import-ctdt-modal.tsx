@@ -7,7 +7,7 @@ import { upsertCurriculum } from "@/lib/supabase/curriculum-api";
 interface Props {
   onSuccess: () => void;
   onClose: () => void;
-  /** Pre-fill from user profile so they don't re-enter known info */
+  /** Pre-fill from user profile — when provided, hides the selectors */
   defaultMajor?: string | null;
   defaultIntakeYear?: number | null;
 }
@@ -15,23 +15,20 @@ interface Props {
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "HTTT"];
 type HeDaoTao = "chinh-quy" | "tu-xa";
 
-/** Build the correct student.uit.edu.vn URL for a given year + hệ đào tạo */
 function buildCtdtUrl(year: number, he: HeDaoTao): string {
-  if (he === "tu-xa") {
-    return `https://student.uit.edu.vn/tu-xa/ctdt-khoa-${year}`;
-  }
-  const segment = year >= 2025 ? "cqui" : "chuong-trinh-dao-tao";
-  return `https://student.uit.edu.vn/${segment}/ctdt-khoa-${year}`;
+  if (he === "tu-xa") return `https://student.uit.edu.vn/tu-xa/ctdt-khoa-${year}`;
+  const seg = year >= 2025 ? "cqui" : "chuong-trinh-dao-tao";
+  return `https://student.uit.edu.vn/${seg}/ctdt-khoa-${year}`;
 }
 
 export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defaultIntakeYear }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const hasProfile = !!(defaultMajor && defaultIntakeYear);
+
   const [major, setMajor] = useState(
     defaultMajor && MAJORS.includes(defaultMajor) ? defaultMajor : "CNTT"
   );
-  const [intakeYear, setIntakeYear] = useState(
-    defaultIntakeYear ?? new Date().getFullYear() - 4
-  );
+  const [intakeYear, setIntakeYear] = useState(defaultIntakeYear ?? new Date().getFullYear() - 4);
   const [he, setHe] = useState<HeDaoTao>("chinh-quy");
   const [result, setResult] = useState<CtdtParseResult | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -42,19 +39,14 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
 
   function handleFile(file: File) {
     const reader = new FileReader();
-    reader.onload = (e) => parseHtml(e.target?.result as string);
+    reader.onload = (e) => {
+      setParseError(null);
+      setResult(null);
+      const r = parseUitCtdt(e.target?.result as string, major, intakeYear);
+      if (r.courses.length === 0) setParseError(r.errors[0] ?? "Không tìm thấy môn học nào trong file.");
+      else setResult(r);
+    };
     reader.readAsText(file, "utf-8");
-  }
-
-  function parseHtml(html: string) {
-    setParseError(null);
-    setResult(null);
-    const r = parseUitCtdt(html, major, intakeYear);
-    if (r.courses.length === 0) {
-      setParseError(r.errors[0] ?? "Không tìm thấy môn học nào trong file.");
-    } else {
-      setResult(r);
-    }
   }
 
   async function handleImport() {
@@ -72,7 +64,6 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
     }
   }
 
-  // Group courses by semester for preview
   const bySemester = result?.courses.reduce<Record<number, number>>((acc, c) => {
     acc[c.suggested_semester] = (acc[c.suggested_semester] ?? 0) + 1;
     return acc;
@@ -90,7 +81,7 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
         onClick={(e) => e.stopPropagation()}
         style={{
           background: "var(--white)", borderRadius: "var(--r-2xl)",
-          padding: 28, width: "min(520px, calc(100vw - 32px))",
+          padding: 28, width: "min(480px, calc(100vw - 32px))",
           boxShadow: "var(--shadow-clay)",
           animation: "duo-bounce-in 0.3s cubic-bezier(0.34,1.56,0.64,1)",
           maxHeight: "90dvh", overflowY: "auto",
@@ -109,58 +100,64 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
 
         {!done ? (
           <>
-            {/* Selectors: ngành + năm + hệ */}
-            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-              <div style={{ flex: "1 1 120px" }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Ngành</div>
-                <select value={major} onChange={(e) => setMajor(e.target.value)} style={selectStyle}>
-                  {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: "1 1 100px" }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Năm nhập học</div>
-                <input
-                  type="number"
-                  value={intakeYear}
-                  min={2013} max={2030}
-                  onChange={(e) => setIntakeYear(parseInt(e.target.value) || intakeYear)}
-                  style={selectStyle}
-                />
-              </div>
-              <div style={{ flex: "1 1 120px" }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Hệ đào tạo</div>
-                <select value={he} onChange={(e) => setHe(e.target.value as HeDaoTao)} style={selectStyle}>
+            {/* Profile mode: show read-only chip + hệ toggle */}
+            {hasProfile ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8, padding: "6px 14px",
+                  borderRadius: "var(--r-full)", background: "var(--blue-lt)",
+                  border: "1.5px solid var(--blue)", fontSize: 13, fontWeight: 700, color: "var(--blue)",
+                }}>
+                  🎓 {major} · K{String(intakeYear).slice(-2)}
+                </div>
+                <select value={he} onChange={(e) => setHe(e.target.value as HeDaoTao)}
+                  style={{ ...selectStyle, width: "auto", flex: "1 1 120px", fontSize: 13 }}>
                   <option value="chinh-quy">Chính quy</option>
                   <option value="tu-xa">Từ xa</option>
                 </select>
               </div>
-            </div>
+            ) : (
+              /* Manual mode: show all 3 selectors */
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 110px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Ngành</div>
+                  <select value={major} onChange={(e) => setMajor(e.target.value)} style={selectStyle}>
+                    {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: "1 1 90px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Năm nhập học</div>
+                  <input type="number" value={intakeYear} min={2013} max={2030}
+                    onChange={(e) => setIntakeYear(parseInt(e.target.value) || intakeYear)} style={selectStyle} />
+                </div>
+                <div style={{ flex: "1 1 110px" }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Hệ đào tạo</div>
+                  <select value={he} onChange={(e) => setHe(e.target.value as HeDaoTao)} style={selectStyle}>
+                    <option value="chinh-quy">Chính quy</option>
+                    <option value="tu-xa">Từ xa</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
-            {/* 3-step guide */}
+            {/* 2-step guide */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
               {[
                 {
-                  n: 1,
-                  label: "Mở trang CTĐT theo khoá",
+                  n: 1, label: "Mở trang CTĐT và lưu về máy",
                   detail: (
-                    <a
-                      href={ctdtUrl}
-                      target="_blank" rel="noopener noreferrer"
-                      style={{ color: "var(--blue)", textDecoration: "none", fontWeight: 600 }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {ctdtUrl.replace("https://", "")} ↗
-                    </a>
+                    <span style={{ color: "var(--es-muted)" }}>
+                      <a href={ctdtUrl} target="_blank" rel="noopener noreferrer"
+                        style={{ color: "var(--blue)", fontWeight: 600, textDecoration: "none" }}
+                        onClick={(e) => e.stopPropagation()}>
+                        {ctdtUrl.replace("https://student.uit.edu.vn/", "")} ↗
+                      </a>
+                      {" "}→ Ctrl+S → <strong>Webpage, HTML Only</strong>
+                    </span>
                   ),
                 },
                 {
-                  n: 2,
-                  label: "Lưu trang về máy",
-                  detail: <span style={{ color: "var(--es-muted)" }}>Ctrl+S → chọn <strong>Webpage, HTML Only</strong> (.html)</span>,
-                },
-                {
-                  n: 3,
-                  label: "Chọn ngành + năm + hệ, rồi kéo thả file",
+                  n: 2, label: "Kéo thả file HTML vào đây",
                   detail: <span style={{ color: "var(--es-muted)" }}>hoặc click vùng bên dưới để chọn file</span>,
                 },
               ].map(({ n, label, detail }) => (
@@ -185,8 +182,7 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
                 border: `2px dashed ${result ? "var(--green)" : "var(--es-border)"}`,
                 borderRadius: "var(--r-xl)", padding: "20px",
                 textAlign: "center", cursor: "pointer",
-                marginBottom: 16, background: "var(--bg)",
-                transition: "border-color 0.15s",
+                marginBottom: 16, background: "var(--bg)", transition: "border-color 0.15s",
               }}
               onClick={() => fileRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
@@ -198,42 +194,26 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
                   ? `${result.courses.length} môn · ${Object.keys(bySemester ?? {}).length} học kỳ đã nhận diện`
                   : "Kéo thả hoặc click để chọn file HTML"}
               </div>
-              <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 4 }}>
-                Lưu trang CTĐT dưới dạng HTML rồi chọn file ở đây
-              </div>
               <input ref={fileRef} type="file" accept=".html,.htm" style={{ display: "none" }}
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
             </div>
 
-            {/* Semester preview */}
+            {/* Semester preview chips */}
             {result && bySemester && (
-              <div className="es-card" style={{ padding: "14px 16px", marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: "var(--ink)" }}>
-                  Phân bổ theo học kỳ · {major} K{String(intakeYear).slice(-2)}
-                  {he === "tu-xa" && <span style={{ color: "var(--es-muted)", fontWeight: 400 }}> · Từ xa</span>}
+              <div className="es-card" style={{ padding: "12px 14px", marginBottom: 16 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {Object.entries(bySemester).sort(([a], [b]) => Number(a) - Number(b)).map(([sem, count]) => (
+                    <div key={sem} style={{
+                      padding: "4px 10px", borderRadius: "var(--r-full)",
+                      background: "var(--blue-lt)", fontSize: 11, fontWeight: 700, color: "var(--blue)",
+                    }}>HK{sem}: {count}</div>
+                  ))}
+                  {result.total_credits_required > 0 && (
+                    <div style={{ fontSize: 11, color: "var(--es-muted)", alignSelf: "center", marginLeft: 4 }}>
+                      Tổng {result.total_credits_required} TC
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {Object.entries(bySemester)
-                    .sort(([a], [b]) => Number(a) - Number(b))
-                    .map(([sem, count]) => (
-                      <div
-                        key={sem}
-                        style={{
-                          padding: "6px 12px", borderRadius: "var(--r-full)",
-                          background: "var(--blue-lt)", fontSize: 12, fontWeight: 700, color: "var(--blue)",
-                        }}
-                      >
-                        HK{sem}: {count} môn
-                      </div>
-                    ))}
-                </div>
-                {result.total_credits_required > 0 && (
-                  <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 10 }}>
-                    Tổng: {result.total_credits_required} TC
-                    {result.general_credits && ` · ĐC ${result.general_credits}`}
-                    {result.major_required_credits && ` · CN ${result.major_required_credits}`}
-                  </div>
-                )}
               </div>
             )}
 
@@ -245,12 +225,8 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button className="es-btn es-btn-outline" onClick={onClose}>Huỷ</button>
-              <button
-                className="es-btn es-btn-primary"
-                onClick={handleImport}
-                disabled={!result || importing}
-              >
-                {importing ? "Đang import..." : `📥 Import CTĐT ${major} K${String(intakeYear).slice(-2)}`}
+              <button className="es-btn es-btn-primary" onClick={handleImport} disabled={!result || importing}>
+                {importing ? "Đang import..." : `📥 Import ${major} K${String(intakeYear).slice(-2)}`}
               </button>
             </div>
           </>

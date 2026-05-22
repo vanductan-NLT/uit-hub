@@ -224,7 +224,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
           {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} />}
           {active === "resources" && <ResourcesPanel userId={userId} inProgressCourses={inProgressCourses} allCourses={allCourses} />}
-          {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} />}
+          {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
         </main>
       </div>
 

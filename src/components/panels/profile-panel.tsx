@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getUserProfile, upsertUserProfile } from "@/lib/supabase/courses-api";
 import { useCourses } from "@/hooks/use-courses";
+import ProfileCurriculumSection from "@/components/features/profile/profile-curriculum-section";
 import type { UserProfile } from "@/types/database";
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
@@ -12,6 +13,8 @@ const GRAD_YEARS = Array.from({ length: 8 }, (_, i) => 2026 + i);
 interface Props {
   userId: string;
   userEmail: string;
+  onImportCtdt?: () => void;
+  curriculumRefreshKey?: number;
 }
 
 function getInitials(name: string | null, email: string) {
@@ -19,7 +22,7 @@ function getInitials(name: string | null, email: string) {
   return email.split("@")[0].slice(0, 2).toUpperCase();
 }
 
-export default function ProfilePanel({ userId, userEmail }: Props) {
+export default function ProfilePanel({ userId, userEmail, onImportCtdt, curriculumRefreshKey = 0 }: Props) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -191,6 +194,16 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
                 </div>
               ))}
             </div>
+
+            {/* CTĐT section */}
+            {onImportCtdt && (
+              <ProfileCurriculumSection
+                major={profile?.major}
+                intakeYear={profile?.intake_year}
+                onImport={onImportCtdt}
+                refreshKey={curriculumRefreshKey}
+              />
+            )}
           </div>
 
           {/* Right: Edit form (always visible for layout, read-only when not editing) */}

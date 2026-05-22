@@ -1,15 +1,11 @@
 /**
  * Parser for student.uit.edu.vn CTĐT (Chương trình đào tạo) pages.
  *
- * The page lists courses grouped by semester (Học kỳ 1..8), each with:
- *   Mã MH | Tên môn học | Loại | Số TC
+ * Handles two common page layouts:
+ *   A) Drupal view-grouping structure with div.view-grouping-header
+ *   B) Table-based layout where semester headings are merged <td colspan> rows
  *
- * Also parses the credit-block summary table for graduation requirements:
- *   Đại cương | Cơ sở ngành | Chuyên ngành | Tốt nghiệp | Tổng
- *
- * Usage:
- *   const html = <paste CTĐT page source>;
- *   const result = parseUitCtdt(html, "CNTT", 2019); // major, intakeYear
+ * Also parses the credit-block summary for graduation requirements.
  */
 
 export interface CtdtCourse {
@@ -32,54 +28,73 @@ export interface CtdtParseResult {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+/** Normalize + clean element text — NFC prevents decomposed-Unicode mismatches. */
 function clean(el: Element | null | undefined): string {
   if (!el) return "";
-  return (el.textContent ?? "").replace(/ /g, " ").replace(/\s+/g, " ").trim();
+  return (el.textContent ?? "")
+    .normalize("NFC")
+    .replace(/ /g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-/**
- * Map raw "Loại MH" text (ĐC/CSN/CN/CNTC/TN…) to our requirement_type enum.
- * Falls back to "elective" for unknowns.
- */
+/** Course code regex — accepts IT001, MA003, SS006, CARC1, ENG03, CE107 */
+const COURSE_CODE_RE = /^[A-Z]{1,6}\d{1,4}[A-Z]?$/;
+
 function mapRequirementType(raw: string): CtdtCourse["requirement_type"] {
-  const r = raw.toUpperCase().trim();
-  if (r === "ĐC" || r.includes("ĐẠI CƯƠNG"))             return "general";
-  if (r === "CSN" || r.includes("CƠ SỞ NGÀNH"))           return "foundation";
-  if (r === "CN" || r.includes("CHUYÊN NGÀNH CHÍNH") || r === "BB") return "required";
-  if (r === "CNTC" || r.includes("TỰ CHỌN") || r === "TC") return "elective";
+  const r = raw.normalize("NFC").toUpperCase().trim();
+  if (r === "ĐC"  || r.includes("ĐẠI CƯƠNG"))                       return "general";
+  if (r === "CSN" || r.includes("CƠ SỞ NGÀNH"))                      return "foundation";
+  if (r === "CN"  || r.includes("CHUYÊN NGÀNH") || r === "BB")       return "required";
+  if (r === "CNTC"|| r.includes("TỰ CHỌN")      || r === "TC")       return "elective";
   return "elective";
 }
 
-/** Try to extract semester number from a heading like "Học kỳ 3" or "HK3". */
-function parseSemesterHeading(text: string): number | null {
-  const m = text.match(/[Hh]ọc\s*[Kk][yỳ]\s*(\d+)|HK\s*(\d+)/);
-  if (m) return parseInt(m[1] ?? m[2]);
+/**
+ * Extract semester number from text.
+ * Handles: "Học kỳ 1", "Học Kỳ 1", "HK1", "HK 1", decomposed Unicode variants.
+ */
+function parseSemesterNum(raw: string): number | null {
+  const text = raw.normalize("NFC");
+  // "Học kỳ N" — case-insensitive, various diacritics on ọ/ỳ tolerated via .normalize
+  let m = text.match(/h[oọ]c\s*k[yỳỵ]\s*(\d+)/i);
+  if (m) return parseInt(m[1]);
+  // "HKN" or "HK N"
+  m = text.match(/\bHK\s*(\d+)\b/);
+  if (m) return parseInt(m[1]);
   return null;
 }
 
-/** Parse the credit summary block (if present). Returns null on failure. */
-function parseCreditSummary(doc: Document): Pick<
-  CtdtParseResult,
-  "total_credits_required" | "general_credits" | "foundation_credits" | "major_required_credits" | "major_elective_credits"
-> | null {
-  // Look for a table/div that mentions "Tổng" and credit counts
-  const allText = doc.body?.textContent ?? "";
+/** True if a <tr> looks like a semester section header (sparse columns or heading-like text). */
+function isSemesterRow(row: Element): number | null {
+  const tds = row.querySelectorAll("td, th");
+  // If the row has only 1-2 cells (possibly merged), check its text
+  if (tds.length <= 3) {
+    for (const td of tds) {
+      const n = parseSemesterNum(clean(td));
+      if (n !== null && n >= 1 && n <= 8) return n;
+    }
+  }
+  // Also check the full row text (merged colspan cells)
+  const rowText = clean(row);
+  const n = parseSemesterNum(rowText);
+  // Only accept as a semester row if it's short (not a full data row)
+  if (n !== null && n >= 1 && n <= 8 && rowText.length < 80) return n;
+  return null;
+}
 
-  // Try pattern: "Tổng số tín chỉ: 131" or similar
+function parseCreditSummary(doc: Document) {
+  const allText = (doc.body?.textContent ?? "").normalize("NFC");
   const totalMatch = allText.match(/[Tt]ổng(?:\s+số)?\s+[Tt]ín\s+[Cc]hỉ[^0-9]*(\d{2,3})/);
   const total = totalMatch ? parseInt(totalMatch[1]) : 131;
-
-  // Extract block credits by keyword search in nearby text
-  function extractCredits(keywords: RegExp): number | null {
-    const m = allText.match(keywords);
-    return m ? parseInt(m[1]) : null;
+  function extractCredits(re: RegExp): number | null {
+    const m = allText.match(re); return m ? parseInt(m[1]) : null;
   }
-
   return {
-    total_credits_required: total,
+    total_credits_required:  total,
     general_credits:         extractCredits(/[Đđ]ại\s*[Cc]ương[^0-9]*(\d{1,3})/),
     foundation_credits:      extractCredits(/[Cc]ơ\s*[Ss]ở\s*[Nn]gành[^0-9]*(\d{1,3})/),
-    major_required_credits:  extractCredits(/[Cc]huyên\s*[Nn]gành(?:\s+[Cc]hính)?[^0-9]*(\d{1,3})/),
+    major_required_credits:  extractCredits(/[Cc]huyên\s*[Nn]gành(?:\s*[Cc]hính)?[^0-9]*(\d{1,3})/),
     major_elective_credits:  extractCredits(/[Tt]ự\s*[Cc]họn[^0-9]*(\d{1,3})/),
   };
 }
@@ -90,80 +105,107 @@ export function parseUitCtdt(html: string, major: string, intakeYear: number): C
   const doc = new DOMParser().parseFromString(html, "text/html");
   const errors: string[] = [];
   const courses: CtdtCourse[] = [];
-
-  // -- Credit summary --
   const summary = parseCreditSummary(doc);
 
-  // -- Course list by semester --
-  // Strategy: walk all elements looking for semester headings, then consume table rows below
-  const allEls = Array.from(doc.body?.querySelectorAll("h1,h2,h3,h4,h5,h6,tr,td,div,p,span") ?? []);
+  // ── Strategy A: Drupal view-grouping blocks ────────────────────────────────
+  // <div class="view-grouping">
+  //   <div class="view-grouping-header">Học kỳ 1</div>
+  //   <div class="view-grouping-content">...<table>...</table>...</div>
+  // </div>
+  const groupings = doc.querySelectorAll(".view-grouping, [class*='grouping']");
+  if (groupings.length > 0) {
+    for (const group of groupings) {
+      const headerEl = group.querySelector("[class*='grouping-header'], [class*='group-header'], h2, h3, h4");
+      const semNum = headerEl ? parseSemesterNum(clean(headerEl)) : parseSemesterNum(clean(group));
+      if (!semNum || semNum < 1 || semNum > 8) continue;
 
-  let currentSemester = 0;
-
-  for (let i = 0; i < allEls.length; i++) {
-    const el = allEls[i];
-    const text = clean(el);
-
-    // Detect semester heading
-    const semNum = parseSemesterHeading(text);
-    if (semNum !== null && semNum >= 1 && semNum <= 8) {
-      currentSemester = semNum;
-      continue;
-    }
-
-    // Detect course rows: a td whose text matches a course code pattern
-    if (el.tagName === "TD" && currentSemester > 0) {
-      const code = text.trim();
-      if (/^[A-Z]{1,5}\d{2,4}$/.test(code)) {
-        // Try to find the Loại MH column in the same row
-        const row = el.closest("tr");
-        if (!row) continue;
-
+      for (const row of group.querySelectorAll("tr")) {
         const tds = Array.from(row.querySelectorAll("td"));
-        const codeIdx = tds.indexOf(el as HTMLTableCellElement);
-
-        // Loại MH is typically the column after course code, or we search for ĐC/CSN/CN
-        let rawType = "";
         for (const td of tds) {
-          const t = clean(td).toUpperCase();
-          if (["ĐC", "CSN", "CN", "CNTC", "BB", "TC", "TN"].includes(t)) {
-            rawType = clean(td);
-            break;
+          const code = clean(td).trim();
+          if (!COURSE_CODE_RE.test(code)) continue;
+          if (courses.find((c) => c.course_id === code)) continue;
+          // Determine requirement_type from sibling tds
+          let rawType = "";
+          for (const sibling of tds) {
+            const t = clean(sibling).toUpperCase().normalize("NFC");
+            if (["ĐC", "CSN", "CN", "CNTC", "BB", "TC", "TN"].includes(t)) {
+              rawType = clean(sibling); break;
+            }
           }
-        }
-        // Fallback: look at td index+2 (common layout: STT | MãMH | TênMH | Loại | TC)
-        if (!rawType && codeIdx >= 0 && tds[codeIdx + 2]) {
-          rawType = clean(tds[codeIdx + 2]);
-        }
-
-        // Deduplicate (same course can appear in multiple semesters in elective lists)
-        const already = courses.find((c) => c.course_id === code);
-        if (!already) {
-          courses.push({
-            course_id: code,
-            suggested_semester: currentSemester,
-            requirement_type: mapRequirementType(rawType),
-          });
+          courses.push({ course_id: code, suggested_semester: semNum, requirement_type: mapRequirementType(rawType) });
         }
       }
     }
   }
 
+  // ── Strategy B: table-based walk (fallback) ────────────────────────────────
   if (courses.length === 0) {
-    errors.push(
-      "Không parse được danh sách môn học. Hãy chắc chắn bạn đang paste đúng trang CTĐT từ student.uit.edu.vn."
-    );
+    let currentSemester = 0;
+    const rows = Array.from(doc.querySelectorAll("tr"));
+
+    for (const row of rows) {
+      // Check if this row IS a semester heading
+      const semNum = isSemesterRow(row);
+      if (semNum !== null) { currentSemester = semNum; continue; }
+      if (currentSemester === 0) continue;
+
+      const tds = Array.from(row.querySelectorAll("td"));
+      for (const td of tds) {
+        const code = clean(td).trim();
+        if (!COURSE_CODE_RE.test(code)) continue;
+        if (courses.find((c) => c.course_id === code)) continue;
+        let rawType = "";
+        for (const sibling of tds) {
+          const t = clean(sibling).toUpperCase().normalize("NFC");
+          if (["ĐC", "CSN", "CN", "CNTC", "BB", "TC", "TN"].includes(t)) {
+            rawType = clean(sibling); break;
+          }
+        }
+        courses.push({ course_id: code, suggested_semester: currentSemester, requirement_type: mapRequirementType(rawType) });
+      }
+    }
+  }
+
+  // ── Strategy C: heading + nearby tables ───────────────────────────────────
+  if (courses.length === 0) {
+    const allEls = Array.from(doc.body?.querySelectorAll("h1,h2,h3,h4,h5,h6,p,div,td,th,span") ?? []);
+    let currentSemester = 0;
+    for (const el of allEls) {
+      const text = clean(el);
+      const semNum = parseSemesterNum(text);
+      if (semNum !== null && semNum >= 1 && semNum <= 8 && text.length < 60) {
+        currentSemester = semNum; continue;
+      }
+      if (el.tagName === "TD" && currentSemester > 0) {
+        const code = text.trim();
+        if (!COURSE_CODE_RE.test(code)) continue;
+        if (courses.find((c) => c.course_id === code)) continue;
+        const row = el.closest("tr");
+        const tds = row ? Array.from(row.querySelectorAll("td")) : [];
+        let rawType = "";
+        for (const td of tds) {
+          const t = clean(td).toUpperCase().normalize("NFC");
+          if (["ĐC", "CSN", "CN", "CNTC", "BB", "TC", "TN"].includes(t)) {
+            rawType = clean(td); break;
+          }
+        }
+        courses.push({ course_id: code, suggested_semester: currentSemester, requirement_type: mapRequirementType(rawType) });
+      }
+    }
+  }
+
+  if (courses.length === 0) {
+    errors.push("Không parse được danh sách môn học. Hãy chắc chắn đang dùng đúng trang CTĐT từ student.uit.edu.vn.");
   }
 
   return {
-    major,
-    intake_year_from: intakeYear,
-    total_credits_required: summary?.total_credits_required ?? 131,
-    general_credits:         summary?.general_credits ?? null,
-    foundation_credits:      summary?.foundation_credits ?? null,
-    major_required_credits:  summary?.major_required_credits ?? null,
-    major_elective_credits:  summary?.major_elective_credits ?? null,
-    courses,
-    errors,
+    major, intake_year_from: intakeYear,
+    total_credits_required: summary.total_credits_required,
+    general_credits:        summary.general_credits,
+    foundation_credits:     summary.foundation_credits,
+    major_required_credits: summary.major_required_credits,
+    major_elective_credits: summary.major_elective_credits,
+    courses, errors,
   };
 }
