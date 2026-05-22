@@ -75,21 +75,21 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
     [filtered, inProgressIds]
   );
 
-  // Group suggested by course, sorted by nearest upcoming exam
-  const suggestedByCourse = useMemo(() => {
-    const map = new Map<string, { uc: UserCourseWithCourse; items: typeof filtered }>();
+  // ALL in-progress courses sorted by nearest exam, each with their filtered resources (may be empty)
+  const allInProgressByCourse = useMemo(() => {
+    const resourceMap = new Map<string, typeof filtered>();
     for (const r of suggested) {
-      const uc = inProgressCourses.find((c) => c.course_id === r.course_id);
-      if (!uc) continue;
-      if (!map.has(r.course_id)) map.set(r.course_id, { uc, items: [] });
-      map.get(r.course_id)!.items.push(r);
+      if (!resourceMap.has(r.course_id)) resourceMap.set(r.course_id, []);
+      resourceMap.get(r.course_id)!.push(r);
     }
-    return Array.from(map.values()).sort((a, b) => {
-      const ea = examMap.get(a.uc.course_id);
-      const eb = examMap.get(b.uc.course_id);
-      if (ea && eb) return ea.daysLeft - eb.daysLeft;
-      return ea ? -1 : eb ? 1 : 0;
-    });
+    return inProgressCourses
+      .map((uc) => ({ uc, items: resourceMap.get(uc.course_id) ?? [] }))
+      .sort((a, b) => {
+        const ea = examMap.get(a.uc.course_id);
+        const eb = examMap.get(b.uc.course_id);
+        if (ea && eb) return ea.daysLeft - eb.daysLeft;
+        return ea ? -1 : eb ? 1 : 0;
+      });
   }, [suggested, inProgressCourses, examMap]);
 
   const coursesWithResources = useMemo(() => {
@@ -166,7 +166,7 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
           />
         ) : (
           <>
-            {suggestedByCourse.map(({ uc, items }) => {
+            {allInProgressByCourse.map(({ uc, items }) => {
               const exam = examMap.get(uc.course_id);
               const urgencyBadge = exam ? (
                 <span className={`es-badge ${exam.daysLeft <= 7 ? "es-badge-red" : exam.daysLeft <= 14 ? "es-badge-amber" : "es-badge-green"}`}>
@@ -179,14 +179,16 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
                   resources={items}
                   title={uc.course?.name ?? uc.course_id}
                   badge={urgencyBadge}
+                  emptyText="Chưa có tài nguyên cho môn này · Bạn có thể đóng góp!"
                 />
               );
             })}
-            <ResourceList
-              resources={rest.length > 0 ? rest : suggested.length === 0 ? filtered : rest}
-              title={suggestedByCourse.length > 0 ? "📚 Tài nguyên khác" : "📚 Tất cả tài nguyên"}
-              emptyText="Không tìm thấy tài nguyên phù hợp."
-            />
+            {rest.length > 0 && (
+              <ResourceList
+                resources={rest}
+                title="📚 Tài nguyên khác"
+              />
+            )}
           </>
         )}
       </div>
