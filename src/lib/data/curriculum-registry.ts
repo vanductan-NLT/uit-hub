@@ -22,12 +22,17 @@ export async function getCurriculum(curriculumId: string): Promise<CurriculumWit
   const supabase = createClient();
 
   const [currRes, coursesRes, reqRes] = await Promise.all([
-    supabase.from("curricula").select("*").eq("id", curriculumId).single(),
+    supabase.from("curricula").select("*").eq("id", curriculumId).maybeSingle(),
     supabase.from("curriculum_courses").select("*").eq("curriculum_id", curriculumId).order("suggested_semester"),
     supabase.from("graduation_requirements").select("*").eq("curriculum_id", curriculumId),
   ]);
 
-  if (currRes.error || !currRes.data) return null;
+  if (currRes.error || !currRes.data) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[useCurriculum] not found:", curriculumId, currRes.error?.message);
+    }
+    return null;
+  }
 
   return {
     ...(currRes.data as Curriculum),
