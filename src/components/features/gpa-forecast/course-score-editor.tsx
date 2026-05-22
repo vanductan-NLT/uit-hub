@@ -127,8 +127,8 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
                   borderRadius: "var(--r-sm, 6px)",
                   border: `1px solid ${active ? "var(--es-border, #e5e7eb)" : "var(--es-border, #e5e7eb)"}`,
                   fontSize: 14,
-                  background: active ? "var(--es-bg, #fff)" : "var(--es-bg-alt, #f9fafb)",
-                  color: "var(--es-text, #111)",
+                  background: active ? "var(--white)" : "var(--es-bg-alt)",
+                  color: "var(--ink)",
                 }}
               />
             </label>
