@@ -42,7 +42,14 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
   const takenIds = useMemo(() => buildTakenIds(userCourses), [userCourses]);
   const passedIds = useMemo(() => buildPassedIds(userCourses), [userCourses]);
   const allCoursesMap = useMemo(() => new Map(allCourses.map((c) => [c.id, c])), [allCourses]);
-  const suggestions = useMemo(() => getSuggestedCourses(allCourses, takenIds, passedIds), [allCourses, takenIds, passedIds]);
+  const curriculumCourseIds = useMemo(
+    () => curriculum ? new Set(curriculum.courses.map((c) => c.course_id)) : undefined,
+    [curriculum]
+  );
+  const suggestions = useMemo(
+    () => getSuggestedCourses(allCourses, takenIds, passedIds, curriculumCourseIds),
+    [allCourses, takenIds, passedIds, curriculumCourseIds]
+  );
   const { avgCreditsPerSem, remainingSemesters } = useMemo(
     () => estimateRemainingTime(userCourses, passedCredits),
     [userCourses, passedCredits]
