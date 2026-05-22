@@ -117,15 +117,10 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
                   { label: "Ngành", val: major },
                   { label: "Khoá", val: `K${String(intakeYear).slice(-2)} (${intakeYear})` },
                   { label: "Hệ đào tạo", val: heLabel },
-                  { label: "URL", val: ctdtUrl.replace("https://student.uit.edu.vn/", ""), mono: true },
-                ].map(({ label, val, mono }) => (
+                ].map(({ label, val }) => (
                   <div key={label}>
                     <div style={{ fontSize: 11, color: "var(--es-muted)", fontWeight: 600, marginBottom: 2 }}>{label}</div>
-                    <div style={{
-                      fontSize: 13, fontWeight: 600, color: "var(--ink)",
-                      fontFamily: mono ? "monospace" : "inherit",
-                      wordBreak: "break-all",
-                    }}>{val}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{val}</div>
                   </div>
                 ))}
               </div>
