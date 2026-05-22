@@ -26,11 +26,12 @@ interface RoadmapPanelProps {
   totalCreditsRequired?: number;
   major?: string | null;
   intakeYear?: number | null;
+  onImportCtdt?: () => void;
 }
 
 const TARGETS = { general: 30, required: 70, elective: 31 };
 
-export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131, major, intakeYear }: RoadmapPanelProps) {
+export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131, major, intakeYear, onImportCtdt }: RoadmapPanelProps) {
   const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
   const { curriculum, loading: currLoading } = useCurriculum(major, intakeYear);
   const [showModal, setShowModal] = useState(false);
@@ -245,8 +246,10 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
                   description={
                     !major || !intakeYear
                       ? "Cập nhật ngành học và năm nhập học trong phần Hồ sơ để xem lộ trình CTĐT."
-                      : "Admin cần import CTĐT cho ngành/khoá này qua nút Import dữ liệu trong sidebar."
+                      : "Import CTĐT để xem lộ trình đầy đủ theo từng học kỳ."
                   }
+                  actionLabel={onImportCtdt ? "🎓 Import CTĐT" : undefined}
+                  onAction={onImportCtdt}
                 />
               ) : (
                 <CurriculumRoadmap
