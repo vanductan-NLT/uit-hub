@@ -10,15 +10,29 @@ interface Props {
 }
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "HTTT"];
+type HeDaoTao = "chinh-quy" | "tu-xa";
+
+/** Build the correct student.uit.edu.vn URL for a given year + hệ đào tạo */
+function buildCtdtUrl(year: number, he: HeDaoTao): string {
+  if (he === "tu-xa") {
+    return `https://student.uit.edu.vn/tu-xa/ctdt-khoa-${year}`;
+  }
+  // Chính quy: new domain segment from 2025 onwards
+  const segment = year >= 2025 ? "cqui" : "chuong-trinh-dao-tao";
+  return `https://student.uit.edu.vn/${segment}/ctdt-khoa-${year}`;
+}
 
 export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [major, setMajor] = useState("CNTT");
   const [intakeYear, setIntakeYear] = useState(new Date().getFullYear() - 4);
+  const [he, setHe] = useState<HeDaoTao>("chinh-quy");
   const [result, setResult] = useState<CtdtParseResult | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [done, setDone] = useState<{ curriculumId: string; coursesLinked: number } | null>(null);
+
+  const ctdtUrl = buildCtdtUrl(intakeYear, he);
 
   function handleFile(file: File) {
     const reader = new FileReader();
@@ -58,6 +72,12 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
     return acc;
   }, {});
 
+  const selectStyle: React.CSSProperties = {
+    width: "100%", padding: "8px 12px", borderRadius: "var(--r)",
+    border: "1.5px solid var(--es-border)", fontFamily: "inherit",
+    fontSize: 14, background: "var(--white)", color: "var(--ink)",
+  };
+
   return (
     <div className="es-logout-overlay" onClick={onClose}>
       <div
@@ -75,7 +95,7 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
           <div>
             <div style={{ fontWeight: 700, fontSize: 16, color: "var(--ink)" }}>🎓 Import CTĐT theo khoá</div>
             <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 3 }}>
-              Nguồn: student.uit.edu.vn/chuong-trinh-dao-tao
+              Nguồn: student.uit.edu.vn · Chương trình đào tạo
             </div>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "var(--es-muted)" }}>×</button>
@@ -83,35 +103,30 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
 
         {!done ? (
           <>
-            {/* Major + year selectors */}
-            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-              <div style={{ flex: 1 }}>
+            {/* Selectors: ngành + năm + hệ */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 120px" }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Ngành</div>
-                <select
-                  value={major}
-                  onChange={(e) => setMajor(e.target.value)}
-                  style={{
-                    width: "100%", padding: "8px 12px", borderRadius: "var(--r)",
-                    border: "1.5px solid var(--es-border)", fontFamily: "inherit",
-                    fontSize: 14, background: "var(--white)", color: "var(--ink)",
-                  }}
-                >
+                <select value={major} onChange={(e) => setMajor(e.target.value)} style={selectStyle}>
                   {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: "1 1 100px" }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Năm nhập học</div>
                 <input
                   type="number"
                   value={intakeYear}
-                  min={2015} max={2030}
+                  min={2013} max={2030}
                   onChange={(e) => setIntakeYear(parseInt(e.target.value) || intakeYear)}
-                  style={{
-                    width: "100%", padding: "8px 12px", borderRadius: "var(--r)",
-                    border: "1.5px solid var(--es-border)", fontFamily: "inherit",
-                    fontSize: 14, background: "var(--white)", color: "var(--ink)",
-                  }}
+                  style={selectStyle}
                 />
+              </div>
+              <div style={{ flex: "1 1 120px" }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink2)", marginBottom: 6 }}>Hệ đào tạo</div>
+                <select value={he} onChange={(e) => setHe(e.target.value as HeDaoTao)} style={selectStyle}>
+                  <option value="chinh-quy">Chính quy</option>
+                  <option value="tu-xa">Từ xa</option>
+                </select>
               </div>
             </div>
 
@@ -123,12 +138,12 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
                   label: "Mở trang CTĐT theo khoá",
                   detail: (
                     <a
-                      href={`https://student.uit.edu.vn/chuong-trinh-dao-tao/ctdt-khoa-${intakeYear}`}
+                      href={ctdtUrl}
                       target="_blank" rel="noopener noreferrer"
                       style={{ color: "var(--blue)", textDecoration: "none", fontWeight: 600 }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      student.uit.edu.vn/ctdt-khoa-{intakeYear} ↗
+                      {ctdtUrl.replace("https://", "")} ↗
                     </a>
                   ),
                 },
@@ -139,7 +154,7 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
                 },
                 {
                   n: 3,
-                  label: "Chọn ngành + năm nhập học, kéo thả file",
+                  label: "Chọn ngành + năm + hệ, rồi kéo thả file",
                   detail: <span style={{ color: "var(--es-muted)" }}>hoặc click vùng bên dưới để chọn file</span>,
                 },
               ].map(({ n, label, detail }) => (
@@ -178,7 +193,7 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
                   : "Kéo thả hoặc click để chọn file HTML"}
               </div>
               <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 4 }}>
-                Vào student.uit.edu.vn/chuong-trinh-dao-tao/ctdt-khoa-{intakeYear} → Save as HTML
+                Lưu trang CTĐT dưới dạng HTML rồi chọn file ở đây
               </div>
               <input ref={fileRef} type="file" accept=".html,.htm" style={{ display: "none" }}
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
@@ -189,6 +204,7 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
               <div className="es-card" style={{ padding: "14px 16px", marginBottom: 16 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 10, color: "var(--ink)" }}>
                   Phân bổ theo học kỳ · {major} K{String(intakeYear).slice(-2)}
+                  {he === "tu-xa" && <span style={{ color: "var(--es-muted)", fontWeight: 400 }}> · Từ xa</span>}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {Object.entries(bySemester)
