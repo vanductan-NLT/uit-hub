@@ -26,7 +26,14 @@ export function getMissingPrereqs(
 export function getSuggestedCourses(
   allCourses: Course[],
   takenIds: Set<string>,
-  passedIds: Set<string>
+  passedIds: Set<string>,
+  /**
+   * When provided (curriculum imported), only courses in this set are eligible.
+   * Without it we fall back to all courses — but most have empty prerequisites,
+   * which causes vacuous-true explosions (~450 suggestions). Always pass this
+   * when the user's CTĐT is available.
+   */
+  curriculumCourseIds?: Set<string>
 ): Course[] {
   // Recursively mark all ancestors of taken courses as superseded —
   // e.g. ENG03 taken → ENG02 superseded → ENG01 superseded
@@ -46,8 +53,13 @@ export function getSuggestedCourses(
     if (takenIds.has(c.id)) markSuperseded(c.id);
   }
 
+  // Candidate pool: restrict to curriculum when available to avoid vacuous-true explosion
+  const candidates = curriculumCourseIds
+    ? allCourses.filter((c) => curriculumCourseIds.has(c.id))
+    : allCourses;
+
   const typeOrder: Record<string, number> = { required: 0, general: 1, elective: 2 };
-  return allCourses
+  return candidates
     .filter((c) =>
       !takenIds.has(c.id) &&
       !supersededIds.has(c.id) &&

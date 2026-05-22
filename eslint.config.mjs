@@ -11,6 +11,18 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      // Allow <img> — Next.js Image requires domain config for external URLs (Google avatar etc.)
+      "@next/next/no-img-element": "off",
+      // Allow underscore-prefixed vars to be intentionally unused
+      "@typescript-eslint/no-unused-vars": ["error", {
+        varsIgnorePattern: "^_",
+        argsIgnorePattern: "^_",
+        caughtErrorsIgnorePattern: "^_",
+      }],
+    },
+  },
 ];
 
 export default eslintConfig;

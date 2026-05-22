@@ -12,9 +12,18 @@ import ProfilePanel from "@/components/panels/profile-panel";
 import ThemeToggle from "@/components/ui/theme-toggle";
 import { useCourses } from "@/hooks/use-courses";
 import { calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
+import ImportHubModal from "@/components/features/import/import-hub-modal";
+import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
+import ImportFromHtml from "@/components/features/course-tracker/import-from-html";
+import ImportExamHtml from "@/components/features/exam-schedule/import-exam-html";
+import ImportCatalogModal from "@/components/features/import/import-catalog-modal";
+import ImportCtdtModal from "@/components/features/import/import-ctdt-modal";
+import FeedbackButton from "@/components/features/feedback/feedback-button";
 import { getUserProfile } from "@/lib/supabase/courses-api";
 import { getNearestExamDays } from "@/lib/supabase/exam-api";
 import type { UserProfile } from "@/types/database";
+import { useToast } from "@/hooks/use-toast";
+import ToastContainer from "@/components/ui/toast-notification";
 
 type Panel = "dashboard" | "roadmap" | "gpa" | "exam" | "resources" | "profile";
 
@@ -35,18 +44,27 @@ function getDisplayName(email: string) {
   return email.split("@")[0];
 }
 
-export default function AppShell({ userId, userEmail }: { userId: string; userEmail: string }) {
+export default function AppShell({ userId, userEmail, avatarUrl }: { userId: string; userEmail: string; avatarUrl?: string }) {
   const [active, setActive] = useState<Panel>("dashboard");
   const [showLogout, setShowLogout] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Global import hub + sub-modal state
+  const [showImportHub, setShowImportHub] = useState(false);
+  const [showImportDkhp, setShowImportDkhp] = useState(false);
+  const [showImportHtml, setShowImportHtml] = useState(false);
+  const [showImportExam, setShowImportExam] = useState(false);
+  const [showImportCatalog, setShowImportCatalog] = useState(false);
+  const [showImportCtdt, setShowImportCtdt] = useState(false);
+  const [curriculumRefreshKey, setCurriculumRefreshKey] = useState(0);
   const router = useRouter();
   const supabase = createClient();
 
+  const { toasts, toast, removeToast } = useToast();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   useEffect(() => { getUserProfile(userId).then(setUserProfile); }, [userId]);
   const totalCreditsRequired = userProfile?.total_credits_required ?? 131;
 
-  const { userCourses, allCourses, loading: coursesLoading, gpa4, passedCredits } = useCourses(userId);
+  const { userCourses, allCourses, loading: coursesLoading, gpa4, passedCredits, addCourse, refetch } = useCourses(userId);
   const inProgressCourses = useMemo(() => userCourses.filter((c) => c.status === "in_progress"), [userCourses]);
   const completedCourses = useMemo(() => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"), [userCourses]);
 
@@ -81,6 +99,17 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
     setActive(panel);
     setSidebarOpen(false);
   }
+
+  /**
+   * Guard: prevent DKHP import (in_progress) from downgrading a course
+   * that the user already has as completed/exempted/failed.
+   * If such a record exists, silently skip that course.
+   */
+  const addCourseWithGuard: typeof addCourse = async (input) => {
+    const existing = userCourses.find((c) => c.course_id === input.course_id);
+    if (existing && ["completed", "exempted"].includes(existing.status) && input.status === "in_progress") return;
+    return addCourse(input);
+  };
 
   const profileName = userProfile?.full_name || null;
   const initials = profileName
@@ -131,11 +160,27 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
                 {item.id === "gpa"
                   ? riskyCount > 0 && <span className="es-nav-badge">{riskyCount}</span>
                   : item.id === "exam"
-                  ? nearestExamDays !== null && nearestExamDays >= 0 && <span className="es-nav-badge">{nearestExamDays}d</span>
+                  ? nearestExamDays !== null && nearestExamDays >= 0 && (
+                    <span className={`es-nav-badge${nearestExamDays <= 3 ? " urgent" : nearestExamDays <= 7 ? " soon" : ""}`}>
+                      {nearestExamDays === 0 ? "Hôm nay" : `${nearestExamDays}d`}
+                    </span>
+                  )
                   : item.badge && <span className="es-nav-badge">{item.badge}</span>
                 }
               </button>
             ))}
+          {/* Global import + feedback */}
+          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--es-border)", display: "flex", flexDirection: "column", gap: 8 }}>
+            <button
+              className="es-btn es-btn-primary"
+              onClick={() => { setShowImportHub(true); setSidebarOpen(false); }}
+              style={{ width: "100%", justifyContent: "center", gap: 6 }}
+            >
+              📥 Import dữ liệu
+            </button>
+            <FeedbackButton userId={userId} onToast={toast} />
+          </div>
+
           {userProfile?.role === "admin" && (
             <>
               <div className="es-nav-label" style={{ marginTop: 12 }}>Quản trị</div>
@@ -152,7 +197,11 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
             style={{ cursor: "pointer" }}
             title="Xem hồ sơ"
           >
-            <div className="es-user-avatar">{initials}</div>
+            <div className="es-user-avatar">
+              {avatarUrl
+                ? <img src={avatarUrl} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} referrerPolicy="no-referrer" />
+                : initials}
+            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="es-user-name">{mssv}</div>
               <div className="es-user-id">{displayName} · {userProfile?.major ?? "CNTT"}</div>
@@ -182,15 +231,72 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               inProgressCourses={inProgressCourses}
               completedCourses={completedCourses}
               nearestExamDays={nearestExamDays}
+              semester={currentSemester}
             />
           )}
-          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} />}
+          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} major={userProfile?.major} intakeYear={userProfile?.intake_year} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
-          {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} />}
+          {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} onToast={toast} />}
           {active === "resources" && <ResourcesPanel userId={userId} inProgressCourses={inProgressCourses} allCourses={allCourses} />}
-          {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} />}
+          {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} avatarUrl={avatarUrl} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
         </main>
       </div>
+
+      {/* Import hub + sub-modals */}
+      {showImportHub && (
+        <ImportHubModal
+          onSelectDkhp={() => setShowImportDkhp(true)}
+          onSelectHtml={() => setShowImportHtml(true)}
+          onSelectExam={() => setShowImportExam(true)}
+          onSelectCatalog={() => setShowImportCatalog(true)}
+          onSelectCtdt={() => setShowImportCtdt(true)}
+          isAdmin={userProfile?.role === "admin"}
+          onClose={() => setShowImportHub(false)}
+        />
+      )}
+      {showImportDkhp && (
+        <ImportFromDkhp
+          allCourses={allCourses}
+          onAdd={addCourseWithGuard}
+          onSuccess={refetch}
+          onClose={() => setShowImportDkhp(false)}
+        />
+      )}
+      {showImportHtml && (
+        <ImportFromHtml
+          userId={userId}
+          userEmail={userEmail}
+          allCourses={allCourses}
+          onSuccess={refetch}
+          onClose={() => setShowImportHtml(false)}
+        />
+      )}
+      {showImportExam && (
+        <ImportExamHtml
+          userId={userId}
+          currentSemester={currentSemester}
+          userCourses={userCourses}
+          allCourses={allCourses}
+          onSuccess={refetch}
+          onClose={() => setShowImportExam(false)}
+        />
+      )}
+
+      {showImportCatalog && (
+        <ImportCatalogModal
+          onSuccess={refetch}
+          onClose={() => setShowImportCatalog(false)}
+        />
+      )}
+      {showImportCtdt && (
+        <ImportCtdtModal
+          onSuccess={() => { refetch(); setCurriculumRefreshKey((k) => k + 1); }}
+          onClose={() => setShowImportCtdt(false)}
+          defaultMajor={userProfile?.major}
+          defaultIntakeYear={userProfile?.intake_year}
+          defaultTrainingType={userProfile?.training_type}
+        />
+      )}
 
       {/* Logout modal */}
       {showLogout && (
@@ -208,6 +314,8 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
           </div>
         </div>
       )}
+
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </>
   );
 }

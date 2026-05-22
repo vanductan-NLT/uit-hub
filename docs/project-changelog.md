@@ -2,9 +2,20 @@
 
 All notable changes to UIT Hub are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [Unreleased] — Sprint: Feature Completeness (2026-05-22)
 
 ### Added
+- **Unit tests** (Vitest + jsdom): 49 tests, 100% pass — covers `gpa-forecast-utils` (calculatePartialScore, calculateRequiredCK, forecastCumulativeGPA4, calculateRequiredAvgScore, sortByRisk) and `graduation-eligibility` (filterPassedCourses, computeBreakdown, computeChecks)
+- **ICS export**: Download exam schedule as `.ics` (RFC 5545 calendar file, works with Google Calendar, Apple Calendar, Outlook) — `src/lib/ics-export-utils.ts`
+- **Toast notification system**: Fixed bottom-right toasts, auto-dismiss 4s, 4 types (success/error/warning/info), Duolingo bounce-in animation — `src/hooks/use-toast.ts` + `src/components/ui/toast-notification.tsx`
+- **Dashboard — graduation eligibility badge**: Topbar chip shows "🎓 Đủ ĐK TN" (green) or "🎓 X% lộ trình" (amber), clickable → Profile panel
+- **Dashboard — dynamic semester label**: Reads from current `inProgressCourses[0].semester`, no more hardcoded "HK2 2024–2025"
+- **Dashboard — exam urgency quick action**: "🚨 Thi hôm nay!" text when `nearestExamDays === 0`
+- **Dashboard — graduation TN quick action**: 5th quick action card linking to Profile/graduation check
+- **Sidebar exam badge urgency**: `.es-nav-badge.urgent` (red + pulse animation ≤3 days), `.es-nav-badge.soon` (amber ≤7 days)
+- **Resources panel — all in-progress courses**: Shows every enrolled course sorted by exam proximity, with empty state for courses lacking resources (students can discover which courses need resources)
+- **Profile panel — compact graduation card**: Redesigned from ~400px tall vertical list to ~150px horizontal chips (`CriteriaChip` components), full-width above personal info grid for immediate visibility
+- **Exam panel — toast wiring**: Success toast on import + delete actions
 - Galactic login page with animated constellations and floating stairs
 - Split-layout login design with feature showcase cards
 - Onboarding wizard with 3-step flow (profile → courses → success)

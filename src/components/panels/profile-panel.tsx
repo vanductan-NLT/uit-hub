@@ -3,15 +3,24 @@
 import { useState, useEffect } from "react";
 import { getUserProfile, upsertUserProfile } from "@/lib/supabase/courses-api";
 import { useCourses } from "@/hooks/use-courses";
+import { useCurriculum } from "@/hooks/use-curriculum";
+import GraduationEligibilityCard from "@/components/features/profile/graduation-eligibility-card";
 import type { UserProfile } from "@/types/database";
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
 const INTAKE_YEARS = Array.from({ length: 10 }, (_, i) => 2026 - i);
 const GRAD_YEARS = Array.from({ length: 8 }, (_, i) => 2026 + i);
+const TRAINING_TYPES: { value: "chinh-quy" | "tu-xa"; label: string }[] = [
+  { value: "chinh-quy", label: "Chính quy" },
+  { value: "tu-xa", label: "Từ xa" },
+];
 
 interface Props {
   userId: string;
   userEmail: string;
+  avatarUrl?: string;
+  onImportCtdt?: () => void;
+  curriculumRefreshKey?: number;
 }
 
 function getInitials(name: string | null, email: string) {
@@ -19,7 +28,7 @@ function getInitials(name: string | null, email: string) {
   return email.split("@")[0].slice(0, 2).toUpperCase();
 }
 
-export default function ProfilePanel({ userId, userEmail }: Props) {
+export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumRefreshKey = 0 }: Props) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -32,8 +41,10 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
   const [intakeYear, setIntakeYear] = useState(2022);
   const [gradYear, setGradYear] = useState(2026);
   const [totalCredits, setTotalCredits] = useState(131);
+  const [trainingType, setTrainingType] = useState<"chinh-quy" | "tu-xa">("chinh-quy");
 
-  const { gpa10, gpa4, passedCredits } = useCourses(userId);
+  const { gpa10, gpa4, passedCredits, userCourses } = useCourses(userId);
+  const { curriculum } = useCurriculum(profile?.major, profile?.intake_year, curriculumRefreshKey);
 
   useEffect(() => {
     getUserProfile(userId).then((p) => {
@@ -45,6 +56,7 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
         setIntakeYear(p.intake_year ?? 2022);
         setGradYear(p.target_graduation_year ?? 2026);
         setTotalCredits(p.total_credits_required ?? 131);
+        setTrainingType(p.training_type ?? "chinh-quy");
       }
       setLoading(false);
     });
@@ -61,6 +73,7 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
         intake_year: intakeYear,
         target_graduation_year: gradYear,
         total_credits_required: totalCredits,
+        training_type: trainingType,
       });
       setProfile(updated);
       setEditing(false);
@@ -77,6 +90,7 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
       setIntakeYear(profile.intake_year ?? 2022);
       setGradYear(profile.target_graduation_year ?? 2026);
       setTotalCredits(profile.total_credits_required ?? 131);
+      setTrainingType(profile.training_type ?? "chinh-quy");
     }
     setEditing(false);
   }
@@ -119,7 +133,16 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
       </div>
 
       <div className="es-content">
-        <div className="es-grid-2" style={{ alignItems: "start" }}>
+        {/* Graduation eligibility — full width, visible at a glance */}
+        <GraduationEligibilityCard
+          userId={userId}
+          userCourses={userCourses}
+          gpa4={gpa4}
+          curriculum={curriculum}
+          totalCreditsRequired={profile?.total_credits_required ?? 131}
+        />
+
+        <div className="es-grid-2" style={{ alignItems: "start", marginTop: 14 }}>
           {/* Left: Avatar + info card */}
           <div>
             <div className="es-card" style={{ marginBottom: 14 }}>
@@ -130,8 +153,11 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 24, fontWeight: 800, flexShrink: 0,
                   boxShadow: "0 0 0 4px var(--blue-lt), 0 0 0 6px var(--blue)",
+                  overflow: "hidden",
                 }}>
-                  {initials}
+                  {avatarUrl
+                    ? <img src={avatarUrl} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} referrerPolicy="no-referrer" />
+                    : initials}
                 </div>
                 <div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)" }}>{displayName}</div>
@@ -180,6 +206,7 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
                 { label: "Năm tốt nghiệp dự kiến", val: profile?.target_graduation_year ?? "—" },
                 { label: "Tổng TC cần tốt nghiệp", val: profile?.total_credits_required ?? 131 },
                 { label: "Ngành", val: profile?.major ?? "CNTT" },
+                { label: "Hệ đào tạo", val: profile?.training_type === "tu-xa" ? "Từ xa" : "Chính quy" },
               ].map((row) => (
                 <div key={row.label} style={{
                   display: "flex", justifyContent: "space-between",
@@ -191,10 +218,12 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
                 </div>
               ))}
             </div>
+
           </div>
 
-          {/* Right: Edit form (always visible for layout, read-only when not editing) */}
-          <div className="es-card">
+          {/* Right: Edit form */}
+          <div>
+            <div className="es-card">
             <div className="es-section-hdr" style={{ marginBottom: 16 }}>
               <div>
                 <div className="es-section-title">Chỉnh sửa thông tin</div>
@@ -223,17 +252,31 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
                   disabled={!editing}
                 />
               </div>
-              <div>
-                <label className="es-login-label">Ngành</label>
-                <select
-                  className="es-login-input"
-                  value={major}
-                  onChange={(e) => setMajor(e.target.value)}
-                  disabled={!editing}
-                  style={{ cursor: editing ? "pointer" : "default" }}
-                >
-                  {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 2 }}>
+                  <label className="es-login-label">Ngành</label>
+                  <select
+                    className="es-login-input"
+                    value={major}
+                    onChange={(e) => setMajor(e.target.value)}
+                    disabled={!editing}
+                    style={{ cursor: editing ? "pointer" : "default" }}
+                  >
+                    {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="es-login-label">Hệ đào tạo</label>
+                  <select
+                    className="es-login-input"
+                    value={trainingType}
+                    onChange={(e) => setTrainingType(e.target.value as "chinh-quy" | "tu-xa")}
+                    disabled={!editing}
+                    style={{ cursor: editing ? "pointer" : "default" }}
+                  >
+                    {TRAINING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
@@ -274,6 +317,7 @@ export default function ProfilePanel({ userId, userEmail }: Props) {
                 />
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

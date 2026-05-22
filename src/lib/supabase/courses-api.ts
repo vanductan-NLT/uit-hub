@@ -92,6 +92,7 @@ export interface UpsertUserProfileInput {
   intake_year?: number | null;
   target_graduation_year?: number | null;
   total_credits_required?: number;
+  training_type?: "chinh-quy" | "tu-xa";
 }
 
 export async function upsertUserProfile(input: UpsertUserProfileInput): Promise<UserProfile> {

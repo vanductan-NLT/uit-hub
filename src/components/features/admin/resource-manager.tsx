@@ -27,7 +27,7 @@ interface Props {
   allCourses: Course[];
 }
 
-export default function ResourceManager({ userId, allCourses }: Props) {
+export default function ResourceManager({ allCourses }: Props) {
   const [resources, setResources] = useState<StudyResourceWithCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<ResourceStatus | "all">("all");

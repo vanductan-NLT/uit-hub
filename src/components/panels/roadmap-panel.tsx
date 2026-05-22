@@ -9,29 +9,49 @@ import ImportFromHtml from "@/components/features/course-tracker/import-from-htm
 import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
 import CourseSuggestions from "@/components/features/course-tracker/course-suggestions";
 import CourseTimeline from "@/components/features/course-tracker/course-timeline";
+import CurriculumRoadmap from "@/components/features/course-tracker/curriculum-roadmap";
 import {
   buildPassedIds,
   buildTakenIds,
   getSuggestedCourses,
   estimateRemainingTime,
 } from "@/lib/course-utils";
+import { useCurriculum } from "@/hooks/use-curriculum";
+import EmptyState from "@/components/ui/empty-state";
+import ErrorState from "@/components/ui/error-state";
 
-interface RoadmapPanelProps { userId: string; userEmail: string; totalCreditsRequired?: number; }
+interface RoadmapPanelProps {
+  userId: string;
+  userEmail: string;
+  totalCreditsRequired?: number;
+  major?: string | null;
+  intakeYear?: number | null;
+  onImportCtdt?: () => void;
+  curriculumRefreshKey?: number;
+}
 
 const TARGETS = { general: 30, required: 70, elective: 31 };
 
-export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131 }: RoadmapPanelProps) {
+export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131, major, intakeYear, onImportCtdt, curriculumRefreshKey = 0 }: RoadmapPanelProps) {
   const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
+  const { curriculum, loading: currLoading } = useCurriculum(major, intakeYear, curriculumRefreshKey);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showDkhpImport, setShowDkhpImport] = useState(false);
   const [showImportMenu, setShowImportMenu] = useState(false);
-  const [activeTab, setActiveTab] = useState<"list" | "timeline">("list");
+  const [activeTab, setActiveTab] = useState<"list" | "timeline" | "ctdt">("list");
 
   const takenIds = useMemo(() => buildTakenIds(userCourses), [userCourses]);
   const passedIds = useMemo(() => buildPassedIds(userCourses), [userCourses]);
   const allCoursesMap = useMemo(() => new Map(allCourses.map((c) => [c.id, c])), [allCourses]);
-  const suggestions = useMemo(() => getSuggestedCourses(allCourses, takenIds, passedIds), [allCourses, takenIds, passedIds]);
+  const curriculumCourseIds = useMemo(
+    () => curriculum ? new Set(curriculum.courses.map((c) => c.course_id)) : undefined,
+    [curriculum]
+  );
+  const suggestions = useMemo(
+    () => getSuggestedCourses(allCourses, takenIds, passedIds, curriculumCourseIds),
+    [allCourses, takenIds, passedIds, curriculumCourseIds]
+  );
   const { avgCreditsPerSem, remainingSemesters } = useMemo(
     () => estimateRemainingTime(userCourses, passedCredits),
     [userCourses, passedCredits]
@@ -60,10 +80,7 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
           </div>
         </div>
         <div className="es-content">
-          <div className="es-alert-strip danger">
-            <span>⚠️</span>
-            <div className="es-alert-text">{error}</div>
-          </div>
+          <ErrorState variant="inline" message={error} onRetry={refetch} />
         </div>
       </>
     );
@@ -131,12 +148,21 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 240, color: "var(--es-muted)", fontSize: 14 }}>
             Đang tải dữ liệu...
           </div>
+        ) : userCourses.length === 0 ? (
+          <EmptyState
+            icon="🗺️"
+            title="Chưa có dữ liệu lộ trình"
+            description="Import bảng điểm hoặc lịch học từ cổng UIT để hệ thống tự động xây dựng lộ trình và gợi ý môn học."
+            actionLabel="📋 Tải dữ liệu từ cổng UIT"
+            onAction={() => setShowDkhpImport(true)}
+            secondary="hoặc kéo file HTML từ DAA · daa.uit.edu.vn"
+          />
         ) : (
           <>
             {/* Tab bar — Google Material underline style */}
             <div style={{ display: "flex", borderBottom: "1px solid var(--es-border)", marginBottom: 20 }}>
-              {(["list", "timeline"] as const).map((tab) => {
-                const label = tab === "list" ? "Danh sách" : "Lộ trình";
+              {(["list", "timeline", "ctdt"] as const).map((tab) => {
+                const label = tab === "list" ? "Danh sách" : tab === "timeline" ? "Lộ trình" : "CTĐT";
                 const isActive = activeTab === tab;
                 return (
                   <button
@@ -206,8 +232,35 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
                   <CourseSuggestions suggestions={suggestions} />
                 </div>
               </div>
-            ) : (
+            ) : activeTab === "timeline" ? (
               <CourseTimeline userCourses={userCourses} suggestions={suggestions} />
+            ) : (
+              /* CTĐT tab */
+              currLoading ? (
+                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--es-muted)", fontSize: 14 }}>
+                  Đang tải CTĐT...
+                </div>
+              ) : !curriculum ? (
+                <EmptyState
+                  icon="🎓"
+                  title={!major || !intakeYear ? "Chưa có thông tin ngành học" : `Chưa có CTĐT ${major} K${String(intakeYear).slice(-2)}`}
+                  description={
+                    !major || !intakeYear
+                      ? "Cập nhật ngành học và năm nhập học trong phần Hồ sơ để xem lộ trình CTĐT."
+                      : "Import CTĐT để xem lộ trình đầy đủ theo từng học kỳ."
+                  }
+                  actionLabel={onImportCtdt ? "🎓 Import CTĐT" : undefined}
+                  onAction={onImportCtdt}
+                />
+              ) : (
+                <CurriculumRoadmap
+                  curriculum={curriculum}
+                  userCourses={userCourses}
+                  allCourses={allCourses}
+                  passedIds={passedIds}
+                  takenIds={takenIds}
+                />
+              )
             )}
           </>
         )}

@@ -192,7 +192,7 @@ export default function ImportFromHtml({ userId, userEmail, allCourses, onSucces
                         <tr key={`${c.course_id}-${c.semester}`} style={{ background: unknown ? "var(--amber-lt)" : "var(--white)", borderBottom: "1px solid var(--es-border)" }}>
                           <td style={{ padding: "8px 10px" }}>
                             <input type="checkbox" checked={checked.has(c.course_id)}
-                              onChange={(e) => setChecked((prev) => { const s = new Set(prev); e.target.checked ? s.add(c.course_id) : s.delete(c.course_id); return s; })} />
+                              onChange={(e) => setChecked((prev) => { const s = new Set(prev); if (e.target.checked) { s.add(c.course_id); } else { s.delete(c.course_id); } return s; })} />
                           </td>
                           <td style={{ padding: "8px 10px", fontSize: 12, fontWeight: 600, fontFamily: "monospace", color: unknown ? "var(--amber)" : "var(--ink)" }}>{c.course_id}</td>
                           <td style={{ padding: "8px 10px", fontSize: 12, color: "var(--ink)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.course_name}</td>

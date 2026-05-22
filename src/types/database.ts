@@ -13,7 +13,50 @@ export interface Course {
   prerequisites: string[];
   components: CourseComponent[];
   is_active: boolean;
+  // Phase 2 augmentation columns (nullable — may not exist for older rows)
+  suggested_semester: number | null;   // 1..8, from CTĐT khoá
+  course_group: string | null;         // ĐC | CSN | CN | CNTC
+  equivalents: string[];               // mã môn tương đương
   created_at: string;
+  updated_at: string;
+}
+
+// ── Phase 2: Curriculum data model ──────────────────────────
+
+export interface Curriculum {
+  id: string;                   // e.g. "CNTT-K19"
+  major: string;
+  intake_year_from: number;
+  total_credits_required: number;
+  general_credits: number | null;
+  foundation_credits: number | null;
+  major_required_credits: number | null;
+  major_elective_credits: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CurriculumCourse {
+  curriculum_id: string;
+  course_id: string;
+  requirement_type: "general" | "foundation" | "required" | "elective";
+  suggested_semester: number | null;
+}
+
+export interface GraduationRequirement {
+  curriculum_id: string;
+  key: string;   // english | gdqp | gdtc | total_credits | gpa_min
+  label: string;
+  threshold_value: number | null;
+  unit: string | null; // credits | score | boolean
+}
+
+export interface UserMilestone {
+  user_id: string;
+  key: string;
+  is_completed: boolean;
+  value: number | null;
+  note: string | null;
   updated_at: string;
 }
 
@@ -41,6 +84,7 @@ export interface UserProfile {
   intake_year: number | null;
   target_graduation_year: number | null;
   total_credits_required: number;
+  training_type: "chinh-quy" | "tu-xa";
   role: "student" | "admin";
   created_at: string;
   updated_at: string;

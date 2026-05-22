@@ -1,5 +1,17 @@
 import { createClient } from "@/lib/supabase/client";
 import type { UserProfile } from "@/types/database";
+import type { FeedbackType } from "@/lib/supabase/feedback-api";
+
+export interface FeedbackRow {
+  id: string;
+  user_id: string;
+  type: FeedbackType;
+  message: string;
+  page: string | null;
+  created_at: string;
+  user_email: string | null;
+  user_name: string | null;
+}
 
 export interface StudentWithProgress extends UserProfile {
   course_count: number;
@@ -69,5 +81,41 @@ export async function getStudentsWithProgress(): Promise<StudentWithProgress[]> 
       total_credits: s.credits,
       gpa10: s.creditSum > 0 ? Math.round((s.weightedSum / s.creditSum) * 100) / 100 : null,
     } as StudentWithProgress;
+  });
+}
+
+export async function getFeedback(): Promise<FeedbackRow[]> {
+  const supabase = createClient();
+
+  // 1. Fetch feedback rows
+  const { data: feedback, error: fErr } = await supabase
+    .from("user_feedback")
+    .select("id, user_id, type, message, page, created_at")
+    .order("created_at", { ascending: false });
+  if (fErr) throw new Error(fErr.message);
+  if (!feedback || feedback.length === 0) return [];
+
+  // 2. Fetch profiles for those user_ids (separate query — no direct FK to user_profiles)
+  const userIds = [...new Set(feedback.map((r) => r.user_id as string))];
+  const { data: profiles } = await supabase
+    .from("user_profiles")
+    .select("id, full_name, student_id")
+    .in("id", userIds);
+
+  const profileMap = new Map<string, { full_name: string | null; student_id: string | null }>();
+  for (const p of profiles ?? []) profileMap.set(p.id, p);
+
+  return feedback.map((row) => {
+    const p = profileMap.get(row.user_id as string);
+    return {
+      id: row.id,
+      user_id: row.user_id as string,
+      type: row.type as FeedbackType,
+      message: row.message,
+      page: row.page,
+      created_at: row.created_at,
+      user_email: null,
+      user_name: p?.full_name ?? p?.student_id ?? null,
+    };
   });
 }
