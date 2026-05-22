@@ -15,3 +15,15 @@ CREATE POLICY "user_feedback_insert_own"
   ON user_feedback FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
+
+-- Admins can read all feedback
+CREATE POLICY "user_feedback_admin_select"
+  ON user_feedback FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.id = auth.uid()
+        AND user_profiles.role = 'admin'
+    )
+  );

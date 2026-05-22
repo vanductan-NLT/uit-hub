@@ -1,5 +1,17 @@
 import { createClient } from "@/lib/supabase/client";
 import type { UserProfile } from "@/types/database";
+import type { FeedbackType } from "@/lib/supabase/feedback-api";
+
+export interface FeedbackRow {
+  id: string;
+  user_id: string;
+  type: FeedbackType;
+  message: string;
+  page: string | null;
+  created_at: string;
+  user_email: string | null;
+  user_name: string | null;
+}
 
 export interface StudentWithProgress extends UserProfile {
   course_count: number;
@@ -69,5 +81,34 @@ export async function getStudentsWithProgress(): Promise<StudentWithProgress[]> 
       total_credits: s.credits,
       gpa10: s.creditSum > 0 ? Math.round((s.weightedSum / s.creditSum) * 100) / 100 : null,
     } as StudentWithProgress;
+  });
+}
+
+export async function getFeedback(): Promise<FeedbackRow[]> {
+  const supabase = createClient();
+
+  // Fetch feedback + join user_profiles for name
+  const { data, error } = await supabase
+    .from("user_feedback")
+    .select(`
+      id, user_id, type, message, page, created_at,
+      user_profiles!inner(full_name, student_id)
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((row) => {
+    const profile = row.user_profiles as unknown as { full_name: string | null; student_id: string | null } | null;
+    return {
+      id: row.id,
+      user_id: row.user_id,
+      type: row.type as FeedbackType,
+      message: row.message,
+      page: row.page,
+      created_at: row.created_at,
+      user_email: null,
+      user_name: profile?.full_name ?? profile?.student_id ?? null,
+    };
   });
 }

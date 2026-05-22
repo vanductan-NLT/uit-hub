@@ -5,8 +5,9 @@ import { getAllCourses } from "@/lib/supabase/courses-api";
 import type { Course } from "@/types/database";
 import ResourceManager from "@/components/features/admin/resource-manager";
 import StudentList from "@/components/features/admin/student-list";
+import FeedbackList from "@/components/features/admin/feedback-list";
 
-type Tab = "resources" | "students";
+type Tab = "resources" | "students" | "feedback";
 
 export default function AdminShell({ userId, userEmail }: { userId: string; userEmail: string }) {
   const [activeTab, setActiveTab] = useState<Tab>("resources");
@@ -48,10 +49,17 @@ export default function AdminShell({ userId, userEmail }: { userId: string; user
           >
             👥 Danh sách sinh viên
           </button>
+          <button
+            className={`es-filter-btn${activeTab === "feedback" ? " active" : ""}`}
+            onClick={() => setActiveTab("feedback")}
+          >
+            💬 Góp ý người dùng
+          </button>
         </div>
 
         {activeTab === "resources" && <ResourceManager userId={userId} allCourses={allCourses} />}
         {activeTab === "students" && <StudentList />}
+        {activeTab === "feedback" && <FeedbackList />}
       </div>
     </div>
   );
