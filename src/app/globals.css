@@ -86,6 +86,10 @@
   --purple: #7C3AED;
   --purple-lt: #F5F3FF;
 
+  /* Button: white variant (welcome banner) */
+  --btn-white-bg: #fff;
+  --btn-white-color: #1A1A2E;
+
   /* Layout */
   --sidebar-w: 248px;
   --es-sidebar-bg: #131F3E;
@@ -164,6 +168,10 @@
   --shadow-btn-blue: 0 4px 0 var(--blue-shadow);
   --shadow-btn-green: 0 4px 0 var(--duo-green-shadow);
   --shadow-btn-yellow: 0 4px 0 var(--duo-yellow-shadow);
+
+  /* Button: white variant (welcome banner) */
+  --btn-white-bg: rgba(255,255,255,0.18);
+  --btn-white-color: #fff;
 }
 
 /* ── DARK MODE COMPONENT OVERRIDES ── */
@@ -459,7 +467,7 @@
 .es-btn-ghost:hover { color: var(--ink); background: var(--bg); }
 
 .es-btn-white {
-  background: #fff; color: var(--ink); border: none;
+  background: var(--btn-white-bg); color: var(--btn-white-color); border: none;
   font-family: inherit; font-size: 13px; font-weight: 700;
   padding: 10px 20px; border-radius: var(--r-full); cursor: pointer;
   box-shadow: 0 4px 0 rgba(0,0,0,0.12);
@@ -467,8 +475,6 @@
 }
 .es-btn-white:hover { filter: brightness(0.97); }
 .es-btn-white:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
-[data-theme="dark"] .es-btn-white { background: rgba(255,255,255,0.14); color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
-[data-theme="dark"] .es-btn-white:hover { background: rgba(255,255,255,0.22); filter: none; }
 
 .es-btn-dark {
   background: rgba(255,255,255,.1); color: #fff;
