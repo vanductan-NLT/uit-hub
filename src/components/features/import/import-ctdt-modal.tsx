@@ -115,22 +115,67 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
               </div>
             </div>
 
+            {/* 3-step guide */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+              {[
+                {
+                  n: 1,
+                  label: "Mở trang CTĐT theo khoá",
+                  detail: (
+                    <a
+                      href="https://student.uit.edu.vn/thong-tin-dao-tao/chuong-trinh-dao-tao"
+                      target="_blank" rel="noopener noreferrer"
+                      style={{ color: "var(--blue)", textDecoration: "none", fontWeight: 600 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      student.uit.edu.vn → Chương trình đào tạo ↗
+                    </a>
+                  ),
+                },
+                {
+                  n: 2,
+                  label: "Lưu trang về máy",
+                  detail: <span style={{ color: "var(--es-muted)" }}>Ctrl+S → chọn <strong>Webpage, HTML Only</strong> (.html)</span>,
+                },
+                {
+                  n: 3,
+                  label: "Chọn ngành + năm nhập học, kéo thả file",
+                  detail: <span style={{ color: "var(--es-muted)" }}>hoặc click vùng bên dưới để chọn file</span>,
+                },
+              ].map(({ n, label, detail }) => (
+                <div key={n} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
+                    background: "var(--blue)", color: "#fff",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 12, fontWeight: 700,
+                  }}>{n}</div>
+                  <div style={{ paddingTop: 2 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{label}</div>
+                    <div style={{ fontSize: 12, marginTop: 1 }}>{detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* File drop zone */}
             <div
               style={{
-                border: "2px dashed var(--es-border)", borderRadius: "var(--r-xl)",
-                padding: "28px 20px", textAlign: "center", cursor: "pointer",
+                border: `2px dashed ${result ? "var(--green)" : "var(--es-border)"}`,
+                borderRadius: "var(--r-xl)", padding: "20px",
+                textAlign: "center", cursor: "pointer",
                 marginBottom: 16, background: "var(--bg)",
+                transition: "border-color 0.15s",
               }}
               onClick={() => fileRef.current?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
             >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🎓</div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>{result ? "✅" : "🎓"}</div>
+              <div style={{ fontWeight: 600, fontSize: 13, color: result ? "var(--green)" : "var(--ink)" }}>
                 {result
-                  ? `✅ ${result.courses.length} môn · ${Object.keys(bySemester ?? {}).length} học kỳ`
-                  : "Kéo thả file HTML trang CTĐT hoặc click để chọn"}
+                  ? `${result.courses.length} môn · ${Object.keys(bySemester ?? {}).length} học kỳ đã nhận diện`
+                  : "Kéo thả hoặc click để chọn file HTML"}
               </div>
               <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 4 }}>
                 Vào student.uit.edu.vn → Chương trình đào tạo → Save as HTML
