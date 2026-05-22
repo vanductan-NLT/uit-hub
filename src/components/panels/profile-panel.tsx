@@ -132,7 +132,16 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
       </div>
 
       <div className="es-content">
-        <div className="es-grid-2" style={{ alignItems: "start" }}>
+        {/* Graduation eligibility — full width, visible at a glance */}
+        <GraduationEligibilityCard
+          userId={userId}
+          userCourses={userCourses}
+          gpa4={gpa4}
+          curriculum={curriculum}
+          totalCreditsRequired={profile?.total_credits_required ?? 131}
+        />
+
+        <div className="es-grid-2" style={{ alignItems: "start", marginTop: 14 }}>
           {/* Left: Avatar + info card */}
           <div>
             <div className="es-card" style={{ marginBottom: 14 }}>
@@ -208,16 +217,9 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
 
           </div>
 
-          {/* Right: Graduation eligibility + Edit form */}
+          {/* Right: Edit form */}
           <div>
-            <GraduationEligibilityCard
-              userId={userId}
-              userCourses={userCourses}
-              gpa4={gpa4}
-              curriculum={curriculum}
-              totalCreditsRequired={profile?.total_credits_required ?? 131}
-            />
-            <div className="es-card" style={{ marginTop: 14 }}>
+            <div className="es-card">
             <div className="es-section-hdr" style={{ marginBottom: 16 }}>
               <div>
                 <div className="es-section-title">Chỉnh sửa thông tin</div>

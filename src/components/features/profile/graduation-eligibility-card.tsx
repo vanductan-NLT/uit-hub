@@ -110,7 +110,7 @@ export default function GraduationEligibilityCard({ userId, userCourses, gpa4, c
   ].filter((r) => r.required !== null);
 
   return (
-    <div className="es-card" style={{ marginTop: 14 }}>
+    <div className="es-card" style={{ marginBottom: 14 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div>
