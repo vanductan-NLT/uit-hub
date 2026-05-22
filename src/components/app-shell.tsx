@@ -21,6 +21,8 @@ import ImportCtdtModal from "@/components/features/import/import-ctdt-modal";
 import { getUserProfile } from "@/lib/supabase/courses-api";
 import { getNearestExamDays } from "@/lib/supabase/exam-api";
 import type { UserProfile } from "@/types/database";
+import { useToast } from "@/hooks/use-toast";
+import ToastContainer from "@/components/ui/toast-notification";
 
 type Panel = "dashboard" | "roadmap" | "gpa" | "exam" | "resources" | "profile";
 
@@ -56,6 +58,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
   const router = useRouter();
   const supabase = createClient();
 
+  const { toasts, toast, removeToast } = useToast();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   useEffect(() => { getUserProfile(userId).then(setUserProfile); }, [userId]);
   const totalCreditsRequired = userProfile?.total_credits_required ?? 131;
@@ -156,7 +159,11 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
                 {item.id === "gpa"
                   ? riskyCount > 0 && <span className="es-nav-badge">{riskyCount}</span>
                   : item.id === "exam"
-                  ? nearestExamDays !== null && nearestExamDays >= 0 && <span className="es-nav-badge">{nearestExamDays}d</span>
+                  ? nearestExamDays !== null && nearestExamDays >= 0 && (
+                    <span className={`es-nav-badge${nearestExamDays <= 3 ? " urgent" : nearestExamDays <= 7 ? " soon" : ""}`}>
+                      {nearestExamDays === 0 ? "Hôm nay" : `${nearestExamDays}d`}
+                    </span>
+                  )
                   : item.badge && <span className="es-nav-badge">{item.badge}</span>
                 }
               </button>
@@ -218,11 +225,12 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               inProgressCourses={inProgressCourses}
               completedCourses={completedCourses}
               nearestExamDays={nearestExamDays}
+              semester={currentSemester}
             />
           )}
           {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} major={userProfile?.major} intakeYear={userProfile?.intake_year} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
-          {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} />}
+          {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} onToast={toast} />}
           {active === "resources" && <ResourcesPanel userId={userId} inProgressCourses={inProgressCourses} allCourses={allCourses} />}
           {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
         </main>
@@ -300,6 +308,8 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
           </div>
         </div>
       )}
+
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </>
   );
 }

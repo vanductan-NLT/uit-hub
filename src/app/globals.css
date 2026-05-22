@@ -352,6 +352,9 @@
   background: var(--duo-red); color: #fff; border-radius: var(--r-full);
   padding: 2px 8px; box-shadow: 0 2px 0 var(--duo-red-shadow);
 }
+.es-nav-badge.urgent { background: var(--duo-red); box-shadow: 0 2px 0 var(--duo-red-shadow); animation: pulse-badge 1.2s ease-in-out infinite; }
+.es-nav-badge.soon   { background: var(--amber); color: #fff; box-shadow: 0 2px 0 #b45309; }
+@keyframes pulse-badge { 0%,100% { opacity:1; } 50% { opacity:.65; } }
 
 .es-sidebar-user {
   margin-top: auto; padding: 16px;

@@ -14,6 +14,7 @@ interface Props {
   inProgressCourses: UserCourseWithCourse[];
   completedCourses: UserCourseWithCourse[];
   nearestExamDays: number | null;
+  semester: string | null;
 }
 
 function gradeLabel(gpa4: number) {
@@ -24,12 +25,13 @@ function gradeLabel(gpa4: number) {
   return gpa4 > 0 ? "Yếu" : "—";
 }
 
-export default function DashboardPanel({ onNav, displayName, loading, gpa4, passedCredits, totalCreditsRequired, inProgressCourses, completedCourses, nearestExamDays }: Props) {
+export default function DashboardPanel({ onNav, displayName, loading, gpa4, passedCredits, totalCreditsRequired, inProgressCourses, completedCourses, nearestExamDays, semester }: Props) {
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Chào buổi sáng" : hour < 18 ? "Chào buổi chiều" : "Chào buổi tối";
   const dayNames = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-  const dateStr = `${dayNames[now.getDay()]}, ${now.getDate()} tháng ${now.getMonth() + 1} · HK2 2024–2025`;
+  const semesterLabel = semester ?? "HK hiện tại";
+  const dateStr = `${dayNames[now.getDay()]}, ${now.getDate()} tháng ${now.getMonth() + 1} · ${semesterLabel}`;
 
   const riskyCourses = useMemo(() =>
     inProgressCourses
@@ -48,6 +50,8 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
 
   const riskyCount = riskyCourses.length;
   const aGradeCount = completedCourses.filter((c) => c.score !== null && c.score >= 8.5).length;
+  const progressPct = totalCreditsRequired > 0 ? Math.round((passedCredits / totalCreditsRequired) * 100) : 0;
+  const gradEligible = !loading && gpa4 >= 2.0 && passedCredits >= totalCreditsRequired;
 
   const bannerTitle = loading ? "Đang tải dữ liệu..."
     : riskyCount > 0 ? `${riskyCount} môn cần chú ý kỳ này`
@@ -66,8 +70,17 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
           <div className="es-topbar-title">{greeting}, {displayName} 👋</div>
           <div className="es-topbar-sub">{dateStr}</div>
         </div>
-        <div className="es-topbar-right">
-          <button className="es-btn es-btn-outline es-btn-sm">⚙️ Cài đặt</button>
+        <div className="es-topbar-right" style={{ gap: 8 }}>
+          {!loading && (
+            <button
+              className={`es-badge ${gradEligible ? "es-badge-green" : "es-badge-amber"}`}
+              onClick={() => onNav("profile")}
+              style={{ cursor: "pointer", border: "none", fontSize: 12 }}
+              title="Xem điều kiện tốt nghiệp"
+            >
+              {gradEligible ? "🎓 Đủ ĐK TN" : `🎓 ${progressPct}% lộ trình`}
+            </button>
+          )}
         </div>
       </div>
 
@@ -113,7 +126,7 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
               {!loading && <span style={{ fontSize: 16, color: "var(--es-muted)" }}>/{totalCreditsRequired}</span>}
             </div>
             <div className="es-stat-delta" style={{ color: "var(--es-muted)" }}>
-              {loading ? "" : `${Math.round((passedCredits / totalCreditsRequired) * 100)}% chương trình`}
+              {loading ? "" : `${progressPct}% chương trình`}
             </div>
           </div>
           <div className="es-stat-card animate-spring-in stagger-3" style={{ "--stat-accent": "var(--duo-orange)" } as React.CSSProperties}>
@@ -148,7 +161,7 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
             <div className="es-quick-action-name">Lịch ôn thi</div>
             <div className="es-quick-action-desc">
               {nearestExamDays !== null && nearestExamDays >= 0
-                ? `Thi gần nhất: ${nearestExamDays} ngày`
+                ? nearestExamDays === 0 ? "🚨 Thi hôm nay!" : `Thi gần nhất: ${nearestExamDays} ngày`
                 : "Xem kế hoạch ôn thi"}
             </div>
           </div>
@@ -163,6 +176,13 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
             <div className="es-quick-action-icon">📚</div>
             <div className="es-quick-action-name">Tài nguyên học tập</div>
             <div className="es-quick-action-desc">Slide, đề thi, bài tập theo môn</div>
+          </div>
+          <div className="es-quick-action" onClick={() => onNav("profile")}>
+            <div className="es-quick-action-icon">🎓</div>
+            <div className="es-quick-action-name">Điều kiện TN</div>
+            <div className="es-quick-action-desc">
+              {loading ? "…" : gradEligible ? "Đủ điều kiện tốt nghiệp" : `${progressPct}% tín chỉ · GPA ${gpa4.toFixed(2)}`}
+            </div>
           </div>
         </div>
       </div>

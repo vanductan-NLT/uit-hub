@@ -6,10 +6,10 @@ UIT Hub is organized into phases with clear milestones and success metrics. This
 
 ```
 Phase 1: Core Features    [████████████████████] 100% DONE
-Phase 2: Design Polish    [████████░░░░░░░░░░░░] 50% IN PROGRESS
-Phase 3: Exam Tracking    [░░░░░░░░░░░░░░░░░░░░] 0% PLANNED
-Phase 4: Testing          [░░░░░░░░░░░░░░░░░░░░] 0% PLANNED
-Phase 5: Advanced Features[░░░░░░░░░░░░░░░░░░░░] 0% FUTURE
+Phase 2: Design Polish    [████████████████░░░░]  80% IN PROGRESS
+Phase 3: Exam Tracking    [████████████████░░░░]  80% DONE
+Phase 4: Testing          [████████░░░░░░░░░░░░]  40% IN PROGRESS
+Phase 5: Advanced Features[░░░░░░░░░░░░░░░░░░░░]   0% FUTURE
 ```
 
 ---
@@ -42,7 +42,7 @@ Phase 5: Advanced Features[░░░░░░░░░░░░░░░░░�
 
 ---
 
-## Phase 2: Design Polish & UX (50% - IN PROGRESS)
+## Phase 2: Design Polish & UX (80% - IN PROGRESS)
 
 **Timeline**: Current release cycle  
 **Status**: 🔄 In progress  
@@ -63,16 +63,21 @@ Phase 5: Advanced Features[░░░░░░░░░░░░░░░░░�
 | Progress bar animations | ✓ | 10px height, spring easing, shine |
 | Canvas confetti library | ✓ | Celebration on onboarding |
 | Stagger animations | ✓ | Cascading delays for lists |
+| Toast notification system | ✓ | Fixed bottom-right, 4 types, auto-dismiss |
+| Sidebar badge urgency | ✓ | Red pulse ≤3d, amber ≤7d |
+| Profile panel layout | ✓ | Graduation card visible above fold |
+| Graduation card compact | ✓ | Horizontal chips, ~150px height |
+| Resources — all courses | ✓ | All in-progress shown, sorted by exam urgency |
 
 ### In Progress
 
 | Feature | % | Target | Notes |
 |---------|---|--------|-------|
-| Mobile responsive | 40% | v0.2.1 | Breakpoints defined, testing needed |
-| Touch interactions | 30% | v0.2.1 | Button sizes ≥44px, tap feedback |
-| Tablet layout | 20% | v0.2.2 | Sidebar drawer, grid adjustments |
-| Animation performance | 60% | v0.2.2 | Profile, optimize will-change |
-| Dark mode refinement | 80% | v0.2.1 | Fine-tune shadow contrast |
+| Mobile responsive | 60% | v0.2.1 | Sidebar drawer, grid adjustments |
+| Touch interactions | 50% | v0.2.1 | Button sizes ≥44px, tap feedback |
+| Tablet layout | 50% | v0.2.2 | Most panels responsive |
+| Animation performance | 80% | v0.2.2 | GPU-accelerated transitions |
+| Dark mode refinement | 90% | v0.2.1 | Minor contrast tweaks left |
 
 ### Planned (Not Started)
 
@@ -100,92 +105,63 @@ Phase 5: Advanced Features[░░░░░░░░░░░░░░░░░�
 
 ---
 
-## Phase 3: Exam Tracking (0% - PLANNED)
+## Phase 3: Exam Tracking (80% - IN PROGRESS)
 
-**Timeline**: Q2 2026 (estimated)  
-**Status**: 📋 Backlog  
+**Timeline**: Q2 2026  
+**Status**: 🔄 Mostly done  
 **Priority**: MEDIUM
 
-### Features to Implement
+### Completed
 
-| Feature | Complexity | Est. Days | Notes |
-|---------|-----------|----------|-------|
-| Exam list UI | LOW | 1 | Card layout, exam details |
-| Exam CRUD | MEDIUM | 2 | Add/edit/delete with validation |
-| Study schedule | MEDIUM | 3 | Calendar + task breakdown |
-| Study progress | HIGH | 4 | Real-time tracker, sync with courses |
-| Exam performance | MEDIUM | 2 | Score input, trend analysis |
-| Notification system | HIGH | 3 | Exam reminders, study milestones |
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Exam list UI | ✓ | Cards with urgency color coding |
+| Exam CRUD | ✓ | Add/edit/delete, HTML import |
+| Study sessions | ✓ | Checkbox-based daily study log |
+| Study progress tracking | ✓ | Progress bar per exam |
+| Urgency calculation | ✓ | Days-left, color tiers (red/amber/green) |
+| Nearest exam badge | ✓ | Sidebar countdown with pulse animation |
+| ICS export | ✓ | RFC 5545, works with Google/Apple/Outlook |
+| HTML import | ✓ | Parse UIT exam schedule HTML |
+| Dashboard exam urgency | ✓ | Quick action + "Thi hôm nay!" alert |
 
-### Database Schema Additions
+### Remaining
 
-```typescript
-// Exams table
-{
-  id: uuid;
-  user_id: uuid (FK);
-  course_id: uuid (FK);
-  subject: string;
-  exam_date: date;
-  location: string;
-  duration_minutes: number;
-  exam_type: 'midterm' | 'final' | 'quiz';
-  created_at: timestamp;
-  updated_at: timestamp;
-}
-
-// Study tasks
-{
-  id: uuid;
-  exam_id: uuid (FK);
-  task: string;
-  target_date: date;
-  completed_at: timestamp | null;
-  priority: 1 | 2 | 3; // 1=high, 3=low
-}
-```
-
-### Success Criteria
-- [ ] Exam list loads in <500ms
-- [ ] Study schedule syncs with calendar
-- [ ] Notifications sent 24h before exam
-- [ ] Performance analytics accurate
-- [ ] Export exam schedule to .ics
+| Feature | Priority | Notes |
+|---------|----------|-------|
+| Push/email notifications | LOW | Browser Notification API (future) |
+| Exam performance analytics | LOW | Score input, trend charts |
 
 ---
 
-## Phase 4: Testing & Quality (0% - PLANNED)
+## Phase 4: Testing & Quality (40% - IN PROGRESS)
 
 **Timeline**: Q2-Q3 2026  
-**Status**: 📋 Backlog  
+**Status**: 🔄 Started  
 **Priority**: HIGH
 
 ### Test Coverage Goals
 
 | Type | Target | Status |
 |------|--------|--------|
-| Unit tests (Jest) | 80% | Not started |
+| Unit tests (Vitest) | 80% | ✓ Started — 49 tests, GPA + graduation |
 | Integration tests | 60% | Not started |
 | E2E tests (Playwright) | 40% | Not started |
 | Performance (Lighthouse) | ≥85 | Not started |
 | Accessibility (WCAG AAA) | 100% | Not started |
 
-### Test Suites to Create
+### Test Suites
 
 ```
-tests/
-├── unit/
-│   ├── lib/gpa-calculator.test.ts
-│   ├── lib/grade-mapper.test.ts
-│   └── components/buttons.test.ts
-├── integration/
-│   ├── auth.test.ts
-│   ├── course-crud.test.ts
-│   └── dashboard-data.test.ts
-└── e2e/
-    ├── login-flow.spec.ts
-    ├── onboarding.spec.ts
-    └── course-management.spec.ts
+src/test/
+├── gpa-forecast-utils.test.ts   ✓ 30 tests (calculatePartialScore, requireCK, forecastGPA4…)
+├── graduation-eligibility.test.ts ✓ 19 tests (filterPassed, computeBreakdown, computeChecks)
+└── setup.ts                     ✓ jest-dom matchers
+
+Planned:
+├── ics-export-utils.test.ts
+├── exam-schedule.test.ts
+└── e2e/ (Playwright)
 ```
 
 ### Security Audit
@@ -237,6 +213,11 @@ tests/
 - **Deliverables**:
   - ✓ Galactic login + onboarding
   - ✓ Design system documentation
+  - ✓ Exam tracking (ICS export, urgency badges, dashboard widget)
+  - ✓ Toast notification system
+  - ✓ Unit tests — GPA + graduation (49 tests)
+  - ✓ Resources panel course discovery
+  - ✓ Graduation eligibility card (compact, always visible)
   - [ ] Mobile responsive complete
   - [ ] Accessibility audit in progress
 - **Blocker**: None
@@ -318,7 +299,7 @@ Phase 2 ─┤           ├─→ Phase 3 ─┐
 | GPA accuracy | 100% | 100% | ✓ Met |
 | Mobile usability | 80%+ | 60% | 🟡 In progress |
 | API response time | <500ms | <200ms | ✓ Exceeds |
-| Test coverage | 80% | 0% | 🔴 Not started |
+| Test coverage | 80% | ~15% | 🟡 Started (49 unit tests) |
 | Accessibility score | 95%+ | ~75% | 🟡 Improving |
 
 ---
@@ -342,5 +323,5 @@ Phase 2 ─┤           ├─→ Phase 3 ─┐
 3. New risk identified: Add to risk register with probability
 4. Scope change: Update phase descriptions and timeline
 
-Last updated: 2026-05-21
-Next review: 2026-06-21
+Last updated: 2026-05-22
+Next review: 2026-06-22
