@@ -27,13 +27,14 @@ interface RoadmapPanelProps {
   major?: string | null;
   intakeYear?: number | null;
   onImportCtdt?: () => void;
+  curriculumRefreshKey?: number;
 }
 
 const TARGETS = { general: 30, required: 70, elective: 31 };
 
-export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131, major, intakeYear, onImportCtdt }: RoadmapPanelProps) {
+export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131, major, intakeYear, onImportCtdt, curriculumRefreshKey = 0 }: RoadmapPanelProps) {
   const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
-  const { curriculum, loading: currLoading } = useCurriculum(major, intakeYear);
+  const { curriculum, loading: currLoading } = useCurriculum(major, intakeYear, curriculumRefreshKey);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showDkhpImport, setShowDkhpImport] = useState(false);

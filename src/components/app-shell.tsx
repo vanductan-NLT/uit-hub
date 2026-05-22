@@ -52,6 +52,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
   const [showImportExam, setShowImportExam] = useState(false);
   const [showImportCatalog, setShowImportCatalog] = useState(false);
   const [showImportCtdt, setShowImportCtdt] = useState(false);
+  const [curriculumRefreshKey, setCurriculumRefreshKey] = useState(0);
   const router = useRouter();
   const supabase = createClient();
 
@@ -219,7 +220,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
               nearestExamDays={nearestExamDays}
             />
           )}
-          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} major={userProfile?.major} intakeYear={userProfile?.intake_year} onImportCtdt={() => { setShowImportHub(false); setShowImportCtdt(true); }} />}
+          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} major={userProfile?.major} intakeYear={userProfile?.intake_year} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
           {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} />}
           {active === "resources" && <ResourcesPanel userId={userId} inProgressCourses={inProgressCourses} allCourses={allCourses} />}
@@ -275,7 +276,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
       )}
       {showImportCtdt && (
         <ImportCtdtModal
-          onSuccess={refetch}
+          onSuccess={() => { refetch(); setCurriculumRefreshKey((k) => k + 1); }}
           onClose={() => setShowImportCtdt(false)}
         />
       )}
