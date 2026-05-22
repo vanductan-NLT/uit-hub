@@ -217,7 +217,7 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
               curriculum={curriculum}
               totalCreditsRequired={profile?.total_credits_required ?? 131}
             />
-          <div className="es-card" style={{ marginTop: 14 }}>
+            <div className="es-card" style={{ marginTop: 14 }}>
             <div className="es-section-hdr" style={{ marginBottom: 16 }}>
               <div>
                 <div className="es-section-title">Chỉnh sửa thông tin</div>
