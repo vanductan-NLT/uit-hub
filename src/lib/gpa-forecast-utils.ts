@@ -119,3 +119,38 @@ export function getRiskScore(course: UserCourseWithCourse): number {
 export function sortByRisk(courses: UserCourseWithCourse[]): UserCourseWithCourse[] {
   return [...courses].sort((a, b) => getRiskScore(b) - getRiskScore(a));
 }
+
+// ── Reverse GPA calculator ──────────────────────────────────────────────────
+
+/**
+ * Given a target cumulative GPA (hệ 4), compute the average course score
+ * that ALL in-progress courses need to achieve to hit that target.
+ *
+ * Formula:
+ *   requiredAvg = (targetGPA10 × totalCredits − completedWeightedSum) / ipCredits
+ */
+export function calculateRequiredAvgScore(
+  targetGPA4: number,
+  completedCourses: UserCourseWithCourse[],
+  inProgressCourses: UserCourseWithCourse[]
+): { requiredAvg: number; isAlreadyMet: boolean; isImpossible: boolean } {
+  const targetGPA10 = targetGPA4 * 2.5;
+
+  // Only scored, completed courses contribute to the weighted sum
+  const scored = completedCourses.filter((c) => c.score !== null && c.status === "completed");
+  const completedWeightedSum = scored.reduce((s, c) => s + (c.score ?? 0) * c.course.credits, 0);
+  const completedCredits = scored.reduce((s, c) => s + c.course.credits, 0);
+
+  const ipCredits = inProgressCourses.reduce((s, c) => s + c.course.credits, 0);
+  if (ipCredits === 0) return { requiredAvg: 0, isAlreadyMet: false, isImpossible: true };
+
+  const totalCredits = completedCredits + ipCredits;
+  const neededFromIP = targetGPA10 * totalCredits - completedWeightedSum;
+  const requiredAvg = Math.round((neededFromIP / ipCredits) * 100) / 100;
+
+  return {
+    requiredAvg,
+    isAlreadyMet: requiredAvg <= 0,
+    isImpossible: requiredAvg > 10,
+  };
+}

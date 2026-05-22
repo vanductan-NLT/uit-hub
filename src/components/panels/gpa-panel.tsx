@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useCourses } from "@/hooks/use-courses";
 import CourseScoreEditor from "@/components/features/gpa-forecast/course-score-editor";
+import GpaTargetCalculator from "@/components/features/gpa-forecast/gpa-target-calculator";
 import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
 import ErrorState from "@/components/ui/error-state";
 import {
@@ -139,6 +140,13 @@ export default function GpaPanel({ userId, onNav }: Props) {
                   ))}
                 </div>
               </div>
+
+              {/* Reverse GPA calculator */}
+              <GpaTargetCalculator
+                completedCourses={completedCourses}
+                inProgressCourses={inProgressCourses}
+                currentGPA4={gpa4}
+              />
 
               {/* Risky course alerts */}
               {sortedInProgress.map((c) => {
