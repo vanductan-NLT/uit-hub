@@ -750,6 +750,7 @@
 .es-day-chip.today { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 2px 0 var(--blue-shadow); }
 
 /* ── RESOURCES ── */
+.es-search-input { width: 200px; }
 .es-resource-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
 .es-filter-btn {
   padding: 7px 16px; border-radius: var(--r-full);
@@ -1192,6 +1193,16 @@
   /* Topbar buttons: smaller text */
   .es-topbar-right .es-btn { font-size: 12px; padding: 5px 10px; }
   .es-topbar-right .es-badge { font-size: 10px; }
+
+  /* Resources panel: search input takes remaining space */
+  .es-search-input { width: auto; flex: 1; min-width: 100px; }
+
+  /* Roadmap: import dropdown constrained */
+  .es-resource-filters { margin-bottom: 10px; }
+
+  /* Prevent long text overflow inside grid cells */
+  .es-exam-subject { word-break: break-word; }
+  .es-exam-meta { font-size: 11px; }
 }
 
 /* ── RESPONSIVE: SMALL MOBILE (≤480px) ── */
@@ -1204,6 +1215,15 @@
   .es-welcome-text h2 { font-size: 16px; }
   /* Topbar action buttons: icon-only mode */
   .es-topbar-right .es-btn-sm { padding: 5px 8px; }
+
+  /* Resources: search input full-width on very small screens */
+  .es-search-input { width: 100%; min-width: 0; }
+
+  /* Exam: study day chips wrap tightly */
+  .es-day-chip { padding: 3px 8px; font-size: 10px; }
+
+  /* Calendar heatmap: single month on tiny screens */
+  .es-calendar-heatmap-months { flex-direction: column; }
 }
 
 /* ── ADMIN TABLE ── */

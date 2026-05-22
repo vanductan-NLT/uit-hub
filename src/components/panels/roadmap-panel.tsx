@@ -15,6 +15,8 @@ import {
   getSuggestedCourses,
   estimateRemainingTime,
 } from "@/lib/course-utils";
+import EmptyState from "@/components/ui/empty-state";
+import ErrorState from "@/components/ui/error-state";
 
 interface RoadmapPanelProps { userId: string; userEmail: string; totalCreditsRequired?: number; }
 
@@ -60,10 +62,7 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
           </div>
         </div>
         <div className="es-content">
-          <div className="es-alert-strip danger">
-            <span>⚠️</span>
-            <div className="es-alert-text">{error}</div>
-          </div>
+          <ErrorState variant="inline" message={error} onRetry={refetch} />
         </div>
       </>
     );
@@ -131,6 +130,15 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 240, color: "var(--es-muted)", fontSize: 14 }}>
             Đang tải dữ liệu...
           </div>
+        ) : userCourses.length === 0 ? (
+          <EmptyState
+            icon="🗺️"
+            title="Chưa có dữ liệu lộ trình"
+            description="Import bảng điểm hoặc lịch học từ cổng UIT để hệ thống tự động xây dựng lộ trình và gợi ý môn học."
+            actionLabel="📋 Tải dữ liệu từ cổng UIT"
+            onAction={() => setShowDkhpImport(true)}
+            secondary="hoặc kéo file HTML từ DAA · daa.uit.edu.vn"
+          />
         ) : (
           <>
             {/* Tab bar — Google Material underline style */}

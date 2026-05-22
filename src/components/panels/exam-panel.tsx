@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useExamSchedule, type ExamWithProgress } from "@/hooks/use-exam-schedule";
 import type { Course, UserCourseWithCourse } from "@/types/database";
 import ImportExamHtml from "@/components/features/exam-schedule/import-exam-html";
+import EmptyState from "@/components/ui/empty-state";
 
 interface Props {
   userId: string;
@@ -49,19 +50,14 @@ export default function ExamPanel({ userId, userCourses, allCourses, currentSeme
             <div className="es-topbar-sub">Lịch ngược từ ngày thi · Ưu tiên môn yếu</div>
           </div>
         </div>
-        <div className="es-content" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
-          <div style={{ textAlign: "center", maxWidth: 400 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
-            <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Chưa có lịch thi</div>
-            <div style={{ fontSize: 14, color: "var(--es-muted)", marginBottom: 24, lineHeight: 1.6 }}>
-              Import lịch thi từ cổng thông tin UIT hoặc thêm thủ công để hệ thống tự động tạo kế hoạch ôn tập.
-            </div>
-            <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-              <button className="es-btn es-btn-primary" onClick={() => setShowImport(true)}>
-                📄 Import từ HTML
-              </button>
-            </div>
-          </div>
+        <div className="es-content">
+          <EmptyState
+            icon="📅"
+            title="Chưa có lịch thi"
+            description="Import lịch thi từ cổng thông tin UIT để hệ thống tự động tạo kế hoạch ôn tập ngược từ ngày thi, ưu tiên môn yếu."
+            actionLabel="📄 Import lịch thi"
+            onAction={() => setShowImport(true)}
+          />
         </div>
         {showImport && (
           <ImportExamHtml
@@ -328,7 +324,7 @@ function CalendarHeatmap({ exams, sessions }: {
   return (
     <div className="es-card">
       <div className="es-section-hdr"><div className="es-section-title">Lịch ôn tập</div></div>
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+      <div className="es-calendar-heatmap-months" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         {months.map(({ month, year }) => (
           <MonthGrid
             key={`${year}-${month}`}

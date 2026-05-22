@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useCourses } from "@/hooks/use-courses";
 import CourseScoreEditor from "@/components/features/gpa-forecast/course-score-editor";
 import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
+import ErrorState from "@/components/ui/error-state";
 import {
   forecastCumulativeGPA4,
   sortByRisk,
@@ -63,7 +64,7 @@ export default function GpaPanel({ userId, onNav }: Props) {
   if (error) {
     return (
       <div className="es-content">
-        <div className="es-alert-strip warn"><span>⚠️</span><span>{error}</span></div>
+        <ErrorState variant="inline" message={error} onRetry={refetch} />
       </div>
     );
   }

@@ -6,6 +6,7 @@ import { useResources } from "@/hooks/use-resources";
 import ResourceList from "@/components/features/study-resources/resource-list";
 import CourseFilter from "@/components/features/study-resources/course-filter";
 import SubmitResourceModal from "@/components/features/study-resources/submit-resource-modal";
+import EmptyState from "@/components/ui/empty-state";
 
 const typeFilters: { label: string; value: ResourceType | null }[] = [
   { label: "Tất cả", value: null },
@@ -73,10 +74,11 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
             placeholder="Tìm kiếm tài nguyên..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="es-search-input"
             style={{
               padding: "6px 12px", borderRadius: "var(--r-sm)",
               border: "1px solid var(--es-border)", fontFamily: "inherit",
-              fontSize: 13, width: 200, outline: "none",
+              fontSize: 13, outline: "none",
               background: "var(--white)", color: "var(--ink)",
             }}
           />
@@ -119,6 +121,14 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
           <div style={{ padding: 40, textAlign: "center", color: "var(--es-muted)" }}>
             Đang tải tài nguyên...
           </div>
+        ) : resources.length === 0 ? (
+          <EmptyState
+            icon="📚"
+            title="Chưa có tài nguyên"
+            description="Chưa có tài nguyên nào trong hệ thống. Bạn có thể đóng góp slide, video, đề thi cũ cho cộng đồng UIT."
+            actionLabel="+ Đóng góp tài nguyên"
+            onAction={() => setShowSubmit(true)}
+          />
         ) : (
           <>
             {suggested.length > 0 && (
