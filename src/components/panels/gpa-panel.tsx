@@ -6,12 +6,7 @@ import CourseScoreEditor from "@/components/features/gpa-forecast/course-score-e
 import GpaTargetCalculator from "@/components/features/gpa-forecast/gpa-target-calculator";
 import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
 import ErrorState from "@/components/ui/error-state";
-import {
-  forecastCumulativeGPA4,
-  sortByRisk,
-  calculateRequiredCK,
-  calculatePartialScore,
-} from "@/lib/gpa-forecast-utils";
+import { forecastCumulativeGPA4, sortByRisk, calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
 
 interface Props {
   userId: string;
@@ -148,41 +143,6 @@ export default function GpaPanel({ userId, onNav }: Props) {
                 currentGPA4={gpa4}
               />
 
-              {/* Risky course alerts */}
-              {sortedInProgress.map((c) => {
-                const scores = c.component_scores ?? {};
-                const partial = calculatePartialScore(c.course, scores);
-                const ckEntered = (scores["Cuối kỳ"] ?? null) !== null;
-                const ckForB = ckEntered ? null : calculateRequiredCK(c.course, scores, 7.0);
-                const isOk = ckEntered
-                  ? (partial !== null && partial >= 5.5)
-                  : (ckForB !== null && ckForB <= 7.5);
-                return (
-                  <div key={c.id} className={`es-forecast-card ${isOk ? "ok" : ckEntered ? "danger" : "warn"}`}>
-                    <div className="es-forecast-icon">{isOk ? "✅" : ckEntered ? "🚨" : "⚡"}</div>
-                    <div style={{ flex: 1 }}>
-                      <div className="es-forecast-title">
-                        {c.course.name}
-                        {!ckEntered && ckForB !== null && !isOk && ` — Cần ${ckForB > 10 ? "điểm không khả thi" : `≥ ${ckForB.toFixed(1)}`} ở cuối kỳ để đạt B`}
-                        {ckEntered && !isOk && partial !== null && ` — Điểm cuối: ${partial.toFixed(2)} (dưới C)`}
-                        {isOk && " — Đang đúng hướng"}
-                      </div>
-                      <div className="es-forecast-desc">
-                        {Object.entries(scores)
-                          .filter(([, v]) => v !== null)
-                          .map(([k, v]) => `${k}: ${v}`)
-                          .join(" · ")}
-                        {partial !== null && ` · Điểm hiện tại: ${partial.toFixed(2)}`}
-                      </div>
-                    </div>
-                    {!isOk && !ckEntered && (
-                      <button className="es-forecast-action" onClick={() => onNav("exam")}>
-                        Lên lịch ôn →
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
             </div>
 
             {/* Right: score editors per course */}
