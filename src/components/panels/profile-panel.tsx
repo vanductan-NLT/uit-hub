@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { getUserProfile, upsertUserProfile } from "@/lib/supabase/courses-api";
 import { useCourses } from "@/hooks/use-courses";
+import { useCurriculum } from "@/hooks/use-curriculum";
+import GraduationEligibilityCard from "@/components/features/profile/graduation-eligibility-card";
 import type { UserProfile } from "@/types/database";
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
@@ -40,7 +42,8 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
   const [totalCredits, setTotalCredits] = useState(131);
   const [trainingType, setTrainingType] = useState<"chinh-quy" | "tu-xa">("chinh-quy");
 
-  const { gpa10, gpa4, passedCredits } = useCourses(userId);
+  const { gpa10, gpa4, passedCredits, userCourses } = useCourses(userId);
+  const { curriculum } = useCurriculum(profile?.major, profile?.intake_year, curriculumRefreshKey);
 
   useEffect(() => {
     getUserProfile(userId).then((p) => {
@@ -203,6 +206,14 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
               ))}
             </div>
 
+            {/* Graduation eligibility */}
+            <GraduationEligibilityCard
+              userId={userId}
+              userCourses={userCourses}
+              gpa4={gpa4}
+              curriculum={curriculum}
+              totalCreditsRequired={profile?.total_credits_required ?? 131}
+            />
           </div>
 
           {/* Right: Edit form (always visible for layout, read-only when not editing) */}
