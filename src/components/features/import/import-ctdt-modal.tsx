@@ -75,7 +75,7 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
           <div>
             <div style={{ fontWeight: 700, fontSize: 16, color: "var(--ink)" }}>🎓 Import CTĐT theo khoá</div>
             <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 3 }}>
-              Nguồn: student.uit.edu.vn → Chương trình đào tạo
+              Nguồn: student.uit.edu.vn/chuong-trinh-dao-tao
             </div>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "var(--es-muted)" }}>×</button>
@@ -123,12 +123,12 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
                   label: "Mở trang CTĐT theo khoá",
                   detail: (
                     <a
-                      href="https://student.uit.edu.vn/thong-tin-dao-tao/chuong-trinh-dao-tao"
+                      href={`https://student.uit.edu.vn/chuong-trinh-dao-tao/ctdt-khoa-${intakeYear}`}
                       target="_blank" rel="noopener noreferrer"
                       style={{ color: "var(--blue)", textDecoration: "none", fontWeight: 600 }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      student.uit.edu.vn → Chương trình đào tạo ↗
+                      student.uit.edu.vn/ctdt-khoa-{intakeYear} ↗
                     </a>
                   ),
                 },
@@ -178,7 +178,7 @@ export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
                   : "Kéo thả hoặc click để chọn file HTML"}
               </div>
               <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 4 }}>
-                Vào student.uit.edu.vn → Chương trình đào tạo → Save as HTML
+                Vào student.uit.edu.vn/chuong-trinh-dao-tao/ctdt-khoa-{intakeYear} → Save as HTML
               </div>
               <input ref={fileRef} type="file" accept=".html,.htm" style={{ display: "none" }}
                 onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
