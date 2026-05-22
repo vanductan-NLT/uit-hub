@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { getUserProfile, upsertUserProfile } from "@/lib/supabase/courses-api";
 import { useCourses } from "@/hooks/use-courses";
-import ProfileCurriculumSection from "@/components/features/profile/profile-curriculum-section";
 import type { UserProfile } from "@/types/database";
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
@@ -204,15 +203,6 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
               ))}
             </div>
 
-            {/* CTĐT section */}
-            {onImportCtdt && (
-              <ProfileCurriculumSection
-                major={profile?.major}
-                intakeYear={profile?.intake_year}
-                onImport={onImportCtdt}
-                refreshKey={curriculumRefreshKey}
-              />
-            )}
           </div>
 
           {/* Right: Edit form (always visible for layout, read-only when not editing) */}
