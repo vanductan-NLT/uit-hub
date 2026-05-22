@@ -206,7 +206,10 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
               ))}
             </div>
 
-            {/* Graduation eligibility */}
+          </div>
+
+          {/* Right: Graduation eligibility + Edit form */}
+          <div>
             <GraduationEligibilityCard
               userId={userId}
               userCourses={userCourses}
@@ -214,10 +217,7 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
               curriculum={curriculum}
               totalCreditsRequired={profile?.total_credits_required ?? 131}
             />
-          </div>
-
-          {/* Right: Edit form (always visible for layout, read-only when not editing) */}
-          <div className="es-card">
+          <div className="es-card" style={{ marginTop: 14 }}>
             <div className="es-section-hdr" style={{ marginBottom: 16 }}>
               <div>
                 <div className="es-section-title">Chỉnh sửa thông tin</div>
@@ -311,6 +311,7 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
                 />
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
