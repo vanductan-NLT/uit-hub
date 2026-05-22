@@ -18,6 +18,7 @@ import ImportFromHtml from "@/components/features/course-tracker/import-from-htm
 import ImportExamHtml from "@/components/features/exam-schedule/import-exam-html";
 import ImportCatalogModal from "@/components/features/import/import-catalog-modal";
 import ImportCtdtModal from "@/components/features/import/import-ctdt-modal";
+import FeedbackButton from "@/components/features/feedback/feedback-button";
 import { getUserProfile } from "@/lib/supabase/courses-api";
 import { getNearestExamDays } from "@/lib/supabase/exam-api";
 import type { UserProfile } from "@/types/database";
@@ -43,7 +44,7 @@ function getDisplayName(email: string) {
   return email.split("@")[0];
 }
 
-export default function AppShell({ userId, userEmail }: { userId: string; userEmail: string }) {
+export default function AppShell({ userId, userEmail, avatarUrl }: { userId: string; userEmail: string; avatarUrl?: string }) {
   const [active, setActive] = useState<Panel>("dashboard");
   const [showLogout, setShowLogout] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -168,8 +169,8 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
                 }
               </button>
             ))}
-          {/* Global import button */}
-          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--es-border)" }}>
+          {/* Global import + feedback */}
+          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--es-border)", display: "flex", flexDirection: "column", gap: 8 }}>
             <button
               className="es-btn es-btn-primary"
               onClick={() => { setShowImportHub(true); setSidebarOpen(false); }}
@@ -177,6 +178,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
             >
               📥 Import dữ liệu
             </button>
+            <FeedbackButton userId={userId} onToast={toast} />
           </div>
 
           {userProfile?.role === "admin" && (
@@ -195,7 +197,11 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
             style={{ cursor: "pointer" }}
             title="Xem hồ sơ"
           >
-            <div className="es-user-avatar">{initials}</div>
+            <div className="es-user-avatar">
+              {avatarUrl
+                ? <img src={avatarUrl} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} referrerPolicy="no-referrer" />
+                : initials}
+            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="es-user-name">{mssv}</div>
               <div className="es-user-id">{displayName} · {userProfile?.major ?? "CNTT"}</div>
@@ -232,7 +238,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
           {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} onToast={toast} />}
           {active === "resources" && <ResourcesPanel userId={userId} inProgressCourses={inProgressCourses} allCourses={allCourses} />}
-          {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
+          {active === "profile" && <ProfilePanel userId={userId} userEmail={userEmail} avatarUrl={avatarUrl} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
         </main>
       </div>
 

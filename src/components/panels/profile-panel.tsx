@@ -18,6 +18,7 @@ const TRAINING_TYPES: { value: "chinh-quy" | "tu-xa"; label: string }[] = [
 interface Props {
   userId: string;
   userEmail: string;
+  avatarUrl?: string;
   onImportCtdt?: () => void;
   curriculumRefreshKey?: number;
 }
@@ -27,7 +28,7 @@ function getInitials(name: string | null, email: string) {
   return email.split("@")[0].slice(0, 2).toUpperCase();
 }
 
-export default function ProfilePanel({ userId, userEmail, onImportCtdt, curriculumRefreshKey = 0 }: Props) {
+export default function ProfilePanel({ userId, userEmail, avatarUrl, onImportCtdt, curriculumRefreshKey = 0 }: Props) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -152,8 +153,11 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 24, fontWeight: 800, flexShrink: 0,
                   boxShadow: "0 0 0 4px var(--blue-lt), 0 0 0 6px var(--blue)",
+                  overflow: "hidden",
                 }}>
-                  {initials}
+                  {avatarUrl
+                    ? <img src={avatarUrl} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} referrerPolicy="no-referrer" />
+                    : initials}
                 </div>
                 <div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)" }}>{displayName}</div>

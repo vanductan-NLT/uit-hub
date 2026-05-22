@@ -115,36 +115,36 @@
   --white: #1F2937;
   --ink: #F1F5F9;
   --ink2: #94A3B8;
-  --es-muted: #64748B;
-  --es-border: #2D3748;
+  --es-muted: #94A3B8;
+  --es-border: #374151;
   --es-bg-alt: #1A2332;
   --es-sidebar-bg: #0B1120;
 
-  --blue: #3B82F6;
-  --blue-d: #2563EB;
-  --blue-lt: #1E3A5F;
-  --blue-mid: #1D4ED8;
+  --blue: #60A5FA;
+  --blue-d: #3B82F6;
+  --blue-lt: #1e3a5f;
+  --blue-mid: #2563EB;
   --blue-shadow: #1E3A8A;
 
-  --duo-green: #4CAF00;
-  --duo-green-d: #3D8C00;
-  --duo-green-lt: #1A2F0D;
-  --duo-green-shadow: #2E6B00;
+  --duo-green: #4ADE80;
+  --duo-green-d: #22C55E;
+  --duo-green-lt: #14290A;
+  --duo-green-shadow: #166534;
 
-  --duo-yellow: #FFB800;
-  --duo-yellow-d: #CC9300;
-  --duo-yellow-lt: #2D2000;
-  --duo-yellow-shadow: #8C6500;
+  --duo-yellow: #FCD34D;
+  --duo-yellow-d: #FBBF24;
+  --duo-yellow-lt: #3a2a00;
+  --duo-yellow-shadow: #92400E;
 
-  --duo-red: #FF5252;
-  --duo-red-d: #E63A3A;
-  --duo-red-lt: #2D0A0A;
-  --duo-red-shadow: #990000;
+  --duo-red: #F87171;
+  --duo-red-d: #EF4444;
+  --duo-red-lt: #3d0f0f;
+  --duo-red-shadow: #991B1B;
 
-  --duo-orange: #FF8C00;
-  --duo-orange-d: #CC7000;
-  --duo-orange-lt: #2D1A00;
-  --duo-orange-shadow: #993000;
+  --duo-orange: #FB923C;
+  --duo-orange-d: #F97316;
+  --duo-orange-lt: #3a1800;
+  --duo-orange-shadow: #9A3412;
 
   --green: var(--duo-green);
   --green-lt: var(--duo-green-lt);
@@ -164,6 +164,32 @@
   --shadow-btn-blue: 0 4px 0 var(--blue-shadow);
   --shadow-btn-green: 0 4px 0 var(--duo-green-shadow);
   --shadow-btn-yellow: 0 4px 0 var(--duo-yellow-shadow);
+}
+
+/* ── DARK MODE COMPONENT OVERRIDES ── */
+[data-theme="dark"] .es-card {
+  border: 1px solid var(--es-border);
+  background: var(--white);
+}
+[data-theme="dark"] .es-stat-card {
+  border: 1px solid var(--es-border);
+}
+[data-theme="dark"] .es-quick-action {
+  border: 1px solid var(--es-border);
+}
+[data-theme="dark"] .es-nav-item.active {
+  background: rgba(96, 165, 250, 0.15);
+  color: #93C5FD;
+}
+[data-theme="dark"] .es-nav-label {
+  color: #6B7280;
+}
+[data-theme="dark"] .es-topbar {
+  background: #1a2235;
+  box-shadow: 0 1px 0 var(--es-border);
+}
+[data-theme="dark"] .es-welcome-banner {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e2d4f 100%);
 }
 
 .dark {

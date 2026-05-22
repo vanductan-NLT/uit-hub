@@ -17,5 +17,6 @@ export default async function DashboardPage() {
 
   if (!profile) redirect("/onboarding");
 
-  return <AppShell userId={user.id} userEmail={user.email!} />;
+  const avatarUrl = (user.user_metadata?.avatar_url as string | undefined) ?? undefined;
+  return <AppShell userId={user.id} userEmail={user.email!} avatarUrl={avatarUrl} />;
 }
