@@ -76,7 +76,7 @@ export default function CurriculumRoadmap({ curriculum, allCourses, passedIds, t
       </div>
 
       {/* Semester grid — 2 cols on small screens, 3-4 on wide */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
         {semesters.map((sem) => {
           const rows = bySemester[sem];
           const passedCount = rows.filter((r) => passedIds.has(r.course_id)).length;
