@@ -75,8 +75,8 @@ export default function CurriculumRoadmap({ curriculum, allCourses, passedIds, t
         ))}
       </div>
 
-      {/* Semester grid — auto-fill, min 200px per column */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+      {/* Semester grid — 2 cols on small screens, 3-4 on wide */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
         {semesters.map((sem) => {
           const rows = bySemester[sem];
           const passedCount = rows.filter((r) => passedIds.has(r.course_id)).length;
@@ -123,21 +123,21 @@ export default function CurriculumRoadmap({ curriculum, allCourses, passedIds, t
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 4 }}>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: cfg.idColor, fontFamily: "monospace", letterSpacing: "0.03em" }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: cfg.idColor, fontFamily: "monospace", letterSpacing: "0.03em" }}>
                             {cc.course_id}
-                            <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 600, padding: "1px 4px", borderRadius: 99, background: "var(--es-border)", color: "var(--ink2)", fontFamily: "inherit" }}>
+                            <span style={{ marginLeft: 5, fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 99, background: "var(--es-border)", color: "var(--ink2)", fontFamily: "inherit" }}>
                               {reqBadge}
                             </span>
                           </div>
                           <div style={{
-                            fontSize: 11, color: "var(--ink)", marginTop: 1, lineHeight: 1.35,
+                            fontSize: 12, color: "var(--ink)", marginTop: 2, lineHeight: 1.4,
                             display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
                             overflow: "hidden",
                           }}>
                             {course?.name ?? "—"}
                           </div>
                         </div>
-                        <div style={{ fontSize: 10, color: "var(--es-muted)", flexShrink: 0 }}>
+                        <div style={{ fontSize: 11, color: "var(--es-muted)", flexShrink: 0, fontWeight: 600 }}>
                           {course?.credits ?? "?"}TC
                         </div>
                       </div>

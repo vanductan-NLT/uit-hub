@@ -278,6 +278,8 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
         <ImportCtdtModal
           onSuccess={() => { refetch(); setCurriculumRefreshKey((k) => k + 1); }}
           onClose={() => setShowImportCtdt(false)}
+          defaultMajor={userProfile?.major}
+          defaultIntakeYear={userProfile?.intake_year}
         />
       )}
 

@@ -7,6 +7,9 @@ import { upsertCurriculum } from "@/lib/supabase/curriculum-api";
 interface Props {
   onSuccess: () => void;
   onClose: () => void;
+  /** Pre-fill from user profile so they don't re-enter known info */
+  defaultMajor?: string | null;
+  defaultIntakeYear?: number | null;
 }
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "HTTT"];
@@ -17,15 +20,18 @@ function buildCtdtUrl(year: number, he: HeDaoTao): string {
   if (he === "tu-xa") {
     return `https://student.uit.edu.vn/tu-xa/ctdt-khoa-${year}`;
   }
-  // Chính quy: new domain segment from 2025 onwards
   const segment = year >= 2025 ? "cqui" : "chuong-trinh-dao-tao";
   return `https://student.uit.edu.vn/${segment}/ctdt-khoa-${year}`;
 }
 
-export default function ImportCtdtModal({ onSuccess, onClose }: Props) {
+export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defaultIntakeYear }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [major, setMajor] = useState("CNTT");
-  const [intakeYear, setIntakeYear] = useState(new Date().getFullYear() - 4);
+  const [major, setMajor] = useState(
+    defaultMajor && MAJORS.includes(defaultMajor) ? defaultMajor : "CNTT"
+  );
+  const [intakeYear, setIntakeYear] = useState(
+    defaultIntakeYear ?? new Date().getFullYear() - 4
+  );
   const [he, setHe] = useState<HeDaoTao>("chinh-quy");
   const [result, setResult] = useState<CtdtParseResult | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
