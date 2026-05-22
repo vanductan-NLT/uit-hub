@@ -87,28 +87,35 @@ export async function getStudentsWithProgress(): Promise<StudentWithProgress[]> 
 export async function getFeedback(): Promise<FeedbackRow[]> {
   const supabase = createClient();
 
-  // Fetch feedback + join user_profiles for name
-  const { data, error } = await supabase
+  // 1. Fetch feedback rows
+  const { data: feedback, error: fErr } = await supabase
     .from("user_feedback")
-    .select(`
-      id, user_id, type, message, page, created_at,
-      user_profiles!inner(full_name, student_id)
-    `)
+    .select("id, user_id, type, message, page, created_at")
     .order("created_at", { ascending: false });
+  if (fErr) throw new Error(fErr.message);
+  if (!feedback || feedback.length === 0) return [];
 
-  if (error) throw new Error(error.message);
+  // 2. Fetch profiles for those user_ids (separate query — no direct FK to user_profiles)
+  const userIds = [...new Set(feedback.map((r) => r.user_id as string))];
+  const { data: profiles } = await supabase
+    .from("user_profiles")
+    .select("id, full_name, student_id")
+    .in("id", userIds);
 
-  return (data ?? []).map((row) => {
-    const profile = row.user_profiles as unknown as { full_name: string | null; student_id: string | null } | null;
+  const profileMap = new Map<string, { full_name: string | null; student_id: string | null }>();
+  for (const p of profiles ?? []) profileMap.set(p.id, p);
+
+  return feedback.map((row) => {
+    const p = profileMap.get(row.user_id as string);
     return {
       id: row.id,
-      user_id: row.user_id,
+      user_id: row.user_id as string,
       type: row.type as FeedbackType,
       message: row.message,
       page: row.page,
       created_at: row.created_at,
       user_email: null,
-      user_name: profile?.full_name ?? profile?.student_id ?? null,
+      user_name: p?.full_name ?? p?.student_id ?? null,
     };
   });
 }
