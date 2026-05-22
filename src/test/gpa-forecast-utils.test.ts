@@ -6,7 +6,7 @@
  * Supabase/React dependencies.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { Course, UserCourseWithCourse } from "@/types/database";
 
 // ── Mock @/hooks/use-courses before importing the module under test ──────────

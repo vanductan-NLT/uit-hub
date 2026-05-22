@@ -28,7 +28,7 @@ function getInitials(name: string | null, email: string) {
   return email.split("@")[0].slice(0, 2).toUpperCase();
 }
 
-export default function ProfilePanel({ userId, userEmail, avatarUrl, onImportCtdt, curriculumRefreshKey = 0 }: Props) {
+export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumRefreshKey = 0 }: Props) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);

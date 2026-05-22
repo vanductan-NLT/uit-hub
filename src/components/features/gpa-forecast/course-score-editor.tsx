@@ -6,7 +6,6 @@ import {
   calculatePartialScore,
   calculateRequiredCK,
   getRiskScore,
-  GRADE_THRESHOLDS,
 } from "@/lib/gpa-forecast-utils";
 
 interface Props {
