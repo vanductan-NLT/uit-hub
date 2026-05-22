@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { Course, UserCourseWithCourse, ResourceType } from "@/types/database";
 import { useResources } from "@/hooks/use-resources";
+import { getExamSchedules } from "@/lib/supabase/exam-api";
 import ResourceList from "@/components/features/study-resources/resource-list";
 import CourseFilter from "@/components/features/study-resources/course-filter";
 import SubmitResourceModal from "@/components/features/study-resources/submit-resource-modal";
@@ -28,6 +29,23 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showSubmit, setShowSubmit] = useState(false);
+  // Map courseId → nearest upcoming exam { daysLeft, period }
+  const [examMap, setExamMap] = useState<Map<string, { daysLeft: number; period: "GK" | "CK" }>>(new Map());
+
+  useEffect(() => {
+    getExamSchedules(userId).then((exams) => {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const map = new Map<string, { daysLeft: number; period: "GK" | "CK" }>();
+      for (const e of exams) {
+        const d = new Date(e.exam_date); d.setHours(0, 0, 0, 0);
+        const daysLeft = Math.ceil((d.getTime() - today.getTime()) / 86400000);
+        if (daysLeft < 0) continue; // past exams
+        const existing = map.get(e.course_id);
+        if (!existing || daysLeft < existing.daysLeft) map.set(e.course_id, { daysLeft, period: e.exam_period });
+      }
+      setExamMap(map);
+    });
+  }, [userId]);
 
   const inProgressIds = useMemo(
     () => inProgressCourses.map((c) => c.course_id),
@@ -56,6 +74,23 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
     () => filtered.filter((r) => !inProgressIds.includes(r.course_id)),
     [filtered, inProgressIds]
   );
+
+  // Group suggested by course, sorted by nearest upcoming exam
+  const suggestedByCourse = useMemo(() => {
+    const map = new Map<string, { uc: UserCourseWithCourse; items: typeof filtered }>();
+    for (const r of suggested) {
+      const uc = inProgressCourses.find((c) => c.course_id === r.course_id);
+      if (!uc) continue;
+      if (!map.has(r.course_id)) map.set(r.course_id, { uc, items: [] });
+      map.get(r.course_id)!.items.push(r);
+    }
+    return Array.from(map.values()).sort((a, b) => {
+      const ea = examMap.get(a.uc.course_id);
+      const eb = examMap.get(b.uc.course_id);
+      if (ea && eb) return ea.daysLeft - eb.daysLeft;
+      return ea ? -1 : eb ? 1 : 0;
+    });
+  }, [suggested, inProgressCourses, examMap]);
 
   const coursesWithResources = useMemo(() => {
     const ids = new Set(resources.map((r) => r.course_id));
@@ -131,16 +166,25 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
           />
         ) : (
           <>
-            {suggested.length > 0 && (
-              <ResourceList
-                resources={suggested}
-                title="⭐ Gợi ý cho bạn"
-                badge={<span className="es-badge es-badge-blue">Dựa trên tiến độ học</span>}
-              />
-            )}
+            {suggestedByCourse.map(({ uc, items }) => {
+              const exam = examMap.get(uc.course_id);
+              const urgencyBadge = exam ? (
+                <span className={`es-badge ${exam.daysLeft <= 7 ? "es-badge-red" : exam.daysLeft <= 14 ? "es-badge-amber" : "es-badge-green"}`}>
+                  📅 {exam.daysLeft === 0 ? "Hôm nay" : `${exam.daysLeft} ngày`} · {exam.period}
+                </span>
+              ) : null;
+              return (
+                <ResourceList
+                  key={uc.course_id}
+                  resources={items}
+                  title={uc.course?.name ?? uc.course_id}
+                  badge={urgencyBadge}
+                />
+              );
+            })}
             <ResourceList
               resources={rest.length > 0 ? rest : suggested.length === 0 ? filtered : rest}
-              title={suggested.length > 0 ? "📚 Tài nguyên khác" : "📚 Tất cả tài nguyên"}
+              title={suggestedByCourse.length > 0 ? "📚 Tài nguyên khác" : "📚 Tất cả tài nguyên"}
               emptyText="Không tìm thấy tài nguyên phù hợp."
             />
           </>
