@@ -21,14 +21,19 @@ interface CreditBreakdown {
   total: { passed: number; required: number };
 }
 
-function CheckRow({ ok, label, detail }: { ok: boolean; label: string; detail?: string }) {
+/** Compact criteria chip */
+function CriteriaChip({ ok, label, value }: { ok: boolean; label: string; value: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", borderBottom: "1px solid var(--es-border)", fontSize: 13 }}>
-      <span style={{ fontSize: 16, flexShrink: 0 }}>{ok ? "✅" : "❌"}</span>
-      <div style={{ flex: 1 }}>
-        <span style={{ fontWeight: 600, color: ok ? "var(--ink)" : "var(--duo-red)" }}>{label}</span>
-        {detail && <span style={{ marginLeft: 6, color: "var(--es-muted)", fontSize: 12 }}>{detail}</span>}
-      </div>
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+      padding: "8px 12px", borderRadius: "var(--r-sm)", minWidth: 80, flex: 1,
+      background: ok ? "var(--duo-green-lt, #f0fdf4)" : "var(--red-lt, #fff1f0)",
+      border: `1px solid ${ok ? "var(--duo-green)" : "var(--duo-red)"}22`,
+    }}>
+      <span style={{ fontSize: 11, color: "var(--es-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: ok ? "var(--duo-green)" : "var(--duo-red)" }}>
+        {ok ? "✓" : "✗"} {value}
+      </span>
     </div>
   );
 }
@@ -48,7 +53,6 @@ export default function GraduationEligibilityCard({ userId, userCourses, gpa4, c
   async function toggleMilestone(key: string) {
     const next = !isMet(key);
     setSaving(key);
-    // Optimistic update
     setMilestones((prev) => {
       const existing = prev.find((m) => m.key === key);
       if (existing) return prev.map((m) => m.key === key ? { ...m, is_completed: next } : m);
@@ -58,7 +62,6 @@ export default function GraduationEligibilityCard({ userId, userCourses, gpa4, c
     setSaving(null);
   }
 
-  // Credit breakdown by requirement_type
   const breakdown = useMemo<CreditBreakdown>(() => {
     const passedCourses = userCourses.filter(
       (c) => c.status === "exempted" || (c.status === "completed" && c.score !== null && c.score >= 4.0)
@@ -78,7 +81,6 @@ export default function GraduationEligibilityCard({ userId, userCourses, gpa4, c
     };
   }, [userCourses, curriculum, totalCreditsRequired]);
 
-  // GPA requirement from graduation_requirements, fallback 2.0
   const gpaReq = curriculum?.graduation_requirements.find((r) => r.key === "gpa_min")?.threshold_value ?? 2.0;
 
   const checks = {
@@ -98,26 +100,28 @@ export default function GraduationEligibilityCard({ userId, userCourses, gpa4, c
 
   const softKeys = [
     { key: "english", label: "Tiếng Anh (TOEIC 450+)" },
-    { key: "gdqp",    label: "Giáo dục quốc phòng" },
-    { key: "gdtc",    label: "Giáo dục thể chất" },
+    { key: "gdqp",    label: "GDQP" },
+    { key: "gdtc",    label: "GDTC" },
   ];
 
-  const creditRows: { label: string; passed: number; required: number | null; ok: boolean }[] = [
-    { label: "Đại cương",      ...breakdown.general,    ok: checks.general },
-    { label: "Cơ sở ngành",    ...breakdown.foundation, ok: checks.foundation },
-    { label: "Chuyên ngành",   ...breakdown.required,   ok: checks.required },
-    { label: "Tự chọn",        ...breakdown.elective,   ok: checks.elective },
-  ].filter((r) => r.required !== null);
+  const creditChips = [
+    { label: "Đại cương",  ok: checks.general,    bd: breakdown.general },
+    { label: "Cơ sở ngành", ok: checks.foundation, bd: breakdown.foundation },
+    { label: "Chuyên ngành", ok: checks.required,   bd: breakdown.required },
+    { label: "Tự chọn",    ok: checks.elective,   bd: breakdown.elective },
+  ].filter((c) => c.bd.required !== null);
 
   return (
     <div className="es-card" style={{ marginBottom: 14 }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <div>
-          <div className="es-section-title">🎓 Điều kiện tốt nghiệp</div>
-          <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 2 }}>
-            {curriculum ? `${curriculum.major} · K${String(curriculum.intake_year_from).slice(-2)}` : "Chưa liên kết CTĐT"}
-          </div>
+      {/* Row 1: Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>🎓 Điều kiện tốt nghiệp</span>
+          {curriculum && (
+            <span style={{ fontSize: 12, color: "var(--es-muted)", background: "var(--es-bg-alt, #f8f9fa)", padding: "2px 8px", borderRadius: "var(--r-full)" }}>
+              {curriculum.major} · K{String(curriculum.intake_year_from).slice(-2)}
+            </span>
+          )}
         </div>
         <div style={{
           padding: "4px 12px", borderRadius: "var(--r-full)", fontSize: 12, fontWeight: 700,
@@ -128,66 +132,53 @@ export default function GraduationEligibilityCard({ userId, userCourses, gpa4, c
         </div>
       </div>
 
-      {/* Total credits + GPA */}
-      <CheckRow
-        ok={checks.totalCredits}
-        label={`Tổng tín chỉ: ${breakdown.total.passed}/${breakdown.total.required} TC`}
-        detail={checks.totalCredits ? undefined : `còn thiếu ${breakdown.total.required - breakdown.total.passed} TC`}
-      />
-      <CheckRow
-        ok={checks.gpa}
-        label={`GPA: ${gpa4.toFixed(2)}/4.0`}
-        detail={`tối thiểu ${gpaReq.toFixed(1)}`}
-      />
+      {/* Row 2: Criteria chips — Total TC + GPA + credit breakdown */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <CriteriaChip
+          ok={checks.totalCredits}
+          label="Tổng TC"
+          value={`${breakdown.total.passed}/${breakdown.total.required}`}
+        />
+        <CriteriaChip
+          ok={checks.gpa}
+          label={`GPA (≥${gpaReq.toFixed(1)})`}
+          value={gpa4.toFixed(2)}
+        />
+        {creditChips.map((c) => (
+          <CriteriaChip
+            key={c.label}
+            ok={c.ok}
+            label={c.label}
+            value={`${c.bd.passed}/${c.bd.required} TC`}
+          />
+        ))}
+      </div>
 
-      {/* Credit breakdown by type (only if curriculum loaded) */}
-      {creditRows.length > 0 && (
-        <div style={{ paddingLeft: 26, marginBottom: 4 }}>
-          {creditRows.map((row) => (
-            <div key={row.label} style={{
-              display: "flex", justifyContent: "space-between", padding: "5px 0",
-              borderBottom: "1px solid var(--es-border)", fontSize: 12,
-            }}>
-              <span style={{ color: "var(--es-muted)" }}>{row.label}</span>
-              <span style={{ fontWeight: 600, color: row.ok ? "var(--ink)" : "var(--duo-red)" }}>
-                {row.passed}/{row.required} TC {row.ok ? "✓" : "✗"}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Soft requirements — toggleable checkboxes */}
-      <div style={{ marginTop: 8 }}>
+      {/* Row 3: Soft requirements — inline checkboxes */}
+      <div style={{ display: "flex", gap: 20, marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--es-border)", flexWrap: "wrap" }}>
         {softKeys.map(({ key, label }) => (
-          <div key={key} style={{
-            display: "flex", alignItems: "center", gap: 10,
-            padding: "7px 0", borderBottom: "1px solid var(--es-border)", fontSize: 13,
+          <label key={key} style={{
+            display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+            fontSize: 13, fontWeight: 600,
+            color: isMet(key) ? "var(--ink)" : "var(--es-muted)",
+            opacity: saving === key ? 0.6 : 1,
           }}>
             <input
               type="checkbox"
               checked={isMet(key)}
               onChange={() => toggleMilestone(key)}
               disabled={saving === key}
-              style={{ width: 16, height: 16, accentColor: "var(--blue)", cursor: "pointer", flexShrink: 0 }}
+              style={{ width: 15, height: 15, accentColor: "var(--blue)", cursor: "pointer" }}
             />
-            <span style={{
-              fontWeight: 600,
-              color: isMet(key) ? "var(--ink)" : "var(--es-muted)",
-              textDecoration: isMet(key) ? "none" : "none",
-            }}>
-              {label}
-            </span>
-            {saving === key && <span style={{ fontSize: 11, color: "var(--es-muted)" }}>Đang lưu...</span>}
-          </div>
+            {label}
+          </label>
         ))}
+        {!curriculum && (
+          <span style={{ fontSize: 12, color: "var(--es-muted)", marginLeft: "auto" }}>
+            Import CTĐT để xem chi tiết tín chỉ
+          </span>
+        )}
       </div>
-
-      {!curriculum && (
-        <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 10, textAlign: "center" }}>
-          Import CTĐT để xem chi tiết tín chỉ theo loại
-        </div>
-      )}
     </div>
   );
 }
