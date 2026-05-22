@@ -280,6 +280,7 @@ export default function AppShell({ userId, userEmail }: { userId: string; userEm
           onClose={() => setShowImportCtdt(false)}
           defaultMajor={userProfile?.major}
           defaultIntakeYear={userProfile?.intake_year}
+          defaultTrainingType={userProfile?.training_type}
         />
       )}
 

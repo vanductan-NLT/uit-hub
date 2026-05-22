@@ -84,6 +84,7 @@ export interface UserProfile {
   intake_year: number | null;
   target_graduation_year: number | null;
   total_credits_required: number;
+  training_type: "chinh-quy" | "tu-xa";
   role: "student" | "admin";
   created_at: string;
   updated_at: string;

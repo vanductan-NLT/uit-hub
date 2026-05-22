@@ -7,9 +7,10 @@ import { upsertCurriculum } from "@/lib/supabase/curriculum-api";
 interface Props {
   onSuccess: () => void;
   onClose: () => void;
-  /** Pre-fill from user profile — when provided, hides the selectors */
+  /** Pre-fill from user profile */
   defaultMajor?: string | null;
   defaultIntakeYear?: number | null;
+  defaultTrainingType?: "chinh-quy" | "tu-xa" | null;
 }
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "HTTT"];
@@ -21,21 +22,25 @@ function buildCtdtUrl(year: number, he: HeDaoTao): string {
   return `https://student.uit.edu.vn/${seg}/ctdt-khoa-${year}`;
 }
 
-export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defaultIntakeYear }: Props) {
+export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defaultIntakeYear, defaultTrainingType }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Profile mode: all 3 values come from profile → no selectors shown
   const hasProfile = !!(defaultMajor && defaultIntakeYear);
 
   const [major, setMajor] = useState(
     defaultMajor && MAJORS.includes(defaultMajor) ? defaultMajor : "CNTT"
   );
   const [intakeYear, setIntakeYear] = useState(defaultIntakeYear ?? new Date().getFullYear() - 4);
-  const [he, setHe] = useState<HeDaoTao>("chinh-quy");
+  const [he, setHe] = useState<HeDaoTao>(defaultTrainingType ?? "chinh-quy");
+
   const [result, setResult] = useState<CtdtParseResult | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [done, setDone] = useState<{ curriculumId: string; coursesLinked: number } | null>(null);
 
   const ctdtUrl = buildCtdtUrl(intakeYear, he);
+  const heLabel = he === "tu-xa" ? "Từ xa" : "Chính quy";
 
   function handleFile(file: File) {
     const reader = new FileReader();
@@ -100,21 +105,29 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
 
         {!done ? (
           <>
-            {/* Profile mode: show read-only chip + hệ toggle */}
+            {/* Profile mode: read-only summary of 4 fields */}
             {hasProfile ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8, padding: "6px 14px",
-                  borderRadius: "var(--r-full)", background: "var(--blue-lt)",
-                  border: "1.5px solid var(--blue)", fontSize: 13, fontWeight: 700, color: "var(--blue)",
-                }}>
-                  🎓 {major} · K{String(intakeYear).slice(-2)}
-                </div>
-                <select value={he} onChange={(e) => setHe(e.target.value as HeDaoTao)}
-                  style={{ ...selectStyle, width: "auto", flex: "1 1 120px", fontSize: 13 }}>
-                  <option value="chinh-quy">Chính quy</option>
-                  <option value="tu-xa">Từ xa</option>
-                </select>
+              <div style={{
+                display: "grid", gridTemplateColumns: "1fr 1fr",
+                gap: 8, marginBottom: 16, padding: "12px 14px",
+                borderRadius: "var(--r)", background: "var(--es-bg-alt, #f8f9fa)",
+                border: "1.5px solid var(--es-border)",
+              }}>
+                {[
+                  { label: "Ngành", val: major },
+                  { label: "Khoá", val: `K${String(intakeYear).slice(-2)} (${intakeYear})` },
+                  { label: "Hệ đào tạo", val: heLabel },
+                  { label: "URL", val: ctdtUrl.replace("https://student.uit.edu.vn/", ""), mono: true },
+                ].map(({ label, val, mono }) => (
+                  <div key={label}>
+                    <div style={{ fontSize: 11, color: "var(--es-muted)", fontWeight: 600, marginBottom: 2 }}>{label}</div>
+                    <div style={{
+                      fontSize: 13, fontWeight: 600, color: "var(--ink)",
+                      fontFamily: mono ? "monospace" : "inherit",
+                      wordBreak: "break-all",
+                    }}>{val}</div>
+                  </div>
+                ))}
               </div>
             ) : (
               /* Manual mode: show all 3 selectors */

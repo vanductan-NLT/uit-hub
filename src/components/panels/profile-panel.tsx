@@ -9,6 +9,10 @@ import type { UserProfile } from "@/types/database";
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
 const INTAKE_YEARS = Array.from({ length: 10 }, (_, i) => 2026 - i);
 const GRAD_YEARS = Array.from({ length: 8 }, (_, i) => 2026 + i);
+const TRAINING_TYPES: { value: "chinh-quy" | "tu-xa"; label: string }[] = [
+  { value: "chinh-quy", label: "Chính quy" },
+  { value: "tu-xa", label: "Từ xa" },
+];
 
 interface Props {
   userId: string;
@@ -35,6 +39,7 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
   const [intakeYear, setIntakeYear] = useState(2022);
   const [gradYear, setGradYear] = useState(2026);
   const [totalCredits, setTotalCredits] = useState(131);
+  const [trainingType, setTrainingType] = useState<"chinh-quy" | "tu-xa">("chinh-quy");
 
   const { gpa10, gpa4, passedCredits } = useCourses(userId);
 
@@ -48,6 +53,7 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
         setIntakeYear(p.intake_year ?? 2022);
         setGradYear(p.target_graduation_year ?? 2026);
         setTotalCredits(p.total_credits_required ?? 131);
+        setTrainingType(p.training_type ?? "chinh-quy");
       }
       setLoading(false);
     });
@@ -64,6 +70,7 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
         intake_year: intakeYear,
         target_graduation_year: gradYear,
         total_credits_required: totalCredits,
+        training_type: trainingType,
       });
       setProfile(updated);
       setEditing(false);
@@ -80,6 +87,7 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
       setIntakeYear(profile.intake_year ?? 2022);
       setGradYear(profile.target_graduation_year ?? 2026);
       setTotalCredits(profile.total_credits_required ?? 131);
+      setTrainingType(profile.training_type ?? "chinh-quy");
     }
     setEditing(false);
   }
@@ -183,6 +191,7 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
                 { label: "Năm tốt nghiệp dự kiến", val: profile?.target_graduation_year ?? "—" },
                 { label: "Tổng TC cần tốt nghiệp", val: profile?.total_credits_required ?? 131 },
                 { label: "Ngành", val: profile?.major ?? "CNTT" },
+                { label: "Hệ đào tạo", val: profile?.training_type === "tu-xa" ? "Từ xa" : "Chính quy" },
               ].map((row) => (
                 <div key={row.label} style={{
                   display: "flex", justifyContent: "space-between",
@@ -236,17 +245,31 @@ export default function ProfilePanel({ userId, userEmail, onImportCtdt, curricul
                   disabled={!editing}
                 />
               </div>
-              <div>
-                <label className="es-login-label">Ngành</label>
-                <select
-                  className="es-login-input"
-                  value={major}
-                  onChange={(e) => setMajor(e.target.value)}
-                  disabled={!editing}
-                  style={{ cursor: editing ? "pointer" : "default" }}
-                >
-                  {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 2 }}>
+                  <label className="es-login-label">Ngành</label>
+                  <select
+                    className="es-login-input"
+                    value={major}
+                    onChange={(e) => setMajor(e.target.value)}
+                    disabled={!editing}
+                    style={{ cursor: editing ? "pointer" : "default" }}
+                  >
+                    {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="es-login-label">Hệ đào tạo</label>
+                  <select
+                    className="es-login-input"
+                    value={trainingType}
+                    onChange={(e) => setTrainingType(e.target.value as "chinh-quy" | "tu-xa")}
+                    disabled={!editing}
+                    style={{ cursor: editing ? "pointer" : "default" }}
+                  >
+                    {TRAINING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
               </div>
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>

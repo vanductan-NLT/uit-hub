@@ -10,6 +10,10 @@ interface Props { userId: string; userEmail: string; }
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
 const YEARS  = Array.from({ length: 8 }, (_, i) => 2026 - i);
+const TRAINING_TYPES = [
+  { value: "chinh-quy", label: "Chính quy" },
+  { value: "tu-xa",     label: "Từ xa" },
+] as const;
 const TOTAL_STEPS = 3;
 
 /** Thin progress bar at top — same pattern as Duolingo onboarding */
@@ -33,6 +37,7 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
   const [studentId, setStudentId] = useState(userEmail.split("@")[0] ?? "");
   const [intakeYear, setIntakeYear] = useState<number>(2023);
   const [major, setMajor]         = useState("CNTT");
+  const [trainingType, setTrainingType] = useState<"chinh-quy" | "tu-xa">("chinh-quy");
 
   // Step 2 state
   const [addedCourses, setAddedCourses] = useState<AddedCourse[]>([]);
@@ -40,7 +45,7 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
   async function handleStep1() {
     setSaving(true); setSaveError("");
     try {
-      await upsertUserProfile({ id: userId, full_name: fullName || null, student_id: studentId || null, intake_year: intakeYear, major });
+      await upsertUserProfile({ id: userId, full_name: fullName || null, student_id: studentId || null, intake_year: intakeYear, major, training_type: trainingType });
       setStep(2);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Không thể lưu hồ sơ. Vui lòng thử lại.");
@@ -101,6 +106,12 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
                     {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
+              </div>
+              <div className="ob-field">
+                <label className="ob-label">Hệ đào tạo</label>
+                <select className="ob-input" value={trainingType} onChange={(e) => setTrainingType(e.target.value as "chinh-quy" | "tu-xa")}>
+                  {TRAINING_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
               </div>
             </div>
 
