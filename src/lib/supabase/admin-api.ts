@@ -29,7 +29,7 @@ export async function checkIsAdmin(userId: string): Promise<boolean> {
     .eq("id", userId)
     .single();
   if (error) return false;
-  return data?.role === "admin";
+  return data?.role === "admin" || data?.role === "owner";
 }
 
 export async function getStudentsWithProgress(): Promise<StudentWithProgress[]> {

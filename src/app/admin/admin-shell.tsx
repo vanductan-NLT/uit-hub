@@ -6,10 +6,11 @@ import type { Course } from "@/types/database";
 import ResourceManager from "@/components/features/admin/resource-manager";
 import StudentList from "@/components/features/admin/student-list";
 import FeedbackList from "@/components/features/admin/feedback-list";
+import type { AppRole } from "@/lib/role-utils";
 
 type Tab = "resources" | "students" | "feedback";
 
-export default function AdminShell({ userId, userEmail }: { userId: string; userEmail: string }) {
+export default function AdminShell({ userId, userEmail, currentUserRole }: { userId: string; userEmail: string; currentUserRole: AppRole }) {
   const [activeTab, setActiveTab] = useState<Tab>("resources");
   const [allCourses, setAllCourses] = useState<Course[]>([]);
 
@@ -58,7 +59,7 @@ export default function AdminShell({ userId, userEmail }: { userId: string; user
         </div>
 
         {activeTab === "resources" && <ResourceManager userId={userId} allCourses={allCourses} />}
-        {activeTab === "students" && <StudentList />}
+        {activeTab === "students" && <StudentList currentUserRole={currentUserRole} />}
         {activeTab === "feedback" && <FeedbackList />}
       </div>
     </div>

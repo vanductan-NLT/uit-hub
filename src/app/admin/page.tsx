@@ -14,7 +14,7 @@ export default async function AdminPage() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "admin") redirect("/dashboard");
+  if (!profile || !["admin", "owner"].includes(profile.role)) redirect("/dashboard");
 
-  return <AdminShell userId={user.id} userEmail={user.email!} />;
+  return <AdminShell userId={user.id} userEmail={user.email!} currentUserRole={profile.role} />;
 }
