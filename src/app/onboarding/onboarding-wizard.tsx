@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import { upsertUserProfile } from "@/lib/supabase/courses-api";
+import { validateFullName, validateStudentId } from "@/lib/validation-utils";
 import OnboardingCourseAdder, { type AddedCourse } from "./onboarding-course-adder";
 
 interface Props { userId: string; userEmail: string; }
@@ -43,6 +44,11 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
   const [addedCourses, setAddedCourses] = useState<AddedCourse[]>([]);
 
   async function handleStep1() {
+    const nameCheck = validateFullName(fullName);
+    if (!nameCheck.valid) { setSaveError(nameCheck.error!); return; }
+    const idCheck = validateStudentId(studentId);
+    if (!idCheck.valid) { setSaveError(idCheck.error!); return; }
+
     setSaving(true); setSaveError("");
     try {
       await upsertUserProfile({ id: userId, full_name: fullName || null, student_id: studentId || null, intake_year: intakeYear, major, training_type: trainingType });

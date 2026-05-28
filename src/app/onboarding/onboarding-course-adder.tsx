@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { getAllCourses, upsertUserCourse } from "@/lib/supabase/courses-api";
 import type { Course } from "@/types/database";
+import { validateScore } from "@/lib/validation-utils";
 
 export interface AddedCourse {
   courseId: string;
@@ -22,6 +23,7 @@ export default function OnboardingCourseAdder({ userId, onCoursesChange }: Onboa
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Course | null>(null);
   const [score, setScore] = useState("");
+  const [scoreError, setScoreError] = useState<string | null>(null);
   const [semester, setSemester] = useState("");
   const [added, setAdded] = useState<AddedCourse[]>([]);
   const [saving, setSaving] = useState(false);
@@ -41,8 +43,10 @@ export default function OnboardingCourseAdder({ userId, onCoursesChange }: Onboa
 
   async function handleAdd() {
     if (!selected) return;
-    const parsedScore = score ? parseFloat(score) : null;
-    if (parsedScore !== null && (isNaN(parsedScore) || parsedScore < 0 || parsedScore > 10)) return;
+    const scoreCheck = validateScore(score);
+    if (!scoreCheck.valid) { setScoreError(scoreCheck.error); return; }
+    setScoreError(null);
+    const parsedScore = score.trim() ? Number(score.trim()) : null;
     setSaving(true);
     try {
       const semStr = semester.trim() || null;
@@ -64,7 +68,7 @@ export default function OnboardingCourseAdder({ userId, onCoursesChange }: Onboa
       const next = [...added, newEntry];
       setAdded(next);
       onCoursesChange(next);
-      setSelected(null); setQuery(""); setScore(""); setSemester("");
+      setSelected(null); setQuery(""); setScore(""); setSemester(""); setScoreError(null);
     } finally { setSaving(false); }
   }
 
@@ -103,16 +107,23 @@ export default function OnboardingCourseAdder({ userId, onCoursesChange }: Onboa
       </div>
 
       {selected && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          <input type="number" min={0} max={10} step={0.1} placeholder="Điểm (0–10)"
-            value={score} onChange={(e) => setScore(e.target.value)}
-            className="es-login-input" style={{ flex: 1, marginBottom: 0 }} />
-          <input type="text" placeholder="Học kỳ (VD: HK1-2023-2024)"
-            value={semester} onChange={(e) => setSemester(e.target.value)}
-            className="es-login-input" style={{ flex: 1.5, marginBottom: 0 }} />
-          <button type="button" className="es-btn es-btn-primary" onClick={handleAdd} disabled={saving}>
-            {saving ? "..." : "+ Thêm"}
-          </button>
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input type="number" min={0} max={10} step={0.1} placeholder="Điểm (0–10)"
+              value={score}
+              onChange={(e) => { setScore(e.target.value); setScoreError(validateScore(e.target.value).error); }}
+              className="es-login-input"
+              style={{ flex: 1, marginBottom: 0, borderColor: scoreError ? "var(--red)" : undefined }} />
+            <input type="text" placeholder="Học kỳ (VD: HK1-2023-2024)"
+              value={semester} onChange={(e) => setSemester(e.target.value)}
+              className="es-login-input" style={{ flex: 1.5, marginBottom: 0 }} />
+            <button type="button" className="es-btn es-btn-primary" onClick={handleAdd} disabled={saving}>
+              {saving ? "..." : "+ Thêm"}
+            </button>
+          </div>
+          {scoreError && (
+            <div style={{ fontSize: 11, color: "var(--red)", marginTop: 4 }}>{scoreError}</div>
+          )}
         </div>
       )}
 

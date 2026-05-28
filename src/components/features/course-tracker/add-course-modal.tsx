@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import type { Course } from "@/types/database";
 import { getMissingPrereqs } from "@/lib/course-utils";
+import { validateScore } from "@/lib/validation-utils";
 
 interface AddCourseModalProps {
   allCourses: Course[];
@@ -71,25 +72,19 @@ export default function AddCourseModal({
     setShowDropdown(false);
   }
 
-  function validateAndGetScore(): number | null {
-    if (status === "in_progress") return null;
-    if (score === "") return null;
-    const n = parseFloat(score);
-    if (isNaN(n) || n < 0 || n > 10) return null;
-    return n;
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
     if (!selected) { setError("Vui lòng chọn môn học."); return; }
 
-    const parsedScore = validateAndGetScore();
-    if (status !== "in_progress" && score !== "" && parsedScore === null) {
-      setError("Điểm phải từ 0 đến 10.");
+    const scoreCheck = validateScore(score);
+    if (status !== "in_progress" && !scoreCheck.valid) {
+      setError(scoreCheck.error);
       return;
     }
+    const parsedScore =
+      status === "in_progress" || score.trim() === "" ? null : Number(score.trim());
 
     const semStr = semester.trim() || null;
     const yearStr = semStr ? semStr.split("-").slice(1).join("-") || null : null;

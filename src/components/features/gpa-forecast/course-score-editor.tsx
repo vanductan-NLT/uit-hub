@@ -7,6 +7,7 @@ import {
   calculateRequiredCK,
   getRiskScore,
 } from "@/lib/gpa-forecast-utils";
+import { validateScore } from "@/lib/validation-utils";
 
 interface Props {
   course: UserCourseWithCourse;
@@ -50,6 +51,7 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
     return init;
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
 
   // Parse all 4 columns — GPA calc ignores weight=0 cols naturally
   const parsedScores: Record<string, number | null> = {};
@@ -67,7 +69,15 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
   const forecastBadge = getForecastBadge(requiredCKforB);
   const isRisky = !ckEntered && riskScore / (10 * course.course.credits) >= 0.5;
 
+  function handleChange(name: string, raw: string) {
+    setScores((prev) => ({ ...prev, [name]: raw }));
+    setErrors((prev) => ({ ...prev, [name]: validateScore(raw).error }));
+  }
+
   async function handleBlur() {
+    // Don't persist if any field is invalid
+    const hasError = STANDARD_COLS.some((col) => !validateScore(scores[col.name]).valid);
+    if (hasError) return;
     setSaving(true);
     try {
       await onUpdate(parsedScores);
@@ -103,6 +113,7 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
         {STANDARD_COLS.map((col) => {
           const weight = weightMap.get(col.name) ?? 0;
           const active = weight > 0;
+          const fieldError = errors[col.name];
           return (
             <label key={col.name} style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 72, opacity: active ? 1 : 0.38 }}>
               <span style={{ fontSize: 11, color: "var(--es-muted)", fontWeight: 600 }}>
@@ -118,18 +129,21 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
                 step={0.1}
                 placeholder="—"
                 value={scores[col.name]}
-                onChange={(e) => setScores((prev) => ({ ...prev, [col.name]: e.target.value }))}
+                onChange={(e) => handleChange(col.name, e.target.value)}
                 onBlur={handleBlur}
                 style={{
                   width: 68,
                   padding: "4px 8px",
                   borderRadius: "var(--r-sm, 6px)",
-                  border: `1px solid ${active ? "var(--es-border, #e5e7eb)" : "var(--es-border, #e5e7eb)"}`,
+                  border: `1px solid ${fieldError ? "var(--red)" : "var(--es-border, #e5e7eb)"}`,
                   fontSize: 14,
                   background: active ? "var(--white)" : "var(--es-bg-alt)",
                   color: "var(--ink)",
                 }}
               />
+              {fieldError && (
+                <span style={{ fontSize: 10, color: "var(--red)" }}>{fieldError}</span>
+              )}
             </label>
           );
         })}
