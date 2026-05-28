@@ -136,7 +136,7 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
         <nav className={`es-sidebar${sidebarOpen ? " open" : ""}`}>
           <div className="es-sidebar-top">
             <div className="es-brand">
-              <img src="/uit-logo.png" alt="UIT" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
+              <img src="/UITHUBLOGO.png" alt="UIT" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
               <div>
                 <div className="es-brand-name">UIT Hub</div>
                 <div className="es-brand-sub">UIT · 2024–2025</div>
