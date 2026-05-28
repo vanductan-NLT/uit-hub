@@ -76,25 +76,33 @@ export function useCourses(userId: string): UseCourseState {
 
   const addCourse = useCallback(
     async (input: Omit<UpsertUserCourseInput, "user_id">) => {
-      const optimistic: UserCourseWithCourse = {
-        id: `optimistic-${Date.now()}`,
-        user_id: userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        note: null,
-        component_scores: {},
-        ...input,
-        course: allCourses.find((c) => c.id === input.course_id)!,
-      };
-      setUserCourses((prev) => [...prev, optimistic]);
+      // Optimistic insert only when the course is in the local catalog. Freshly
+      // imported courses (e.g. from DKHP) aren't in allCourses yet — skip the
+      // optimistic row to avoid a render with an undefined course, and rely on
+      // the saved row (which carries the joined course) instead.
+      const localCourse = allCourses.find((c) => c.id === input.course_id);
+      const optimisticId = `optimistic-${Date.now()}`;
+      if (localCourse) {
+        const optimistic: UserCourseWithCourse = {
+          id: optimisticId,
+          user_id: userId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          note: null,
+          component_scores: {},
+          ...input,
+          course: localCourse,
+        };
+        setUserCourses((prev) => [...prev, optimistic]);
+      }
       try {
         const saved = await upsertUserCourse({ ...input, user_id: userId });
         setUserCourses((prev) => [
-          ...prev.filter((c) => c.id !== optimistic.id && c.id !== saved.id),
+          ...prev.filter((c) => c.id !== optimisticId && c.id !== saved.id),
           saved,
         ]);
       } catch (e) {
-        setUserCourses((prev) => prev.filter((c) => c.id !== optimistic.id));
+        setUserCourses((prev) => prev.filter((c) => c.id !== optimisticId));
         throw e;
       }
     },

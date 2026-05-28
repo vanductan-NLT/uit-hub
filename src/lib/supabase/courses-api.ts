@@ -24,7 +24,9 @@ export async function getUserCourses(userId: string): Promise<UserCourseWithCour
     .eq("user_id", userId)
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
-  return data as UserCourseWithCourse[];
+  // Drop orphaned rows whose course was deleted — the join returns null and
+  // every consumer assumes course is present.
+  return (data ?? []).filter((uc) => uc.course != null) as UserCourseWithCourse[];
 }
 
 export interface UpsertUserCourseInput {
