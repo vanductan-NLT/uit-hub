@@ -72,7 +72,7 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
 
       {/* Brand header */}
       <div className="ob-brand">
-        <img src="/uit-logo.png" alt="UIT" width={36} height={36} />
+        <img src="/UITHUBLOGO.png" alt="UIT" width={36} height={36} />
         <span className="ob-brand-name">UIT Hub</span>
       </div>
 

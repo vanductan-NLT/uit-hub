@@ -10,7 +10,7 @@ export default function LandingFooterCta({ onLogin, loading }: Props) {
       {/* ── CTA Band ── */}
       <section className="lp-cta-band">
         <div className="lp-cta-inner">
-          <div className="lp-cta-mascot" aria-hidden="true">🎓</div>
+          <div className="lp-cta-mascot" aria-hidden="true"><img src="/UITHUBLOGO.png" alt="" style={{ height: 100, width: "auto", objectFit: "contain" }} /></div>
           <h2 className="lp-cta-heading">Bắt đầu hành trình học tập của bạn</h2>
           <p className="lp-cta-sub">Miễn phí. Không cần cài đặt. Chỉ cần email @gm.uit.edu.vn.</p>
           <div className="lp-cta-btns">
@@ -36,7 +36,7 @@ export default function LandingFooterCta({ onLogin, loading }: Props) {
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <div className="lp-footer-brand">
-            <img src="/uit-logo.png" alt="UIT" width={28} height={28} />
+            <img src="/UITHUBLOGO.png" alt="UIT" width={28} height={28} />
             <span>UIT Hub</span>
           </div>
           <div className="lp-footer-links"></div>
