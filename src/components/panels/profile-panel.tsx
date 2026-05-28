@@ -5,10 +5,10 @@ import { getUserProfile, upsertUserProfile } from "@/lib/supabase/courses-api";
 import { useCourses } from "@/hooks/use-courses";
 import { useCurriculum } from "@/hooks/use-curriculum";
 import GraduationEligibilityCard from "@/components/features/profile/graduation-eligibility-card";
+import { intakeYearFromStudentId } from "@/lib/validation-utils";
 import type { UserProfile } from "@/types/database";
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
-const INTAKE_YEARS = Array.from({ length: 10 }, (_, i) => 2026 - i);
 const GRAD_YEARS = Array.from({ length: 8 }, (_, i) => 2026 + i);
 const TRAINING_TYPES: { value: "chinh-quy" | "tu-xa"; label: string }[] = [
   { value: "chinh-quy", label: "Chính quy" },
@@ -38,10 +38,11 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
   const [fullName, setFullName] = useState("");
   const [studentId, setStudentId] = useState("");
   const [major, setMajor] = useState("CNTT");
-  const [intakeYear, setIntakeYear] = useState(2022);
   const [gradYear, setGradYear] = useState(2026);
   const [totalCredits, setTotalCredits] = useState(131);
   const [trainingType, setTrainingType] = useState<"chinh-quy" | "tu-xa">("chinh-quy");
+
+  const intakeYear = intakeYearFromStudentId(studentId);
 
   const { gpa10, gpa4, passedCredits, userCourses } = useCourses(userId);
   const { curriculum } = useCurriculum(profile?.major, profile?.intake_year, curriculumRefreshKey);
@@ -53,7 +54,6 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
         setFullName(p.full_name ?? "");
         setStudentId(p.student_id ?? "");
         setMajor(p.major ?? "CNTT");
-        setIntakeYear(p.intake_year ?? 2022);
         setGradYear(p.target_graduation_year ?? 2026);
         setTotalCredits(p.total_credits_required ?? 131);
         setTrainingType(p.training_type ?? "chinh-quy");
@@ -70,7 +70,7 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
         full_name: fullName || null,
         student_id: studentId || null,
         major,
-        intake_year: intakeYear,
+        intake_year: intakeYearFromStudentId(studentId),
         target_graduation_year: gradYear,
         total_credits_required: totalCredits,
         training_type: trainingType,
@@ -87,7 +87,6 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
       setFullName(profile.full_name ?? "");
       setStudentId(profile.student_id ?? "");
       setMajor(profile.major ?? "CNTT");
-      setIntakeYear(profile.intake_year ?? 2022);
       setGradYear(profile.target_graduation_year ?? 2026);
       setTotalCredits(profile.total_credits_required ?? 131);
       setTrainingType(profile.training_type ?? "chinh-quy");
@@ -281,15 +280,13 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <label className="es-login-label">Năm nhập học</label>
-                  <select
+                  <input
                     className="es-login-input"
-                    value={intakeYear}
-                    onChange={(e) => setIntakeYear(Number(e.target.value))}
-                    disabled={!editing}
-                    style={{ cursor: editing ? "pointer" : "default" }}
-                  >
-                    {INTAKE_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-                  </select>
+                    value={intakeYear ?? "—"}
+                    readOnly
+                    disabled
+                    style={{ cursor: "default" }}
+                  />
                 </div>
                 <div style={{ flex: 1 }}>
                   <label className="es-login-label">Năm TN dự kiến</label>

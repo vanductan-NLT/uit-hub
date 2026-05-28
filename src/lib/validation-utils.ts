@@ -20,6 +20,13 @@ export function validateScore(raw: string): ValidationResult {
   return OK;
 }
 
+// First 2 digits of MSSV encode the intake year (24 → 2024). Returns null when
+// the id has fewer than 2 leading digits.
+export function intakeYearFromStudentId(raw: string): number | null {
+  const m = raw.trim().match(/^(\d{2})/);
+  return m ? 2000 + Number(m[1]) : null;
+}
+
 // UIT student id: exactly 8 digits (e.g. 22521234). Empty is rejected by
 // default; pass allowEmpty when the field is optional.
 export function validateStudentId(raw: string, allowEmpty = false): ValidationResult {

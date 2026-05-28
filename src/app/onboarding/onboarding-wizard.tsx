@@ -4,13 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import { upsertUserProfile } from "@/lib/supabase/courses-api";
-import { validateFullName, validateStudentId } from "@/lib/validation-utils";
+import { validateFullName, validateStudentId, intakeYearFromStudentId } from "@/lib/validation-utils";
 import OnboardingCourseAdder, { type AddedCourse } from "./onboarding-course-adder";
 
 interface Props { userId: string; userEmail: string; }
 
 const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
-const YEARS  = Array.from({ length: 8 }, (_, i) => 2026 - i);
 const TRAINING_TYPES = [
   { value: "chinh-quy", label: "Chính quy" },
   { value: "tu-xa",     label: "Từ xa" },
@@ -36,7 +35,6 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
   // Step 1 state
   const [fullName, setFullName]   = useState("");
   const [studentId, setStudentId] = useState(userEmail.split("@")[0] ?? "");
-  const [intakeYear, setIntakeYear] = useState<number>(2023);
   const [major, setMajor]         = useState("CNTT");
   const [trainingType, setTrainingType] = useState<"chinh-quy" | "tu-xa">("chinh-quy");
 
@@ -51,7 +49,7 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
 
     setSaving(true); setSaveError("");
     try {
-      await upsertUserProfile({ id: userId, full_name: fullName || null, student_id: studentId || null, intake_year: intakeYear, major, training_type: trainingType });
+      await upsertUserProfile({ id: userId, full_name: fullName || null, student_id: studentId || null, intake_year: intakeYearFromStudentId(studentId), major, training_type: trainingType });
       setStep(2);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Không thể lưu hồ sơ. Vui lòng thử lại.");
@@ -102,9 +100,7 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
               <div className="ob-row-2">
                 <div className="ob-field">
                   <label className="ob-label">Năm nhập học</label>
-                  <select className="ob-input" value={intakeYear} onChange={(e) => setIntakeYear(Number(e.target.value))}>
-                    {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-                  </select>
+                  <input className="ob-input" value={intakeYearFromStudentId(studentId) ?? "—"} readOnly disabled />
                 </div>
                 <div className="ob-field">
                   <label className="ob-label">Ngành</label>
