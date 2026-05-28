@@ -42,9 +42,9 @@
   --ink2: #4A5568;
   --es-muted: #8B93AD;
   --es-border: #E8EBF4;
-  --bg: #F7F7F7;
+  --bg: #FAFBFC;
   --white: #fff;
-  --es-bg-alt: #F0F2F5;
+  --es-bg-alt: #F1F4F8;
 
   /* Primary: UIT Blue */
   --blue: #2563EB;
@@ -54,10 +54,10 @@
   --blue-shadow: #1E40AF;
 
   /* Duolingo accent colors */
-  --duo-green: #58CC02;
-  --duo-green-d: #46A302;
-  --duo-green-lt: #E9F7E3;
-  --duo-green-shadow: #358A00;
+  --duo-green: #16A34A;
+  --duo-green-d: #15803D;
+  --duo-green-lt: #DCFCE7;
+  --duo-green-shadow: #14532D;
 
   --duo-yellow: #FFC800;
   --duo-yellow-d: #E6A800;
@@ -77,7 +77,7 @@
   /* Semantic aliases */
   --green: var(--duo-green);
   --green-lt: var(--duo-green-lt);
-  --green-mid: #A7EF7A;
+  --green-mid: #86EFAC;
   --amber: var(--duo-yellow);
   --amber-lt: var(--duo-yellow-lt);
   --amber-mid: #FFE066;
@@ -89,6 +89,9 @@
   /* Button: white variant (welcome banner) */
   --btn-white-bg: #fff;
   --btn-white-color: #1A1A2E;
+
+  /* Topbar */
+  --es-topbar-bg: #FFFFFF;
 
   /* Layout */
   --sidebar-w: 248px;
@@ -115,14 +118,15 @@
 
 /* ── DARK MODE TOKENS ── */
 [data-theme="dark"] {
-  --bg: #111827;
-  --white: #1F2937;
+  --bg: #0F172A;
+  --white: #263044;
   --ink: #F1F5F9;
   --ink2: #94A3B8;
   --es-muted: #94A3B8;
   --es-border: #374151;
-  --es-bg-alt: #1A2332;
+  --es-bg-alt: #1A2540;
   --es-sidebar-bg: #0B1120;
+  --es-topbar-bg: #1e2d47;
 
   --blue: #60A5FA;
   --blue-d: #3B82F6;
@@ -132,7 +136,7 @@
 
   --duo-green: #4ADE80;
   --duo-green-d: #22C55E;
-  --duo-green-lt: #14290A;
+  --duo-green-lt: #052E16;
   --duo-green-shadow: #166534;
 
   --duo-yellow: #FCD34D;
@@ -193,7 +197,7 @@
   color: #6B7280;
 }
 [data-theme="dark"] .es-topbar {
-  background: #1a2235;
+  background: var(--es-topbar-bg);
   box-shadow: 0 1px 0 var(--es-border);
 }
 [data-theme="dark"] .es-welcome-banner {
@@ -408,7 +412,7 @@
 /* ── MAIN ── */
 .es-main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0; }
 .es-topbar {
-  background: var(--white); border-bottom: none;
+  background: var(--es-topbar-bg, var(--white)); border-bottom: none;
   box-shadow: 0 1px 0 var(--es-border), 0 2px 8px rgba(0,0,0,0.04);
   padding: 0 32px; height: 64px;
   display: flex; align-items: center; justify-content: space-between;

@@ -146,7 +146,8 @@ export interface StudyResource {
   course_id: string;
   title: string;
   description: string | null;
-  url: string;
+  url: string | null;
+  file_path: string | null;
   resource_type: ResourceType;
   source: string | null;
   status: ResourceStatus;

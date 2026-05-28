@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { getStudentsWithProgress, type StudentWithProgress } from "@/lib/supabase/admin-api";
-import { assignRole, type UserWithRole } from "@/lib/supabase/role-admin-actions";
+import { assignRole } from "@/lib/supabase/role-admin-actions";
 import { canAssignRole, assignableRoles, ROLE_LABELS, type AppRole } from "@/lib/role-utils";
 import { useToast } from "@/hooks/use-toast";
 import ToastContainer from "@/components/ui/toast-notification";

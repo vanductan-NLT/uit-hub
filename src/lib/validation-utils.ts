@@ -40,3 +40,18 @@ export function validateFullName(raw: string): ValidationResult {
   }
   return OK;
 }
+
+const ALLOWED_RESOURCE_EXTENSIONS = [".pdf", ".pptx", ".ppt", ".docx", ".doc"];
+const MAX_RESOURCE_FILE_BYTES = 50 * 1024 * 1024; // 50 MB
+
+// File upload for study resources: PDF, PPTX/PPT, DOCX/DOC; max 50 MB.
+export function validateResourceFile(file: File): ValidationResult {
+  const ext = "." + (file.name.split(".").pop() ?? "").toLowerCase();
+  if (!ALLOWED_RESOURCE_EXTENSIONS.includes(ext)) {
+    return { valid: false, error: "Chỉ chấp nhận file PDF, PPTX, PPT, DOCX, DOC." };
+  }
+  if (file.size > MAX_RESOURCE_FILE_BYTES) {
+    return { valid: false, error: "File không được vượt quá 50MB." };
+  }
+  return OK;
+}

@@ -34,10 +34,25 @@ export interface SubmitResourceInput {
   course_id: string;
   title: string;
   description: string | null;
-  url: string;
+  url: string | null;
+  file_path?: string | null;
   resource_type: string;
   source: string | null;
   submitted_by: string;
+}
+
+export async function uploadResourceFile(file: File, userId: string): Promise<string> {
+  const supabase = createClient();
+  const ext = file.name.split(".").pop() ?? "bin";
+  const filePath = `resources/${userId}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("resources").upload(filePath, file);
+  if (error) throw new Error(error.message);
+  return filePath;
+}
+
+export function getResourceFileUrl(filePath: string): string {
+  const supabase = createClient();
+  return supabase.storage.from("resources").getPublicUrl(filePath).data.publicUrl;
 }
 
 export async function submitResource(input: SubmitResourceInput): Promise<StudyResource> {
@@ -86,7 +101,8 @@ export interface UpsertResourceAdminInput {
   course_id: string;
   title: string;
   description: string | null;
-  url: string;
+  url: string | null;
+  file_path?: string | null;
   resource_type: string;
   source: string | null;
   status: ResourceStatus;

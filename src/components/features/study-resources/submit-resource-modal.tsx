@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { Course } from "@/types/database";
-import { submitResource } from "@/lib/supabase/resources-api";
+import { submitResource, uploadResourceFile } from "@/lib/supabase/resources-api";
+import { validateResourceFile } from "@/lib/validation-utils";
 
 interface Props {
   userId: string;
@@ -18,29 +19,69 @@ const resourceTypes = [
   { value: "exam", label: "🔗 Đề thi cũ" },
 ];
 
+type InputMode = "url" | "file";
+
 export default function SubmitResourceModal({ userId, courses, onClose, onSubmitted }: Props) {
   const [courseId, setCourseId] = useState("");
   const [type, setType] = useState("slide");
   const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
   const [source, setSource] = useState("");
+
+  const [mode, setMode] = useState<InputMode>("url");
+  const [url, setUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit() {
-    if (!courseId || !title.trim() || !url.trim()) {
-      setError("Vui lòng điền đầy đủ: Môn học, Tiêu đề, và URL.");
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const picked = e.target.files?.[0] ?? null;
+    setFile(null);
+    setFileError(null);
+    if (!picked) return;
+    const result = validateResourceFile(picked);
+    if (!result.valid) {
+      setFileError(result.error);
+      e.target.value = "";
       return;
     }
+    setFile(picked);
+  }
+
+  async function handleSubmit() {
+    if (!courseId || !title.trim()) {
+      setError("Vui lòng điền đầy đủ: Môn học và Tiêu đề.");
+      return;
+    }
+    if (mode === "url" && !url.trim()) {
+      setError("Vui lòng nhập URL tài nguyên.");
+      return;
+    }
+    if (mode === "file" && !file) {
+      setError("Vui lòng chọn file để upload.");
+      return;
+    }
+
     try {
       setSubmitting(true);
       setError(null);
+      let filePath: string | null = null;
+
+      if (mode === "file" && file) {
+        setUploadProgress(true);
+        filePath = await uploadResourceFile(file, userId);
+        setUploadProgress(false);
+      }
+
       await submitResource({
         course_id: courseId,
         title: title.trim(),
         description: description.trim() || null,
-        url: url.trim(),
+        url: mode === "url" ? url.trim() : null,
+        file_path: filePath,
         resource_type: type,
         source: source.trim() || null,
         submitted_by: userId,
@@ -48,6 +89,7 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
       onSubmitted();
       onClose();
     } catch (err) {
+      setUploadProgress(false);
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
     } finally {
       setSubmitting(false);
@@ -86,13 +128,67 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
             className="es-input"
           />
 
-          <input
-            placeholder="URL tài nguyên *"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="es-input"
-            type="url"
-          />
+          {/* URL / File toggle */}
+          <div style={{ display: "flex", gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => { setMode("url"); setFile(null); setFileError(null); }}
+              style={{
+                flex: 1, padding: "6px 0", borderRadius: "var(--r-sm)", fontSize: 13, fontWeight: 600,
+                border: `1.5px solid ${mode === "url" ? "var(--blue)" : "var(--es-border)"}`,
+                background: mode === "url" ? "var(--blue-lt)" : "transparent",
+                color: mode === "url" ? "var(--blue)" : "var(--es-muted)",
+                cursor: "pointer",
+              }}
+            >
+              🔗 Nhập URL
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode("file"); setUrl(""); }}
+              style={{
+                flex: 1, padding: "6px 0", borderRadius: "var(--r-sm)", fontSize: 13, fontWeight: 600,
+                border: `1.5px solid ${mode === "file" ? "var(--blue)" : "var(--es-border)"}`,
+                background: mode === "file" ? "var(--blue-lt)" : "transparent",
+                color: mode === "file" ? "var(--blue)" : "var(--es-muted)",
+                cursor: "pointer",
+              }}
+            >
+              📎 Upload file
+            </button>
+          </div>
+
+          {mode === "url" ? (
+            <input
+              placeholder="URL tài nguyên *"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="es-input"
+              type="url"
+            />
+          ) : (
+            <div>
+              <label
+                style={{
+                  display: "block", padding: "10px 12px", borderRadius: "var(--r-sm)",
+                  border: "1.5px dashed var(--es-border)", cursor: "pointer",
+                  background: "var(--es-bg-alt)", textAlign: "center", fontSize: 13,
+                  color: file ? "var(--ink)" : "var(--es-muted)",
+                }}
+              >
+                {file ? `📎 ${file.name}` : "Chọn file PDF, PPTX, PPT, DOCX, DOC (tối đa 50MB)"}
+                <input
+                  type="file"
+                  accept=".pdf,.pptx,.ppt,.docx,.doc"
+                  style={{ display: "none" }}
+                  onChange={handleFileChange}
+                />
+              </label>
+              {fileError && (
+                <div style={{ color: "var(--red)", fontSize: 12, marginTop: 4 }}>{fileError}</div>
+              )}
+            </div>
+          )}
 
           <input
             placeholder="Nguồn (YouTube, GitHub, UIT Drive...)"
@@ -120,9 +216,9 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
         </div>
 
         <div className="es-logout-btns" style={{ marginTop: 14 }}>
-          <button className="es-btn es-btn-outline" onClick={onClose}>Huỷ</button>
+          <button className="es-btn es-btn-outline" onClick={onClose} disabled={submitting}>Huỷ</button>
           <button className="es-btn es-btn-primary" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Đang gửi..." : "Gửi đóng góp"}
+            {uploadProgress ? "Đang upload..." : submitting ? "Đang gửi..." : "Gửi đóng góp"}
           </button>
         </div>
       </div>

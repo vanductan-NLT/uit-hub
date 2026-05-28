@@ -7,6 +7,7 @@ import {
   updateResourceStatus,
   upsertResourceAdmin,
   deleteResource,
+  getResourceFileUrl,
 } from "@/lib/supabase/resources-api";
 
 const statusBadge: Record<string, { cls: string; label: string }> = {
@@ -114,7 +115,7 @@ export default function ResourceManager({ allCourses }: Props) {
                       <button className="es-btn es-btn-sm es-btn-outline" onClick={() => handleReject(r.id)} style={{ color: "var(--red)" }}>✗</button>
                     </>
                   )}
-                  <a href={r.url} target="_blank" rel="noopener noreferrer" className="es-btn es-btn-sm es-btn-ghost">🔗</a>
+                  <a href={r.file_path ? getResourceFileUrl(r.file_path) : (r.url ?? "#")} target="_blank" rel="noopener noreferrer" className="es-btn es-btn-sm es-btn-ghost">🔗</a>
                   <button className="es-btn es-btn-sm es-btn-ghost" onClick={() => handleDelete(r.id)} style={{ color: "var(--red)" }}>🗑</button>
                 </div>
               </div>

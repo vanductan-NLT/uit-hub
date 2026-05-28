@@ -1,0 +1,3 @@
+ALTER TABLE study_resources
+  ALTER COLUMN url DROP NOT NULL,
+  ADD COLUMN IF NOT EXISTS file_path TEXT;

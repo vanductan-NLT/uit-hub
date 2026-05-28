@@ -1,6 +1,7 @@
 "use client";
 
 import type { StudyResourceWithCourse } from "@/types/database";
+import { getResourceFileUrl } from "@/lib/supabase/resources-api";
 
 const typeConfig: Record<string, { icon: string; badge: string; cls: string }> = {
   video: { icon: "📺", badge: "Video", cls: "es-badge-blue" },
@@ -11,10 +12,14 @@ const typeConfig: Record<string, { icon: string; badge: string; cls: string }> =
 
 export default function ResourceCard({ resource }: { resource: StudyResourceWithCourse }) {
   const cfg = typeConfig[resource.resource_type] ?? typeConfig.slide;
+  const href = resource.file_path
+    ? getResourceFileUrl(resource.file_path)
+    : (resource.url ?? "#");
+  const isFile = !!resource.file_path;
 
   return (
     <a
-      href={resource.url}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="es-resource-card"
@@ -23,6 +28,9 @@ export default function ResourceCard({ resource }: { resource: StudyResourceWith
       <div className="es-resource-type-row">
         <span className="es-resource-icon">{cfg.icon}</span>
         <span className={`es-badge ${cfg.cls}`}>{cfg.badge}</span>
+        {isFile && (
+          <span className="es-badge es-badge-gray" style={{ fontSize: 10 }}>📎 File</span>
+        )}
       </div>
       <div className="es-resource-name">{resource.title}</div>
       <div className="es-resource-desc">{resource.description}</div>
