@@ -5,7 +5,7 @@ import { useExamSchedule, type ExamWithProgress } from "@/hooks/use-exam-schedul
 import type { Course, UserCourseWithCourse } from "@/types/database";
 import ImportExamHtml from "@/components/features/exam-schedule/import-exam-html";
 import EmptyState from "@/components/ui/empty-state";
-import { generateICSContent, downloadICS } from "@/lib/ics-export-utils";
+import { buildGoogleCalendarUrl } from "@/lib/google-calendar-utils";
 
 interface ToastFns { success: (m: string) => void; error: (m: string) => void; info: (m: string) => void; warning: (m: string) => void; }
 
@@ -89,17 +89,6 @@ export default function ExamPanel({ userId, userCourses, allCourses, currentSeme
             <span className={`es-badge es-badge-${nearestExam.urgency === "green" ? "green" : nearestExam.urgency === "amber" ? "amber" : "red"}`}>
               Gần nhất: {nearestExam.daysLeft} ngày
             </span>
-          )}
-          {exams.length > 0 && (
-            <button
-              className="es-btn es-btn-outline es-btn-sm"
-              onClick={() => {
-                const content = generateICSContent(exams);
-                downloadICS(content);
-              }}
-            >
-              📥 Xuất .ics
-            </button>
           )}
           <button className="es-btn es-btn-primary es-btn-sm" onClick={() => setShowImport(true)}>
             + Import lịch thi
@@ -248,13 +237,22 @@ function ExamCard({ exam, today, onToggleSession, onDelete }: {
             </div>
           </div>
           {!isPast && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "var(--es-muted)", padding: "2px 6px" }}
-              title="Xoá lịch thi"
-            >
-              ×
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); window.open(buildGoogleCalendarUrl(exam), "_blank", "noopener,noreferrer"); }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--blue)", padding: "2px 6px", fontWeight: 600, whiteSpace: "nowrap" }}
+                title="Thêm vào Google Calendar"
+              >
+                📅 Lịch
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "var(--es-muted)", padding: "2px 6px" }}
+                title="Xoá lịch thi"
+              >
+                ×
+              </button>
+            </div>
           )}
         </div>
 
