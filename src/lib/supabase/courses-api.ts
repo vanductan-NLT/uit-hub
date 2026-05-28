@@ -34,8 +34,8 @@ export interface UpsertUserCourseInput {
   course_id: string;
   score: number | null;
   semester: string | null;
-  academic_year: string | null;
-  status: "completed" | "in_progress" | "failed";
+  academic_year?: string | null;
+  status: "completed" | "in_progress" | "failed" | "exempted";
   component_scores?: Record<string, number | null>;
   note?: string | null;
 }

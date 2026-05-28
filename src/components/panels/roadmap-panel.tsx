@@ -233,7 +233,13 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
                 </div>
               </div>
             ) : activeTab === "timeline" ? (
-              <CourseTimeline userCourses={userCourses} suggestions={suggestions} />
+              <CourseTimeline
+                userCourses={userCourses}
+                suggestions={suggestions}
+                addCourse={addCourse}
+                editCourse={editCourse}
+                removeCourse={removeCourse}
+              />
             ) : (
               /* CTĐT tab */
               currLoading ? (

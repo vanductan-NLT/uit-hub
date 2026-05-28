@@ -86,11 +86,15 @@ export function useCourses(userId: string): UseCourseState {
         const optimistic: UserCourseWithCourse = {
           id: optimisticId,
           user_id: userId,
+          course_id: input.course_id,
+          score: input.score,
+          semester: input.semester,
+          academic_year: input.academic_year ?? null,
+          status: input.status,
+          component_scores: input.component_scores ?? {},
+          note: input.note ?? null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          note: null,
-          component_scores: {},
-          ...input,
           course: localCourse,
         };
         setUserCourses((prev) => [...prev, optimistic]);

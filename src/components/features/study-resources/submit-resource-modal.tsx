@@ -36,6 +36,7 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = e.target.files?.[0] ?? null;
@@ -87,13 +88,31 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
         submitted_by: userId,
       });
       onSubmitted();
-      onClose();
+      setDone(true);
     } catch (err) {
       setUploadProgress(false);
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (done) {
+    return (
+      <div className="es-logout-overlay" onClick={onClose}>
+        <div className="es-logout-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 400, textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
+          <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6, color: "var(--ink)" }}>Đã gửi thành công!</div>
+          <div style={{ fontSize: 13, color: "var(--es-muted)", marginBottom: 4 }}>
+            Tài nguyên <strong style={{ color: "var(--ink)" }}>{title}</strong> đang chờ admin duyệt.
+          </div>
+          <div style={{ fontSize: 12, color: "var(--es-muted)", marginBottom: 20, lineHeight: 1.6 }}>
+            Bạn có thể theo dõi trạng thái ở mục <strong>Đóng góp của tôi</strong> ngay bên dưới bộ lọc.
+          </div>
+          <button className="es-btn es-btn-primary" onClick={onClose}>Đóng</button>
+        </div>
+      </div>
+    );
   }
 
   return (

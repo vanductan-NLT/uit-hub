@@ -7,6 +7,7 @@ import { getExamSchedules } from "@/lib/supabase/exam-api";
 import ResourceList from "@/components/features/study-resources/resource-list";
 import CourseFilter from "@/components/features/study-resources/course-filter";
 import SubmitResourceModal from "@/components/features/study-resources/submit-resource-modal";
+import MySubmissionsSection from "@/components/features/study-resources/my-submissions-section";
 import EmptyState from "@/components/ui/empty-state";
 
 const typeFilters: { label: string; value: ResourceType | null }[] = [
@@ -29,6 +30,7 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showSubmit, setShowSubmit] = useState(false);
+  const [submissionRefreshKey, setSubmissionRefreshKey] = useState(0);
   // Map courseId → nearest upcoming exam { daysLeft, period }
   const [examMap, setExamMap] = useState<Map<string, { daysLeft: number; period: "GK" | "CK" }>>(new Map());
 
@@ -137,6 +139,8 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
           </div>
         )}
 
+        <MySubmissionsSection userId={userId} refreshKey={submissionRefreshKey} />
+
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
           <div className="es-resource-filters">
             {typeFilters.map((f) => (
@@ -198,7 +202,7 @@ export default function ResourcesPanel({ userId, inProgressCourses, allCourses }
           userId={userId}
           courses={allCourses}
           onClose={() => setShowSubmit(false)}
-          onSubmitted={refetch}
+          onSubmitted={() => { refetch(); setSubmissionRefreshKey((k) => k + 1); }}
         />
       )}
     </>

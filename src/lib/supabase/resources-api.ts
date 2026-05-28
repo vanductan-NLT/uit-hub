@@ -66,6 +66,17 @@ export async function submitResource(input: SubmitResourceInput): Promise<StudyR
   return data as StudyResource;
 }
 
+export async function getMySubmissions(userId: string): Promise<StudyResourceWithCourse[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("study_resources")
+    .select("*, course:courses(*)")
+    .eq("submitted_by", userId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data as StudyResourceWithCourse[];
+}
+
 // ── ADMIN ────────────────────────────────────────────────
 
 export async function getAllResourcesAdmin(): Promise<StudyResourceWithCourse[]> {

@@ -3,10 +3,13 @@
 import { useMemo } from "react";
 import type { UserCourseWithCourse } from "@/types/database";
 import { calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
+import DashboardAcademicOverview from "@/components/features/dashboard/dashboard-academic-overview";
+import DashboardHeroQuote from "@/components/features/dashboard/dashboard-hero-quote";
 
 interface Props {
   onNav: (panel: string) => void;
   displayName: string;
+  avatarUrl?: string;
   loading: boolean;
   gpa4: number;
   passedCredits: number;
@@ -25,13 +28,17 @@ function gradeLabel(gpa4: number) {
   return gpa4 > 0 ? "Yếu" : "—";
 }
 
-export default function DashboardPanel({ onNav, displayName, loading, gpa4, passedCredits, totalCreditsRequired, inProgressCourses, completedCourses, nearestExamDays, semester }: Props) {
-  const now = new Date();
-  const hour = now.getHours();
-  const greeting = hour < 12 ? "Chào buổi sáng" : hour < 18 ? "Chào buổi chiều" : "Chào buổi tối";
-  const dayNames = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-  const semesterLabel = semester ?? "HK hiện tại";
-  const dateStr = `${dayNames[now.getDay()]}, ${now.getDate()} tháng ${now.getMonth() + 1} · ${semesterLabel}`;
+function getInitials(name: string) {
+  return name.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+}
+
+export default function DashboardPanel({
+  onNav, displayName, avatarUrl, loading, gpa4, passedCredits, totalCreditsRequired,
+  inProgressCourses, completedCourses, nearestExamDays, semester,
+}: Props) {
+  const dateStr = semester ?? "HK hiện tại";
+  const progressPct = totalCreditsRequired > 0 ? Math.round((passedCredits / totalCreditsRequired) * 100) : 0;
+  const gradEligible = !loading && gpa4 >= 2.0 && passedCredits >= totalCreditsRequired;
 
   const riskyCourses = useMemo(() =>
     inProgressCourses
@@ -47,27 +54,36 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
       }),
     [inProgressCourses]
   );
-
   const riskyCount = riskyCourses.length;
-  const aGradeCount = completedCourses.filter((c) => c.score !== null && c.score >= 8.5).length;
-  const progressPct = totalCreditsRequired > 0 ? Math.round((passedCredits / totalCreditsRequired) * 100) : 0;
-  const gradEligible = !loading && gpa4 >= 2.0 && passedCredits >= totalCreditsRequired;
 
-  const bannerTitle = loading ? "Đang tải dữ liệu..."
-    : riskyCount > 0 ? `${riskyCount} môn cần chú ý kỳ này`
-    : inProgressCourses.length > 0 ? "Tất cả môn đang tiến triển tốt"
-    : "Chưa có môn học kỳ này";
-
-  const bannerSub = loading ? ""
-    : riskyCount > 0 ? "Nhập điểm thành phần và xem dự báo GPA để cải thiện kịp thời."
-    : inProgressCourses.length > 0 ? "Tiếp tục duy trì nhịp học đều đặn nhé!"
-    : "Import lịch học từ cổng thông tin UIT để bắt đầu theo dõi.";
+  const quickActions = [
+    {
+      id: "gpa", icon: "🔮", label: "Dự báo GPA",
+      desc: loading ? "…" : riskyCount > 0 ? `⚠️ ${riskyCount} môn cần chú ý` : `GPA ${gpa4.toFixed(2)} · ${gradeLabel(gpa4)}`,
+      urgent: riskyCount > 0,
+    },
+    {
+      id: "exam", icon: "📅", label: "Kế hoạch ôn thi",
+      desc: loading ? "…" : nearestExamDays === 0 ? "🚨 Thi hôm nay!" : nearestExamDays !== null && nearestExamDays >= 0 ? `Thi gần nhất: ${nearestExamDays} ngày` : "Chưa có lịch thi",
+      urgent: nearestExamDays !== null && nearestExamDays >= 0 && nearestExamDays <= 3,
+    },
+    {
+      id: "roadmap", icon: "🗺️", label: "Lộ trình môn học",
+      desc: loading ? "…" : `${completedCourses.length} môn hoàn thành · ${progressPct}% lộ trình`,
+      urgent: false,
+    },
+    {
+      id: "resources", icon: "📚", label: "Tài nguyên học tập",
+      desc: "Slide, đề thi, bài tập theo môn",
+      urgent: false,
+    },
+  ];
 
   return (
     <>
       <div className="es-topbar">
         <div className="es-topbar-left">
-          <div className="es-topbar-title">{greeting}, {displayName} 👋</div>
+          <div className="es-topbar-title">Dashboard</div>
           <div className="es-topbar-sub">{dateStr}</div>
         </div>
         <div className="es-topbar-right" style={{ gap: 8 }}>
@@ -76,7 +92,6 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
               className={`es-badge ${gradEligible ? "es-badge-green" : "es-badge-amber"}`}
               onClick={() => onNav("profile")}
               style={{ cursor: "pointer", border: "none", fontSize: 12 }}
-              title="Xem điều kiện tốt nghiệp"
             >
               {gradEligible ? "🎓 Đủ ĐK TN" : `🎓 ${progressPct}% lộ trình`}
             </button>
@@ -85,106 +100,51 @@ export default function DashboardPanel({ onNav, displayName, loading, gpa4, pass
       </div>
 
       <div className="es-content">
-        <div className="es-welcome-banner">
-          <div className="es-welcome-text">
-            <h2>{bannerTitle}</h2>
-            <p>{bannerSub}</p>
+        {loading ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300, color: "var(--es-muted)" }}>
+            Đang tải dữ liệu...
           </div>
-          <div className="es-welcome-actions">
-            <button className="es-btn-white" onClick={() => onNav("exam")}>Xem lịch ôn thi</button>
-            <button className="es-btn-dark" onClick={() => onNav(riskyCount > 0 ? "gpa" : "tracker")}>
-              {riskyCount > 0 ? "Xem dự báo GPA" : "Cập nhật tiến độ"}
-            </button>
-          </div>
-        </div>
+        ) : (
+          <>
+            {/* ── 1. Hero: Avatar + Greeting + Quote ── */}
+            <DashboardHeroQuote
+              displayName={displayName}
+              avatarUrl={avatarUrl}
+              initials={getInitials(displayName)}
+            />
 
-        {!loading && riskyCourses.slice(0, 2).map(({ c, ckNeeded }) => (
-          <div key={c.id} className="es-alert-strip warn" style={{ marginTop: 8 }}>
-            <span>⚠️</span>
-            <span className="es-alert-text">
-              <strong>{c.course.name}:</strong>{" "}
-              {ckNeeded !== null && ckNeeded > 10
-                ? "Không thể đạt B với điểm hiện tại."
-                : ckNeeded !== null
-                ? `Cần ít nhất ${ckNeeded.toFixed(1)} điểm cuối kỳ để đạt B.`
-                : "Điểm hiện tại chưa đủ an toàn."}
-            </span>
-            <button className="es-alert-cta" onClick={() => onNav("gpa")}>Xem dự báo →</button>
-          </div>
-        ))}
+            {/* ── 2. Academic status: GPA + progress + alerts ── */}
+            <DashboardAcademicOverview
+              gpa4={gpa4}
+              passedCredits={passedCredits}
+              totalCreditsRequired={totalCreditsRequired}
+              completedCourses={completedCourses}
+              inProgressCourses={inProgressCourses}
+              riskyCourses={riskyCourses}
+              nearestExamDays={nearestExamDays}
+              onNav={onNav}
+            />
 
-        <div className="es-grid-4" style={{ margin: "20px 0 0" }}>
-          <div className="es-stat-card animate-spring-in stagger-1" style={{ "--stat-accent": "var(--blue)" } as React.CSSProperties}>
-            <div className="es-stat-label">GPA tích lũy</div>
-            <div className="es-stat-value">{loading ? "…" : gpa4.toFixed(2)}</div>
-            <div className="es-stat-delta" style={{ color: "var(--es-muted)" }}>{loading ? "" : gradeLabel(gpa4)}</div>
-          </div>
-          <div className="es-stat-card animate-spring-in stagger-2" style={{ "--stat-accent": "var(--duo-green)" } as React.CSSProperties}>
-            <div className="es-stat-label">Tín chỉ tích lũy</div>
-            <div className="es-stat-value">
-              {loading ? "…" : passedCredits}
-              {!loading && <span style={{ fontSize: 16, color: "var(--es-muted)" }}>/{totalCreditsRequired}</span>}
+            {/* ── 3. Quick actions ── */}
+            <div className="es-section-hdr" style={{ marginTop: 18, marginBottom: 10 }}>
+              <div className="es-section-title" style={{ fontSize: 13 }}>Hành động nhanh</div>
             </div>
-            <div className="es-stat-delta" style={{ color: "var(--es-muted)" }}>
-              {loading ? "" : `${progressPct}% chương trình`}
+            <div className="es-quick-actions">
+              {quickActions.map((a) => (
+                <div
+                  key={a.id}
+                  className="es-quick-action"
+                  onClick={() => onNav(a.id)}
+                  style={a.urgent ? { border: "1.5px solid var(--amber)", background: "var(--amber-lt)" } : undefined}
+                >
+                  <div className="es-quick-action-icon">{a.icon}</div>
+                  <div className="es-quick-action-name">{a.label}</div>
+                  <div className="es-quick-action-desc" style={a.urgent ? { color: "var(--amber)", fontWeight: 600 } : undefined}>{a.desc}</div>
+                </div>
+              ))}
             </div>
-          </div>
-          <div className="es-stat-card animate-spring-in stagger-3" style={{ "--stat-accent": "var(--duo-orange)" } as React.CSSProperties}>
-            <div className="es-stat-label">Môn đã hoàn thành</div>
-            <div className="es-stat-value">{loading ? "…" : completedCourses.length}</div>
-            <div className="es-stat-delta" style={{ color: "var(--es-muted)" }}>
-              {loading ? "" : `${aGradeCount} môn điểm A`}
-            </div>
-          </div>
-          <div className="es-stat-card animate-spring-in stagger-4" style={{ "--stat-accent": riskyCount > 0 ? "var(--duo-yellow)" : "var(--duo-green)" } as React.CSSProperties}>
-            <div className="es-stat-label">Môn HK này</div>
-            <div className="es-stat-value">{loading ? "…" : inProgressCourses.length}</div>
-            <div className="es-stat-delta" style={{ color: riskyCount > 0 ? "var(--amber)" : "var(--green)" }}>
-              {loading ? "" : riskyCount > 0 ? `${riskyCount} cần chú ý` : inProgressCourses.length > 0 ? "Tất cả ổn" : "—"}
-            </div>
-          </div>
-        </div>
-
-        <div className="es-section-hdr" style={{ marginTop: 20 }}>
-          <div className="es-section-title">Hành động nhanh</div>
-        </div>
-        <div className="es-quick-actions">
-          <div className="es-quick-action" onClick={() => onNav("gpa")}>
-            <div className="es-quick-action-icon">🔮</div>
-            <div className="es-quick-action-name">Kiểm tra dự báo</div>
-            <div className="es-quick-action-desc">
-              {loading ? "…" : riskyCount > 0 ? `${riskyCount} môn cần chú ý` : "Mọi thứ đang ổn"}
-            </div>
-          </div>
-          <div className="es-quick-action" onClick={() => onNav("exam")}>
-            <div className="es-quick-action-icon">📅</div>
-            <div className="es-quick-action-name">Lịch ôn thi</div>
-            <div className="es-quick-action-desc">
-              {nearestExamDays !== null && nearestExamDays >= 0
-                ? nearestExamDays === 0 ? "🚨 Thi hôm nay!" : `Thi gần nhất: ${nearestExamDays} ngày`
-                : "Xem kế hoạch ôn thi"}
-            </div>
-          </div>
-          <div className="es-quick-action" onClick={() => onNav("roadmap")}>
-            <div className="es-quick-action-icon">🗺️</div>
-            <div className="es-quick-action-name">Lộ trình HK sau</div>
-            <div className="es-quick-action-desc">
-              {loading ? "…" : `${completedCourses.length} môn đã hoàn thành`}
-            </div>
-          </div>
-          <div className="es-quick-action" onClick={() => onNav("resources")}>
-            <div className="es-quick-action-icon">📚</div>
-            <div className="es-quick-action-name">Tài nguyên học tập</div>
-            <div className="es-quick-action-desc">Slide, đề thi, bài tập theo môn</div>
-          </div>
-          <div className="es-quick-action" onClick={() => onNav("profile")}>
-            <div className="es-quick-action-icon">🎓</div>
-            <div className="es-quick-action-name">Điều kiện TN</div>
-            <div className="es-quick-action-desc">
-              {loading ? "…" : gradEligible ? "Đủ điều kiện tốt nghiệp" : `${progressPct}% tín chỉ · GPA ${gpa4.toFixed(2)}`}
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </>
   );

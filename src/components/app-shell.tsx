@@ -27,12 +27,12 @@ import ToastContainer from "@/components/ui/toast-notification";
 
 type Panel = "dashboard" | "roadmap" | "gpa" | "exam" | "resources" | "profile";
 
-const navItems: { id: Panel; icon: string; label: string; badge?: string }[] = [
-  { id: "dashboard", icon: "🏠", label: "Dashboard" },
-  { id: "roadmap", icon: "🗺️", label: "Lộ trình môn học" },
-  { id: "gpa", icon: "📈", label: "Dự báo GPA" },
-  { id: "exam", icon: "📅", label: "Kế hoạch ôn thi" },
-  { id: "resources", icon: "📚", label: "Tài nguyên học tập" },
+const navItems: { id: Panel; icon: string; label: string; badge?: string; badgeBg: string }[] = [
+  { id: "dashboard", icon: "🏠", label: "Dashboard", badgeBg: "#EFF4FF" },
+  { id: "roadmap", icon: "🗺️", label: "Lộ trình môn học", badgeBg: "#DCFCE7" },
+  { id: "gpa", icon: "📈", label: "Dự báo GPA", badgeBg: "#F5F3FF" },
+  { id: "exam", icon: "📅", label: "Kế hoạch ôn thi", badgeBg: "#FFF7ED" },
+  { id: "resources", icon: "📚", label: "Tài nguyên học tập", badgeBg: "#FFF1F2" },
 ];
 
 function getInitials(email: string) {
@@ -48,6 +48,7 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
   const [active, setActive] = useState<Panel>("dashboard");
   const [showLogout, setShowLogout] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // Global import hub + sub-modal state
   const [showImportHub, setShowImportHub] = useState(false);
   const [showImportDkhp, setShowImportDkhp] = useState(false);
@@ -133,19 +134,31 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
 
       <div className="es-app">
         {/* Sidebar */}
-        <nav className={`es-sidebar${sidebarOpen ? " open" : ""}`}>
-          <div className="es-sidebar-top">
+        <nav className={`es-sidebar${sidebarOpen ? " open" : ""}${sidebarCollapsed ? " collapsed" : ""}`}>
+          {/* Header section (fixed) */}
+          <div className="es-sidebar-header">
             <div className="es-brand">
               <img src="/UITHUBLOGO.png" alt="UIT" style={{ width: 36, height: 36, objectFit: "contain", flexShrink: 0 }} />
-              <div>
+              <div className="es-brand-text">
                 <div className="es-brand-name">UIT Hub</div>
                 <div className="es-brand-sub">UIT · 2024–2025</div>
               </div>
             </div>
+            <button
+              className="es-sidebar-collapse-btn"
+              onClick={() => setSidebarCollapsed((v) => !v)}
+              title={sidebarCollapsed ? "Mở rộng" : "Thu gọn"}
+            >
+              {sidebarCollapsed ? "»" : "«"}
+            </button>
+          </div>
 
+          {/* Navigation content section (scrollable) */}
+          <div className="es-sidebar-nav-content">
             <div className="es-nav-label">Tổng quan</div>
-            <button className={`es-nav-item${active === "dashboard" ? " active" : ""}`} onClick={() => navigate("dashboard")}>
-              <span className="es-nav-icon">🏠</span> Dashboard
+            <button className={`es-nav-item${active === "dashboard" ? " active" : ""}`} onClick={() => navigate("dashboard")} data-tooltip="Dashboard">
+              <span className="es-nav-icon-badge" style={{ background: "#EFF4FF" }}>🏠</span>
+              <span className="es-nav-text">Dashboard</span>
             </button>
 
             <div className="es-nav-label" style={{ marginTop: 12 }}>Cá nhân hóa</div>
@@ -154,9 +167,10 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
                 key={item.id}
                 className={`es-nav-item${active === item.id ? " active" : ""}`}
                 onClick={() => navigate(item.id)}
+                data-tooltip={item.label}
               >
-                <span className="es-nav-icon">{item.icon}</span>
-                {item.label}
+                <span className="es-nav-icon-badge" style={{ background: item.badgeBg }}>{item.icon}</span>
+                <span className="es-nav-text">{item.label}</span>
                 {item.id === "gpa"
                   ? riskyCount > 0 && <span className="es-nav-badge">{riskyCount}</span>
                   : item.id === "exam"
@@ -169,51 +183,58 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
                 }
               </button>
             ))}
-          {/* Global import + feedback */}
-          <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--es-border)", display: "flex", flexDirection: "column", gap: 8 }}>
-            <button
-              className="es-btn es-btn-primary"
-              onClick={() => { setShowImportHub(true); setSidebarOpen(false); }}
-              style={{ width: "100%", justifyContent: "center", gap: 6 }}
+
+            {/* Global import + feedback */}
+            <div className="es-sidebar-bottom-btns">
+              <button
+                className="es-btn es-btn-primary"
+                onClick={() => { setShowImportHub(true); setSidebarOpen(false); }}
+                style={{ width: "100%", justifyContent: "center", gap: 6 }}
+              >
+                📥 Import dữ liệu
+              </button>
+              <FeedbackButton userId={userId} onToast={toast} />
+            </div>
+
+            {userProfile?.role === "admin" && (
+              <>
+                <div className="es-nav-label" style={{ marginTop: 12 }}>Quản trị</div>
+                <a href="/admin" className="es-nav-item" style={{ textDecoration: "none" }} data-tooltip="Admin Panel">
+                  <span className="es-nav-icon-badge" style={{ background: "#FEF3C7" }}>🛡️</span>
+                  <span className="es-nav-text">Admin Panel</span>
+                </a>
+              </>
+            )}
+          </div>
+
+          {/* Footer section (fixed) */}
+          <div className="es-sidebar-user-section">
+            <div
+              className={`es-sidebar-user${active === "profile" ? " active" : ""}`}
+              onClick={() => navigate("profile")}
+              style={{ cursor: "pointer" }}
+              title="Xem hồ sơ"
+              data-tooltip="Xem hồ sơ"
             >
-              📥 Import dữ liệu
-            </button>
-            <FeedbackButton userId={userId} onToast={toast} />
-          </div>
-
-          {userProfile?.role === "admin" && (
-            <>
-              <div className="es-nav-label" style={{ marginTop: 12 }}>Quản trị</div>
-              <a href="/admin" className="es-nav-item" style={{ textDecoration: "none" }}>
-                <span className="es-nav-icon">🛡️</span> Admin Panel
-              </a>
-            </>
-          )}
-          </div>
-
-          <div
-            className={`es-sidebar-user${active === "profile" ? " active" : ""}`}
-            onClick={() => navigate("profile")}
-            style={{ cursor: "pointer" }}
-            title="Xem hồ sơ"
-          >
-            <div className="es-user-avatar">
-              {avatarUrl
-                ? <img src={avatarUrl} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} referrerPolicy="no-referrer" />
-                : initials}
+              <div className="es-user-avatar">
+                {avatarUrl
+                  ? <img src={avatarUrl} alt={displayName} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} referrerPolicy="no-referrer" />
+                  : initials}
+              </div>
+              <div className="es-nav-text" style={{ flex: 1, minWidth: 0 }}>
+                <div className="es-user-name">{mssv}</div>
+                <div className="es-user-id">{displayName} · {userProfile?.major ?? "CNTT"}</div>
+              </div>
+              <span className="es-nav-text"><ThemeToggle /></span>
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="es-user-name">{mssv}</div>
-              <div className="es-user-id">{displayName} · {userProfile?.major ?? "CNTT"}</div>
-            </div>
-            <ThemeToggle />
             <button
-              className="es-btn-ghost"
-              onClick={(e) => { e.stopPropagation(); setShowLogout(true); }}
+              className="es-logout-btn"
+              onClick={() => setShowLogout(true)}
               title="Đăng xuất"
-              style={{ padding: "4px 6px", fontSize: 16 }}
+              data-tooltip="Đăng xuất"
             >
-              ↪
+              <span className="es-nav-icon-badge" style={{ background: "rgba(239,68,68,0.1)", fontSize: 14 }}>↪</span>
+              <span className="es-nav-text">Đăng xuất</span>
             </button>
           </div>
         </nav>
@@ -224,6 +245,7 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
             <DashboardPanel
               onNav={(p) => navigate(p as Panel)}
               displayName={displayName}
+              avatarUrl={avatarUrl}
               loading={coursesLoading}
               gpa4={gpa4}
               passedCredits={passedCredits}
