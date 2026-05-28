@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
+import { Agentation } from "agentation";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -36,6 +37,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();` }}
         />
         {children}
+        {/* Dev-only visual feedback tool — click a UI element to generate structured context for AI agents */}
+        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
       <Script src="https://www.googletagmanager.com/gtag/js?id=G-069BHYPWZ9" strategy="afterInteractive" />
       <Script id="gtag-init" strategy="afterInteractive">{`

@@ -29,10 +29,10 @@ function getStatus(
 }
 
 const STATUS_CFG: Record<CourseStatus, { dot: string; leftBorder: string; bg: string; idColor: string }> = {
-  passed:      { dot: "✅", leftBorder: "var(--green)",    bg: "#f0fdf4", idColor: "var(--green)" },
-  in_progress: { dot: "🔄", leftBorder: "var(--amber)",    bg: "#fffbeb", idColor: "var(--amber)" },
-  available:   { dot: "📗", leftBorder: "var(--blue)",     bg: "var(--blue-lt)", idColor: "var(--blue)" },
-  locked:      { dot: "🔒", leftBorder: "var(--es-border)", bg: "var(--bg)", idColor: "var(--es-muted)" },
+  passed:      { dot: "✅", leftBorder: "var(--green)",     bg: "var(--green-lt)",  idColor: "var(--green)" },
+  in_progress: { dot: "🔄", leftBorder: "var(--amber)",     bg: "var(--amber-lt)",  idColor: "var(--amber)" },
+  available:   { dot: "📗", leftBorder: "var(--blue)",      bg: "var(--blue-lt)",   idColor: "var(--blue)" },
+  locked:      { dot: "🔒", leftBorder: "var(--es-border)", bg: "var(--bg)",        idColor: "var(--es-muted)" },
 };
 
 const STATUS_LABELS: Record<CourseStatus, string> = {

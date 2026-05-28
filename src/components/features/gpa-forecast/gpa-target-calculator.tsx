@@ -48,7 +48,7 @@ export default function GpaTargetCalculator({ completedCourses, inProgressCourse
   );
 
   const statusColor = isImpossible ? "var(--duo-red)" : isAlreadyMet ? "var(--duo-green)" : scoreColor(requiredAvg);
-  const statusBg   = isImpossible ? "var(--duo-red-lt, #fff1f1)" : isAlreadyMet ? "var(--duo-green-lt, #f0fdf4)" : requiredAvg > 8.5 ? "var(--amber-lt)" : "var(--blue-lt)";
+  const statusBg   = isImpossible ? "var(--duo-red-lt)" : isAlreadyMet ? "var(--duo-green-lt)" : requiredAvg > 8.5 ? "var(--amber-lt)" : "var(--blue-lt)";
 
   return (
     <div className="es-card" style={{ marginBottom: 14 }}>
@@ -83,6 +83,7 @@ export default function GpaTargetCalculator({ completedCourses, inProgressCourse
       <div style={{
         display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
         borderRadius: "var(--r)", background: statusBg, marginBottom: 12,
+        border: `1px solid ${statusColor}`,
       }}>
         <div style={{ fontSize: 24 }}>
           {isAlreadyMet ? "✅" : isImpossible ? "🚫" : requiredAvg >= 8.5 ? "💪" : "📊"}
@@ -127,7 +128,8 @@ export default function GpaTargetCalculator({ completedCourses, inProgressCourse
               <div key={c.id} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "7px 10px", borderRadius: "var(--r-sm)",
-                background: "var(--es-bg-alt, #f8f9fa)",
+                background: "var(--es-bg-alt)",
+                border: "1px solid var(--es-border)",
                 fontSize: 13,
               }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 }}>

@@ -101,7 +101,7 @@ export default function ExamPanel({ userId, userCourses, allCourses, currentSeme
           {/* Left: Exam list */}
           <div>
             {nearestExam && nearestExam.daysLeft >= 0 && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 99, background: nearestExam.urgency === "red" ? "var(--red-lt)" : nearestExam.urgency === "amber" ? "var(--amber-lt)" : "var(--green-lt)", fontSize: 12, fontWeight: 700, color: URGENCY_COLORS[nearestExam.urgency], marginBottom: 14 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 99, background: nearestExam.urgency === "red" ? "var(--red-lt)" : nearestExam.urgency === "amber" ? "var(--amber-lt)" : "var(--green-lt)", border: `1.5px solid ${URGENCY_COLORS[nearestExam.urgency]}`, fontSize: 12, fontWeight: 700, color: URGENCY_COLORS[nearestExam.urgency], marginBottom: 14 }}>
                 {nearestExam.urgency === "red" ? "🚨" : "📅"} Thi gần nhất: {formatDateShort(nearestExam.exam_date)} · Còn {nearestExam.daysLeft} ngày
               </div>
             )}
@@ -139,7 +139,8 @@ export default function ExamPanel({ userId, userCourses, allCourses, currentSeme
                         className="es-card-sm"
                         style={{
                           display: "flex", alignItems: "center", gap: 12,
-                          borderColor: urgencyBorder, background: urgencyBg,
+                          border: urgencyBorder ? `1.5px solid ${urgencyBorder}` : undefined,
+                          background: urgencyBg,
                           opacity: s.is_completed ? 0.6 : 1,
                           cursor: "pointer",
                         }}
@@ -216,8 +217,8 @@ function ExamCard({ exam, today, onToggleSession, onDelete }: {
   const isPast = exam.daysLeft < 0;
 
   const borderStyle = isPast ? {} :
-    exam.urgency === "red" ? { borderColor: "var(--red)", borderWidth: 1.5 } :
-    exam.urgency === "amber" ? { borderColor: "var(--amber)", borderWidth: 1.5 } : {};
+    exam.urgency === "red" ? { border: "1.5px solid var(--red)" } :
+    exam.urgency === "amber" ? { border: "1.5px solid var(--amber)" } : {};
 
   return (
     <div className="es-exam-item" style={{ ...borderStyle, opacity: isPast ? 0.5 : 1 }}>
@@ -240,7 +241,7 @@ function ExamCard({ exam, today, onToggleSession, onDelete }: {
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <button
                 onClick={(e) => { e.stopPropagation(); window.open(buildGoogleCalendarUrl(exam), "_blank", "noopener,noreferrer"); }}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "var(--blue)", padding: "2px 6px", fontWeight: 600, whiteSpace: "nowrap" }}
+                style={{ background: "var(--blue-lt)", border: "1px solid var(--blue)", borderRadius: "var(--r-sm)", cursor: "pointer", fontSize: 12, color: "var(--blue)", padding: "3px 8px", fontWeight: 700, whiteSpace: "nowrap" }}
                 title="Thêm vào Google Calendar"
               >
                 📅 Lịch
@@ -350,7 +351,7 @@ function CalendarHeatmap({ exams, sessions }: {
         ))}
       </div>
       <div style={{ display: "flex", gap: 12, marginTop: 10, fontSize: 11, color: "var(--es-muted)" }}>
-        <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "var(--blue-lt)", marginRight: 4, verticalAlign: "middle" }} />Có lịch ôn</span>
+        <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "var(--blue)", marginRight: 4, verticalAlign: "middle" }} />Có lịch ôn</span>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "var(--green)", marginRight: 4, verticalAlign: "middle" }} />Đã ôn xong</span>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: 2, background: "var(--red)", marginRight: 4, verticalAlign: "middle" }} />Ngày thi</span>
       </div>
@@ -405,9 +406,13 @@ function MonthGrid({ month, year, today, examDates, sessionsByDate }: {
                 padding: "3px 0",
                 borderRadius: 4,
                 background: bg,
-                border: isToday ? "1.5px solid var(--blue)" : isExam ? "1.5px solid var(--red)" : "1px solid transparent",
+                border: isToday ? "1.5px solid var(--blue)"
+                  : isExam ? "1.5px solid var(--red)"
+                  : allDone ? "1.5px solid var(--green)"
+                  : entry && entry.total > 0 ? "1px solid var(--blue)"
+                  : "1px solid transparent",
                 fontWeight: isToday || isExam ? 700 : 400,
-                color: isExam ? "var(--red)" : isToday ? "var(--blue)" : "var(--ink2)",
+                color: isExam ? "var(--red)" : isToday ? "var(--blue)" : allDone ? "var(--green)" : "var(--ink2)",
               }}
               title={isExam ? "Ngày thi" : entry ? `${entry.completed}/${entry.total} buổi ôn` : undefined}
             >

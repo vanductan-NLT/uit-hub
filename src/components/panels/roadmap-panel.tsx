@@ -200,7 +200,7 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
                 <div>
                   <GpaSummary gpa10={gpa10} gpa4={gpa4} passedCredits={passedCredits} />
 
-                  <div className="es-card">
+                  <div className="es-card" style={{ marginBottom: 14 }}>
                     <div className="es-section-hdr">
                       <div className="es-section-title">Tiến độ chương trình</div>
                     </div>

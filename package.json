@@ -37,6 +37,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/ui": "^4.1.7",
+    "agentation": "^3.0.2",
     "dotenv": "^16.4.7",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
