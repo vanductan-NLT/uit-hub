@@ -22,8 +22,8 @@ export default function LandingNav({ onLogin, loading }: Props) {
 
   return (
     <>
-      {/* Spacer to prevent content from jumping up when the nav height shrinks (fixes the jitter bug) and to reserve space for the fixed nav */}
-      <div style={{ height: "280px" }} aria-hidden="true" />
+      {/* Reserves the unscrolled nav footprint (height driven by --lp-nav-h) so content starts below the fixed header without jumping */}
+      <div className="lp-nav-spacer" aria-hidden="true" />
       
       <nav className={`lp-nav${scrolled ? " lp-nav--scrolled" : ""}`}>
         <a href="#" className="lp-nav-logo" aria-label="UIT Hub trang chủ">

@@ -1601,14 +1601,20 @@
 .lp-btn-sm  { padding: 10px 18px; font-size: 13px; }
 .lp-btn-lg  { padding: 16px 28px; font-size: 15px; }
 
-/* ── Nav (Animated Sticky Header) ── */
+/* ── Nav (Animated Sticky Header) ──
+   Single source of truth for the header footprint. The spacer and the hero's
+   min-height both read --lp-nav-h, so the layout can never disagree with the
+   reserved space (the bug that pushed the hero below the fold). */
+.lp-root { --lp-nav-h: 150px; }
+
 .lp-nav {
   position: fixed; top: 0; left: 0; width: 100%; z-index: 500;
-  height: 280px;
+  height: var(--lp-nav-h);
   background: rgba(255, 251, 248, 0.95);
   border-bottom: 2px solid transparent;
   backdrop-filter: blur(8px);
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.4s ease, border-color 0.4s ease;
   overflow: hidden;
 }
 .lp-nav--scrolled {
@@ -1617,17 +1623,20 @@
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 }
 
-/* Base Logo Container */
+/* Spacer reserves exactly the unscrolled nav footprint so content starts below it */
+.lp-nav-spacer { height: var(--lp-nav-h); flex-shrink: 0; }
+
+/* Base Logo Container — big & centered at rest, morphs to a small left badge on scroll */
 .lp-nav-logo {
   position: absolute;
-  top: 35px; left: 50%;
+  top: 20px; left: 50%;
   transform: translateX(-50%);
-  width: 280px; height: 160px;
+  width: 200px; height: 120px;
   text-decoration: none; color: #1A1A2E;
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .lp-nav--scrolled .lp-nav-logo {
-  top: 16px; left: 40px;
+  top: 16px; left: 32px;
   transform: none;
   width: 180px; height: 32px;
 }
@@ -1637,50 +1646,46 @@
   position: absolute;
   top: 0; left: 50%;
   transform: translateX(-50%);
-  width: 160px; height: 110px; border-radius: 16px;
+  width: 96px; height: 72px; border-radius: 16px;
   object-fit: contain;
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .lp-nav--scrolled .lp-nav-logo-img {
   top: 0; left: 0;
   transform: none;
-  width: 50px; height: 32px; border-radius: 8px;
+  width: 48px; height: 32px; border-radius: 8px;
   object-fit: contain;
 }
 
 /* Logo Text */
 .lp-nav-logo-text {
   position: absolute;
-  bottom: 0; left: 50%;
+  top: 80px; left: 50%;
   transform: translateX(-50%);
-  font-size: 38px; font-weight: 800; letter-spacing: -1px;
+  font-size: 28px; font-weight: 800; letter-spacing: -.5px;
   white-space: nowrap;
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .lp-nav--scrolled .lp-nav-logo-text {
-  bottom: auto; top: 50%; left: 60px; /* 50px img + 10px gap */
+  top: 50%; left: 58px; /* 48px img + 10px gap */
   transform: translateY(-50%);
   font-size: 18px; letter-spacing: -.3px;
 }
 
-/* Actions Container */
+/* Actions Container — pinned top-right in both states; only the logo morphs */
 .lp-nav-actions {
   position: absolute;
-  top: 210px; left: 50%;
-  transform: translateX(-50%);
+  top: 50%; right: 40px;
+  transform: translateY(-50%);
   display: flex; gap: 12px;
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.lp-nav--scrolled .lp-nav-actions {
-  top: 13px; left: auto; right: 40px;
-  transform: none;
+  transition: top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* Buttons */
 .lp-nav-actions .lp-btn-outline,
 .lp-nav-actions .lp-btn-primary {
-  padding: 14px 28px; font-size: 15px; border-radius: 99px;
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 12px 24px; font-size: 14px; border-radius: 99px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .lp-nav--scrolled .lp-nav-actions .lp-btn-outline,
 .lp-nav--scrolled .lp-nav-actions .lp-btn-primary {
@@ -1691,9 +1696,9 @@
 .lp-hero {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
   gap: 40px 80px;
-  padding: 72px 40px 0;
+  padding: 32px 40px 0;
   background: #FFFBF8;
-  min-height: calc(100dvh - 64px);
+  min-height: calc(100dvh - var(--lp-nav-h));
   overflow: hidden;
 }
 .lp-hero-text {
@@ -2093,8 +2098,13 @@
   .lp-feature-inner { gap: 48px; }
 }
 @media (max-width: 860px) {
-  .lp-nav { padding: 0 20px; }
-  .lp-hero { padding: 48px 20px 0; gap: 40px 32px; }
+  .lp-root { --lp-nav-h: 124px; }
+  .lp-nav-logo { width: 160px; height: 96px; top: 14px; }
+  .lp-nav-logo-img { width: 78px; height: 58px; }
+  .lp-nav-logo-text { top: 64px; font-size: 22px; }
+  .lp-nav--scrolled .lp-nav-logo { left: 20px; }
+  .lp-nav-actions { right: 20px; }
+  .lp-hero { padding: 24px 20px 0; gap: 40px 32px; }
   .lp-feature-inner, .lp-feature--flip .lp-feature-inner {
     flex-direction: column; align-items: flex-start;
   }
