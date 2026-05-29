@@ -256,7 +256,7 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
               semester={currentSemester}
             />
           )}
-          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} major={userProfile?.major} intakeYear={userProfile?.intake_year} onImportCtdt={() => setShowImportCtdt(true)} curriculumRefreshKey={curriculumRefreshKey} />}
+          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} major={userProfile?.major} intakeYear={userProfile?.intake_year} curriculumRefreshKey={curriculumRefreshKey} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
           {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} onToast={toast} />}
           {active === "resources" && <ResourcesPanel userId={userId} inProgressCourses={inProgressCourses} allCourses={allCourses} />}
