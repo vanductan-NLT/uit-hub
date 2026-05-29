@@ -133,7 +133,9 @@ export default function AppShellLayout({ userId, userEmail, avatarUrl, children 
       )}
       {showImportDkhp && (
         <ImportFromDkhp
+          userId={userId}
           allCourses={allCourses}
+          userCourses={userCourses}
           onAdd={addCourseWithGuard}
           onSuccess={refetch}
           onClose={() => setShowImportDkhp(false)}

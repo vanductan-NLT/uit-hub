@@ -278,7 +278,9 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
       )}
       {showImportDkhp && (
         <ImportFromDkhp
+          userId={userId}
           allCourses={allCourses}
+          userCourses={userCourses}
           onAdd={addCourseWithGuard}
           onSuccess={refetch}
           onClose={() => setShowImportDkhp(false)}

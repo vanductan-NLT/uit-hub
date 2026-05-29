@@ -33,7 +33,9 @@ export function getSuggestedCourses(
    * which causes vacuous-true explosions (~450 suggestions). Always pass this
    * when the user's CTĐT is available.
    */
-  curriculumCourseIds?: Set<string>
+  curriculumCourseIds?: Set<string>,
+  /** Course IDs to exclude because they are tracked via milestones (gdqp, gdtc). */
+  excludeIds?: Set<string>
 ): Course[] {
   // Recursively mark all ancestors of taken courses as superseded —
   // e.g. ENG03 taken → ENG02 superseded → ENG01 superseded
@@ -63,6 +65,7 @@ export function getSuggestedCourses(
     .filter((c) =>
       !takenIds.has(c.id) &&
       !supersededIds.has(c.id) &&
+      !(excludeIds?.has(c.id)) &&
       c.prerequisites.every((pid) => passedIds.has(pid))
     )
     .sort((a, b) => {

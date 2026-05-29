@@ -1,30 +1,36 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { Course } from "@/types/database";
+import type { Course, UserCourseWithCourse } from "@/types/database";
 import { parseUitDkhp, type DkhpCourse, type DkhpParseResult } from "@/lib/parsers/uit-dkhp-parser";
 import { insertCourseAdmin } from "@/lib/supabase/course-admin-actions";
 import { getCourseComponents } from "@/lib/data/course-weight-registry";
 import type { UpsertUserCourseInput } from "@/lib/supabase/courses-api";
+import { updateUserCourse } from "@/lib/supabase/courses-api";
+import { upsertMilestone } from "@/lib/supabase/milestone-api";
 
 interface Props {
+  userId: string;
   allCourses: Course[];
+  userCourses: UserCourseWithCourse[];
   onAdd: (input: Omit<UpsertUserCourseInput, "user_id">) => Promise<void>;
   onSuccess: () => void;
   onClose: () => void;
 }
 
-export default function ImportFromDkhp({ allCourses, onAdd, onSuccess, onClose }: Props) {
+export default function ImportFromDkhp({ userId, allCourses, userCourses, onAdd, onSuccess, onClose }: Props) {
   const [result, setResult] = useState<DkhpParseResult | null>(null);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
   const [importedCount, setImportedCount] = useState(0);
   const [createdCount, setCreatedCount] = useState(0);
+  const [gdtcDetected, setGdtcDetected] = useState(false);
   const [done, setDone] = useState(false);
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const knownIds = new Set(allCourses.map((c) => c.id));
+  const enrolledMap = new Map(userCourses.map((uc) => [uc.course_id, uc]));
 
   function handleFile(file: File) {
     setParseError(null);
@@ -68,23 +74,41 @@ export default function ImportFromDkhp({ allCourses, onAdd, onSuccess, onClose }
     let created = 0;
     for (const c of selected) {
       try {
-        // Auto-create unknown courses with default components before importing
-        if (!knownIds.has(c.course_id)) {
-          const components = getCourseComponents(c.course_id) ?? undefined;
-          await insertCourseAdmin({ id: c.course_id, name: c.course_name, credits: c.credits, components });
-          created++;
+        const existing = enrolledMap.get(c.course_id);
+        if (existing?.score !== null && existing?.score !== undefined) {
+          // Preserve existing grades — only update scheduling fields
+          await updateUserCourse(existing.id, {
+            semester: c.semester || null,
+            academic_year: c.academic_year || null,
+          });
+        } else {
+          // Auto-create unknown courses with default components before importing
+          if (!knownIds.has(c.course_id)) {
+            const components = getCourseComponents(c.course_id) ?? undefined;
+            await insertCourseAdmin({ id: c.course_id, name: c.course_name, credits: c.credits, components });
+            created++;
+          }
+          await onAdd({
+            course_id: c.course_id,
+            status: "in_progress",
+            score: null,
+            semester: c.semester || null,
+            academic_year: c.academic_year || null,
+            component_scores: {},
+          });
         }
-        await onAdd({
-          course_id: c.course_id,
-          status: "in_progress",
-          score: null,
-          semester: c.semester || null,
-          academic_year: c.academic_year || null,
-          component_scores: {},
-        });
         imported++;
       } catch {
-        // skip duplicates / errors silently
+        // skip errors silently
+      }
+    }
+    // Auto-tick GDTC milestone if PE courses detected in this import
+    if (result.peCourses.length > 0) {
+      try {
+        await upsertMilestone(userId, "gdtc", true);
+        setGdtcDetected(true);
+      } catch {
+        // non-critical
       }
     }
     setImportedCount(imported);
@@ -109,11 +133,16 @@ export default function ImportFromDkhp({ allCourses, onAdd, onSuccess, onClose }
             </div>
           )}
           {createdCount > 0 && (
-            <div style={{ fontSize: 12, color: "var(--es-muted)", marginBottom: 20 }}>
+            <div style={{ fontSize: 12, color: "var(--es-muted)", marginBottom: 8 }}>
               {createdCount} môn mới đã được thêm vào hệ thống
             </div>
           )}
-          <button className="es-btn es-btn-primary" onClick={onClose}>Đóng</button>
+          {gdtcDetected && (
+            <div style={{ fontSize: 12, color: "var(--duo-green, #16a34a)", marginBottom: 8 }}>
+              ✓ Tự động tick GDTC trong hồ sơ
+            </div>
+          )}
+          <button className="es-btn es-btn-primary" style={{ marginTop: 12 }} onClick={onClose}>Đóng</button>
         </div>
       </div>
     );
@@ -167,8 +196,26 @@ export default function ImportFromDkhp({ allCourses, onAdd, onSuccess, onClose }
                 </tr>
               </thead>
               <tbody>
+                {result.peCourses.map((peId) => (
+                  <tr key={peId} style={{ borderTop: "1px solid var(--es-border)", opacity: 0.55 }}>
+                    <td style={{ padding: "8px 10px" }}>
+                      <input type="checkbox" disabled checked={false} />
+                    </td>
+                    <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono, monospace)", color: "var(--es-muted)" }}>
+                      {peId}
+                      <span style={{ marginLeft: 6, fontSize: 10, padding: "1px 5px", borderRadius: 4, background: "var(--duo-green-lt, #f0fdf4)", color: "var(--duo-green, #16a34a)", fontWeight: 600 }}>
+                        GDTC
+                      </span>
+                    </td>
+                    <td style={{ padding: "8px 10px", color: "var(--es-muted)", fontStyle: "italic" }}>
+                      Giáo dục thể chất — tự động tick hồ sơ
+                    </td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: "var(--es-muted)" }}>0</td>
+                  </tr>
+                ))}
                 {result.courses.map((c: DkhpCourse) => {
-                  const isNew = !knownIds.has(c.course_id);
+                  const isNewToCatalog = !knownIds.has(c.course_id);
+                  const alreadyEnrolled = enrolledMap.has(c.course_id);
                   return (
                     <tr
                       key={c.course_id}
@@ -185,9 +232,14 @@ export default function ImportFromDkhp({ allCourses, onAdd, onSuccess, onClose }
                       </td>
                       <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono, monospace)", color: "var(--es-muted)" }}>
                         {c.course_id}
-                        {isNew && (
+                        {isNewToCatalog && (
                           <span style={{ marginLeft: 6, fontSize: 10, padding: "1px 5px", borderRadius: 4, background: "var(--amber-lt, #fef3c7)", color: "var(--amber, #d97706)", fontWeight: 600 }}>
                             MỚI
+                          </span>
+                        )}
+                        {!isNewToCatalog && alreadyEnrolled && (
+                          <span style={{ marginLeft: 6, fontSize: 10, padding: "1px 5px", borderRadius: 4, background: "var(--blue-lt, #eff6ff)", color: "var(--blue, #2563eb)", fontWeight: 600 }}>
+                            ĐÃ CÓ
                           </span>
                         )}
                       </td>

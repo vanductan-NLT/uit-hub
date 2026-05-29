@@ -23,7 +23,7 @@ const URGENCY_COLORS: Record<string, string> = { red: "var(--red)", amber: "var(
 const URGENCY_BAR: Record<string, string> = { red: "", amber: "amber", green: "green" };
 
 export default function ExamPanel({ userId, userCourses, allCourses, currentSemester, onToast }: Props) {
-  const { exams, sessions, loading, nearestExam, todaySessions, stats, toggleSession, deleteExam, refetch } = useExamSchedule(userId, userCourses);
+  const { exams, sessions, loading, nearestExam, todaySessions, stats, toggleSession, refetch } = useExamSchedule(userId, userCourses);
   const [showImport, setShowImport] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
@@ -112,7 +112,6 @@ export default function ExamPanel({ userId, userCourses, allCourses, currentSeme
                 exam={exam}
                 today={today}
                 onToggleSession={toggleSession}
-                onDelete={() => { deleteExam(exam.id); onToast?.success("Đã xoá lịch thi"); }}
               />
             ))}
           </div>
@@ -205,11 +204,10 @@ export default function ExamPanel({ userId, userCourses, allCourses, currentSeme
 
 // ── Exam Card ──
 
-function ExamCard({ exam, today, onToggleSession, onDelete }: {
+function ExamCard({ exam, today, onToggleSession }: {
   exam: ExamWithProgress;
   today: string;
   onToggleSession: (id: string) => void;
-  onDelete: () => void;
 }) {
   const date = new Date(exam.exam_date);
   const day = String(date.getDate()).padStart(2, "0");
@@ -238,22 +236,13 @@ function ExamCard({ exam, today, onToggleSession, onDelete }: {
             </div>
           </div>
           {!isPast && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <button
-                onClick={(e) => { e.stopPropagation(); window.open(buildGoogleCalendarUrl(exam), "_blank", "noopener,noreferrer"); }}
-                style={{ background: "var(--blue-lt)", border: "1px solid var(--blue)", borderRadius: "var(--r-sm)", cursor: "pointer", fontSize: 12, color: "var(--blue)", padding: "3px 8px", fontWeight: 700, whiteSpace: "nowrap" }}
-                title="Thêm vào Google Calendar"
-              >
-                📅 Lịch
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "var(--es-muted)", padding: "2px 6px" }}
-                title="Xoá lịch thi"
-              >
-                ×
-              </button>
-            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); window.open(buildGoogleCalendarUrl(exam), "_blank", "noopener,noreferrer"); }}
+              style={{ background: "var(--blue-lt)", border: "1px solid var(--blue)", borderRadius: "var(--r-sm)", cursor: "pointer", fontSize: 12, color: "var(--blue)", padding: "3px 8px", fontWeight: 700, whiteSpace: "nowrap" }}
+              title="Thêm vào Google Calendar"
+            >
+              📅 Lịch
+            </button>
           )}
         </div>
 

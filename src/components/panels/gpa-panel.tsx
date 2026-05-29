@@ -175,7 +175,9 @@ export default function GpaPanel({ userId, onNav }: Props) {
 
       {showDkhpImport && (
         <ImportFromDkhp
+          userId={userId}
           allCourses={allCourses}
+          userCourses={userCourses}
           onAdd={addCourse}
           onSuccess={refetch}
           onClose={() => setShowDkhpImport(false)}

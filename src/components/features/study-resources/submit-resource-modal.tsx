@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Course } from "@/types/database";
 import { submitResource, uploadResourceFile } from "@/lib/supabase/resources-api";
 import { validateResourceFile } from "@/lib/validation-utils";
+import { parseSourceFromUrl } from "@/lib/parse-source-from-url";
 
 interface Props {
   userId: string;
@@ -181,7 +182,13 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
             <input
               placeholder="URL tài nguyên *"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                if (!source.trim()) {
+                  const parsed = parseSourceFromUrl(e.target.value);
+                  if (parsed) setSource(parsed);
+                }
+              }}
               className="es-input"
               type="url"
             />

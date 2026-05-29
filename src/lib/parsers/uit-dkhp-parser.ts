@@ -10,6 +10,7 @@ export interface DkhpParseResult {
   semester: string;
   academic_year: string;
   courses: DkhpCourse[];
+  peCourses: string[]; // PE course IDs detected (0-credit GDTC courses)
 }
 
 function parseSemester(titleText: string): { semester: string; academic_year: string } {
@@ -37,11 +38,12 @@ export function parseUitDkhp(html: string): DkhpParseResult {
 
   // Target data table specifically — NOT the sticky-header table which comes first inside the form
   const table = doc.querySelector("table.sticky-enabled") ?? doc.querySelector("#uit-tracuu-dkhp-data table:last-of-type");
-  if (!table) return { semester, academic_year, courses: [] };
+  if (!table) return { semester, academic_year, courses: [], peCourses: [] };
 
   const rows = Array.from(table.querySelectorAll("tr.odd, tr.even"));
   const seen = new Set<string>();
   const courses: DkhpCourse[] = [];
+  const peCourses: string[] = [];
 
   for (const row of rows) {
     const tds = Array.from(row.querySelectorAll("td"));
@@ -52,13 +54,23 @@ export function parseUitDkhp(html: string): DkhpParseResult {
     const course_name = cleanText(tds[3]);
     const credits = parseInt(cleanText(tds[4]), 10);
 
-    // Skip 0-credit courses (e.g. Physical Education)
-    if (!course_id || isNaN(credits) || credits === 0) continue;
+    if (!course_id) continue;
 
-    // Skip lab sub-sections: class code has more than one dot (CS112.Q21.1)
-    // or ends with a digit after the last dot and matches a parent already seen
+    // Detect GDTC/PE courses (0 credits, PE prefix) — track separately, don't import as user_course
+    if (isNaN(credits) || credits === 0) {
+      if (course_id.startsWith("PE") && !peCourses.includes(course_id)) {
+        peCourses.push(course_id);
+      }
+      continue;
+    }
+
+    // Accumulate lab sub-section credits into parent course instead of discarding
     const dotCount = (classCode.match(/\./g) ?? []).length;
-    if (dotCount >= 2) continue;
+    if (dotCount >= 2) {
+      const parent = courses.find((c) => c.course_id === course_id);
+      if (parent && credits > 0) parent.credits += credits;
+      continue;
+    }
 
     // Deduplicate by course_id (keep first occurrence)
     if (seen.has(course_id)) continue;
@@ -67,5 +79,5 @@ export function parseUitDkhp(html: string): DkhpParseResult {
     courses.push({ course_id, course_name, credits, semester, academic_year });
   }
 
-  return { semester, academic_year, courses };
+  return { semester, academic_year, courses, peCourses };
 }
