@@ -4,12 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import confetti from "canvas-confetti";
 import { upsertUserProfile } from "@/lib/supabase/courses-api";
-import { validateFullName, validateStudentId, intakeYearFromStudentId } from "@/lib/validation-utils";
+import { validateFullName, validateStudentId, intakeYearFromStudentId, inferGraduationYear } from "@/lib/validation-utils";
 import OnboardingCourseAdder, { type AddedCourse } from "./onboarding-course-adder";
 
 interface Props { userId: string; userEmail: string; }
 
-const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
+const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "HTTT", "TTNT", "Khác"];
 const TRAINING_TYPES = [
   { value: "chinh-quy", label: "Chính quy" },
   { value: "tu-xa",     label: "Từ xa" },
@@ -49,7 +49,17 @@ export default function OnboardingWizard({ userId, userEmail }: Props) {
 
     setSaving(true); setSaveError("");
     try {
-      await upsertUserProfile({ id: userId, full_name: fullName || null, student_id: studentId || null, intake_year: intakeYearFromStudentId(studentId), major, training_type: trainingType });
+      const intake = intakeYearFromStudentId(studentId);
+      const gradYear = inferGraduationYear(major, intake);
+      await upsertUserProfile({
+        id: userId,
+        full_name: fullName || null,
+        student_id: studentId || null,
+        intake_year: intake,
+        target_graduation_year: gradYear,
+        major,
+        training_type: trainingType,
+      });
       setStep(2);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Không thể lưu hồ sơ. Vui lòng thử lại.");

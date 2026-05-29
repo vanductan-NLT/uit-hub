@@ -27,6 +27,17 @@ export function intakeYearFromStudentId(raw: string): number | null {
   return m ? 2000 + Number(m[1]) : null;
 }
 
+/**
+ * Inferred graduation year based on major and intake year.
+ * KHMT, TTNT, ATTT: 3.5 years.
+ * Other majors: 4.0 years.
+ */
+export function inferGraduationYear(major: string, intakeYear: number | null): number | null {
+  if (!intakeYear) return null;
+  const isShortMajor = ["KHMT", "TTNT", "ATTT"].includes(major);
+  return intakeYear + (isShortMajor ? 3.5 : 4);
+}
+
 // UIT student id: exactly 8 digits (e.g. 22521234). Empty is rejected by
 // default; pass allowEmpty when the field is optional.
 export function validateStudentId(raw: string, allowEmpty = false): ValidationResult {

@@ -5,11 +5,24 @@ import { getUserProfile, upsertUserProfile } from "@/lib/supabase/courses-api";
 import { useCourses } from "@/hooks/use-courses";
 import { useCurriculum } from "@/hooks/use-curriculum";
 import GraduationEligibilityCard from "@/components/features/profile/graduation-eligibility-card";
-import { intakeYearFromStudentId } from "@/lib/validation-utils";
+import { intakeYearFromStudentId, inferGraduationYear } from "@/lib/validation-utils";
 import type { UserProfile } from "@/types/database";
 
-const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "Khác"];
-const GRAD_YEARS = Array.from({ length: 8 }, (_, i) => 2026 + i);
+const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "HTTT", "TTNT", "Khác"];
+function getGradYearOptions(intakeYear: number | null): number[] {
+  const baseYear = intakeYear ?? 2022;
+  const options: number[] = [];
+  for (let d = 3; d <= 8; d += 0.5) {
+    options.push(baseYear + d);
+  }
+  return options;
+}
+
+function formatGradYear(y: number, intakeYear: number | null): string {
+  if (!intakeYear) return String(y);
+  const duration = y - intakeYear;
+  return `${y} (${duration} năm)`;
+}
 const TRAINING_TYPES: { value: "chinh-quy" | "tu-xa"; label: string }[] = [
   { value: "chinh-quy", label: "Chính quy" },
   { value: "tu-xa", label: "Từ xa" },
@@ -43,6 +56,11 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
   const [trainingType, setTrainingType] = useState<"chinh-quy" | "tu-xa">("chinh-quy");
 
   const intakeYear = intakeYearFromStudentId(studentId);
+  const gradOptions = getGradYearOptions(intakeYear);
+  if (gradYear && !gradOptions.includes(gradYear)) {
+    gradOptions.push(gradYear);
+    gradOptions.sort((a, b) => a - b);
+  }
 
   const { gpa10, gpa4, passedCredits, userCourses } = useCourses(userId);
   const { curriculum } = useCurriculum(profile?.major, profile?.intake_year, curriculumRefreshKey);
@@ -54,7 +72,12 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
         setFullName(p.full_name ?? "");
         setStudentId(p.student_id ?? "");
         setMajor(p.major ?? "CNTT");
-        setGradYear(p.target_graduation_year ?? 2026);
+        
+        const initialIntake = intakeYearFromStudentId(p.student_id ?? "");
+        const initialMajor = p.major ?? "CNTT";
+        const inferred = inferGraduationYear(initialMajor, initialIntake) ?? 2026;
+        setGradYear(p.target_graduation_year ?? inferred);
+        
         setTotalCredits(p.total_credits_required ?? 131);
         setTrainingType(p.training_type ?? "chinh-quy");
       }
@@ -87,7 +110,12 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
       setFullName(profile.full_name ?? "");
       setStudentId(profile.student_id ?? "");
       setMajor(profile.major ?? "CNTT");
-      setGradYear(profile.target_graduation_year ?? 2026);
+      
+      const initialIntake = intakeYearFromStudentId(profile.student_id ?? "");
+      const initialMajor = profile.major ?? "CNTT";
+      const inferred = inferGraduationYear(initialMajor, initialIntake) ?? 2026;
+      setGradYear(profile.target_graduation_year ?? inferred);
+      
       setTotalCredits(profile.total_credits_required ?? 131);
       setTrainingType(profile.training_type ?? "chinh-quy");
     }
@@ -247,7 +275,15 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
                   className="es-login-input"
                   placeholder="22521234"
                   value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setStudentId(newId);
+                    const newIntake = intakeYearFromStudentId(newId);
+                    if (newIntake) {
+                      const newGrad = inferGraduationYear(major, newIntake);
+                      if (newGrad) setGradYear(newGrad);
+                    }
+                  }}
                   disabled={!editing}
                 />
               </div>
@@ -257,7 +293,14 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
                   <select
                     className="es-login-input"
                     value={major}
-                    onChange={(e) => setMajor(e.target.value)}
+                    onChange={(e) => {
+                      const newMajor = e.target.value;
+                      setMajor(newMajor);
+                      if (intakeYear) {
+                        const newGrad = inferGraduationYear(newMajor, intakeYear);
+                        if (newGrad) setGradYear(newGrad);
+                      }
+                    }}
                     disabled={!editing}
                     style={{ cursor: editing ? "pointer" : "default" }}
                   >
@@ -297,8 +340,15 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
                     disabled={!editing}
                     style={{ cursor: editing ? "pointer" : "default" }}
                   >
-                    {GRAD_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                    {gradOptions.map((y) => (
+                      <option key={y} value={y}>
+                        {formatGradYear(y, intakeYear)}
+                      </option>
+                    ))}
                   </select>
+                  <span style={{ fontSize: 11, color: "var(--es-muted)", display: "block", marginTop: 4 }}>
+                    * Chưa áp dụng cho chương trình tiên tiến, liên kết
+                  </span>
                 </div>
               </div>
               <div>

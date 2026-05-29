@@ -13,7 +13,7 @@ interface Props {
   defaultTrainingType?: "chinh-quy" | "tu-xa" | null;
 }
 
-const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "HTTT"];
+const MAJORS = ["CNTT", "KTPM", "KHMT", "MMT&TT", "ATTT", "HTTT", "TTNT", "Khác"];
 type HeDaoTao = "chinh-quy" | "tu-xa";
 
 function buildCtdtUrl(year: number, he: HeDaoTao): string {

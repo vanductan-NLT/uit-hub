@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/client";
 import LandingNav from "@/components/features/login/landing-nav";
 import LandingHero from "@/components/features/login/landing-hero";
 import LandingFeatureSections from "@/components/features/login/landing-feature-sections";
-import LandingStatsRow from "@/components/features/login/landing-stats-row";
 import LandingFooterCta from "@/components/features/login/landing-footer-cta";
 
 export default function LoginForm() {
@@ -42,8 +41,7 @@ export default function LoginForm() {
       <main>
         <LandingHero onLogin={handleLogin} loading={loading} />
         <LandingFeatureSections />
-        <LandingStatsRow />
-        <LandingFooterCta onLogin={handleLogin} loading={loading} />
+<LandingFooterCta onLogin={handleLogin} loading={loading} />
       </main>
     </div>
   );

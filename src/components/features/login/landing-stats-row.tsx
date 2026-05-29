@@ -1,6 +1,5 @@
 /** Stats strip — mirrors Duolingo's social proof numbers */
 const STATS = [
-  { val: "1,248+", label: "Sinh viên UIT đang dùng", icon: "🧑‍💻" },
   { val: "500+",   label: "Tài nguyên sẵn có",       icon: "📚" },
   { val: "+0.35",  label: "GPA trung bình cải thiện", icon: "📈" },
   { val: "0 đồng",label: "Hoàn toàn miễn phí",       icon: "🎁" },
