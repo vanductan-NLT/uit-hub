@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isUitEmail } from "@/lib/validation-utils";
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -25,8 +26,15 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session without checking — keeps cookie fresh
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user && !isUitEmail(user.email)) {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("error", "invalid_domain");
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }

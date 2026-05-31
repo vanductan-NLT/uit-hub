@@ -8,6 +8,13 @@ export interface ValidationResult {
 
 const OK: ValidationResult = { valid: true, error: null };
 
+export const ALLOWED_EMAIL_DOMAIN = "gm.uit.edu.vn";
+
+export function isUitEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return email.trim().toLowerCase().endsWith(`@${ALLOWED_EMAIL_DOMAIN}`);
+}
+
 // Score on a 0–10 scale. Empty string is treated as "not entered" (valid) so
 // score fields stay optional.
 export function validateScore(raw: string): ValidationResult {

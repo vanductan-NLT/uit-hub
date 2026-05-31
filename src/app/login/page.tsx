@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import LoginForm from "./login-form";
@@ -8,5 +9,9 @@ export default async function LoginPage() {
 
   if (user) redirect("/dashboard");
 
-  return <LoginForm />;
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
 }
