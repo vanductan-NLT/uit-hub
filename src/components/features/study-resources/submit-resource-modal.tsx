@@ -1,10 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Course } from "@/types/database";
 import { submitResource, uploadResourceFile } from "@/lib/supabase/resources-api";
 import { validateResourceFile } from "@/lib/validation-utils";
 import { parseSourceFromUrl } from "@/lib/parse-source-from-url";
+
+interface UrlMetadata {
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  siteName: string | null;
+}
 
 interface Props {
   userId: string;
@@ -38,6 +45,44 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+
+  const [metadata, setMetadata] = useState<UrlMetadata | null>(null);
+  const [metadataLoading, setMetadataLoading] = useState(false);
+  const userEditedTitleRef = useRef(false);
+
+  useEffect(() => {
+    if (mode !== "url") return;
+    const trimmed = url.trim();
+    if (!trimmed || !/^https?:\/\//i.test(trimmed)) {
+      setMetadata(null);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setMetadataLoading(true);
+      try {
+        const res = await fetch(`/api/url-metadata?url=${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          setMetadata(null);
+          return;
+        }
+        const data: UrlMetadata = await res.json();
+        setMetadata(data);
+        if (!userEditedTitleRef.current && data.title) setTitle(data.title);
+        if (!source.trim() && data.siteName) setSource(data.siteName);
+      } catch {
+        // Fetch failure is non-fatal — the user can still fill the form manually.
+      } finally {
+        setMetadataLoading(false);
+      }
+    }, 500);
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [url, mode, source]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = e.target.files?.[0] ?? null;
@@ -144,7 +189,10 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
           <input
             placeholder="Tiêu đề *"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              userEditedTitleRef.current = true;
+              setTitle(e.target.value);
+            }}
             className="es-input"
           />
 
@@ -179,19 +227,55 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
           </div>
 
           {mode === "url" ? (
-            <input
-              placeholder="URL tài nguyên *"
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                if (!source.trim()) {
-                  const parsed = parseSourceFromUrl(e.target.value);
-                  if (parsed) setSource(parsed);
-                }
-              }}
-              className="es-input"
-              type="url"
-            />
+            <div>
+              <input
+                placeholder="URL tài nguyên *"
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  if (!source.trim()) {
+                    const parsed = parseSourceFromUrl(e.target.value);
+                    if (parsed) setSource(parsed);
+                  }
+                }}
+                className="es-input"
+                type="url"
+              />
+              {metadataLoading && (
+                <div style={{ fontSize: 11, color: "var(--es-muted)", marginTop: 4 }}>
+                  Đang lấy thông tin…
+                </div>
+              )}
+              {metadata && (metadata.image || metadata.description) && (
+                <div
+                  style={{
+                    marginTop: 6,
+                    padding: 8,
+                    border: "1px solid var(--es-border)",
+                    borderRadius: "var(--r-sm)",
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "flex-start",
+                    background: "var(--bg)",
+                  }}
+                >
+                  {metadata.image && (
+                    <img
+                      src={metadata.image}
+                      alt=""
+                      style={{ width: 56, height: 56, objectFit: "cover", borderRadius: "var(--r-sm)", flexShrink: 0 }}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  )}
+                  <div style={{ fontSize: 11, color: "var(--es-muted)", lineHeight: 1.5, overflow: "hidden" }}>
+                    {metadata.description?.slice(0, 140)}
+                    {metadata.description && metadata.description.length > 140 ? "…" : ""}
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div>
               <label
