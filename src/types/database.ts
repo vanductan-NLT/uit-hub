@@ -41,6 +41,10 @@ export interface CurriculumCourse {
   course_id: string;
   requirement_type: "general" | "foundation" | "required" | "elective";
   suggested_semester: number | null;
+  // When non-null, the row is one alternative inside a "choose N of M" group;
+  // group_required_credits is how many credits must be earned from the group.
+  elective_group_key?: string | null;
+  group_required_credits?: number | null;
 }
 
 export interface GraduationRequirement {

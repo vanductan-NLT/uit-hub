@@ -1,4 +1,4 @@
-import type { Course, UserCourseWithCourse } from "@/types/database";
+import type { Course, CurriculumCourse, UserCourseWithCourse } from "@/types/database";
 
 export function buildPassedIds(userCourses: UserCourseWithCourse[]): Set<string> {
   return new Set(
@@ -39,6 +39,40 @@ export interface SuggestionResult {
  * In that case we return an empty list with reason="no_curriculum" so the UI
  * can prompt the user to import their CTĐT instead of showing noise.
  */
+/**
+ * Compute the set of course IDs that should be excluded because they belong
+ * to an elective group whose required credits have already been earned.
+ * Example: HK7 graduation block — passing CS554 fulfills the 10-credit group
+ * so CS553 and CS505 should not be suggested anymore.
+ */
+export function getFulfilledGroupExclusions(
+  curriculumCourses: Pick<CurriculumCourse, "course_id" | "elective_group_key" | "group_required_credits">[],
+  passedCourses: { id: string; credits: number }[]
+): Set<string> {
+  const passedMap = new Map(passedCourses.map((c) => [c.id, c.credits]));
+  const groups = new Map<string, { required: number; members: string[] }>();
+  for (const cc of curriculumCourses) {
+    if (!cc.elective_group_key) continue;
+    const g = groups.get(cc.elective_group_key) ?? {
+      required: cc.group_required_credits ?? 0,
+      members: [],
+    };
+    g.members.push(cc.course_id);
+    if (cc.group_required_credits && cc.group_required_credits > g.required) {
+      g.required = cc.group_required_credits;
+    }
+    groups.set(cc.elective_group_key, g);
+  }
+  const exclude = new Set<string>();
+  for (const g of groups.values()) {
+    const earned = g.members.reduce((s, id) => s + (passedMap.get(id) ?? 0), 0);
+    if (g.required > 0 && earned >= g.required) {
+      for (const id of g.members) if (!passedMap.has(id)) exclude.add(id);
+    }
+  }
+  return exclude;
+}
+
 export function getSuggestedCourses(
   allCourses: Course[],
   takenIds: Set<string>,

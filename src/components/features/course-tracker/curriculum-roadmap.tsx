@@ -102,58 +102,110 @@ export default function CurriculumRoadmap({ curriculum, allCourses, passedIds, t
                 />
               </div>
 
-              {/* Course cards */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                {rows.map((cc) => {
-                  const course = courseMap.get(cc.course_id);
-                  const status = getStatus(cc.course_id, course, passedIds, takenIds);
-                  const cfg = STATUS_CFG[status];
-                  const missingPrereqs = status === "locked" && course
-                    ? course.prerequisites.filter((pid) => !passedIds.has(pid))
-                    : [];
-                  const reqBadge = REQ_TYPE_BADGE[cc.requirement_type] ?? cc.requirement_type;
-
-                  return (
-                    <div
-                      key={cc.course_id}
-                      style={{
-                        padding: "5px 8px", borderRadius: "var(--r-sm)",
-                        background: cfg.bg, borderLeft: `3px solid ${cfg.leftBorder}`,
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 4 }}>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: cfg.idColor, fontFamily: "monospace", letterSpacing: "0.03em" }}>
-                            {cc.course_id}
-                            <span style={{ marginLeft: 5, fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 99, background: "var(--es-border)", color: "var(--ink2)", fontFamily: "inherit" }}>
-                              {reqBadge}
-                            </span>
-                          </div>
-                          <div style={{
-                            fontSize: 12, color: "var(--ink)", marginTop: 2, lineHeight: 1.4,
-                            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}>
-                            {course?.name ?? "—"}
-                          </div>
-                        </div>
-                        <div style={{ fontSize: 11, color: "var(--es-muted)", flexShrink: 0, fontWeight: 600 }}>
-                          {course?.credits ?? "?"}TC
-                        </div>
+              {/* Group ungrouped courses + cluster elective groups together */}
+              {(() => {
+                const standalone: typeof rows = [];
+                const groupBuckets = new Map<string, typeof rows>();
+                for (const cc of rows) {
+                  if (cc.elective_group_key) {
+                    const bucket = groupBuckets.get(cc.elective_group_key) ?? [];
+                    bucket.push(cc);
+                    groupBuckets.set(cc.elective_group_key, bucket);
+                  } else {
+                    standalone.push(cc);
+                  }
+                }
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {standalone.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {standalone.map((cc) => renderCourseRow(cc, courseMap, passedIds, takenIds))}
                       </div>
-                      {missingPrereqs.length > 0 && (
-                        <div style={{ fontSize: 9, color: "var(--es-muted)", marginTop: 3 }}>
-                          Cần: {missingPrereqs.slice(0, 3).join(", ")}{missingPrereqs.length > 3 ? ` +${missingPrereqs.length - 3}` : ""}
+                    )}
+                    {Array.from(groupBuckets.entries()).map(([key, members]) => {
+                      const requiredCredits = members[0].group_required_credits ?? 0;
+                      const earned = members.reduce(
+                        (s, m) => s + (passedIds.has(m.course_id) ? (courseMap.get(m.course_id)?.credits ?? 0) : 0),
+                        0
+                      );
+                      const fulfilled = requiredCredits > 0 && earned >= requiredCredits;
+                      return (
+                        <div
+                          key={key}
+                          style={{
+                            border: `1px dashed ${fulfilled ? "var(--green)" : "var(--es-border)"}`,
+                            borderRadius: "var(--r-sm)",
+                            padding: "6px 8px",
+                            background: fulfilled ? "var(--green-lt)" : "transparent",
+                          }}
+                        >
+                          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--ink2)", marginBottom: 4 }}>
+                            Chọn {requiredCredits}TC từ {members.length} môn{fulfilled ? " ✓" : ""}
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                            {members.map((cc) => renderCourseRow(cc, courseMap, passedIds, takenIds))}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function renderCourseRow(
+  cc: { course_id: string; requirement_type: string },
+  courseMap: Map<string, Course>,
+  passedIds: Set<string>,
+  takenIds: Set<string>
+) {
+  const course = courseMap.get(cc.course_id);
+  const status = getStatus(cc.course_id, course, passedIds, takenIds);
+  const cfg = STATUS_CFG[status];
+  const missingPrereqs = status === "locked" && course
+    ? course.prerequisites.filter((pid) => !passedIds.has(pid))
+    : [];
+  const reqBadge = REQ_TYPE_BADGE[cc.requirement_type] ?? cc.requirement_type;
+
+  return (
+    <div
+      key={cc.course_id}
+      style={{
+        padding: "5px 8px", borderRadius: "var(--r-sm)",
+        background: cfg.bg, borderLeft: `3px solid ${cfg.leftBorder}`,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 4 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: cfg.idColor, fontFamily: "monospace", letterSpacing: "0.03em" }}>
+            {cc.course_id}
+            <span style={{ marginLeft: 5, fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 99, background: "var(--es-border)", color: "var(--ink2)", fontFamily: "inherit" }}>
+              {reqBadge}
+            </span>
+          </div>
+          <div style={{
+            fontSize: 12, color: "var(--ink)", marginTop: 2, lineHeight: 1.4,
+            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}>
+            {course?.name ?? "—"}
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--es-muted)", flexShrink: 0, fontWeight: 600 }}>
+          {course?.credits ?? "?"}TC
+        </div>
+      </div>
+      {missingPrereqs.length > 0 && (
+        <div style={{ fontSize: 9, color: "var(--es-muted)", marginTop: 3 }}>
+          Cần: {missingPrereqs.slice(0, 3).join(", ")}{missingPrereqs.length > 3 ? ` +${missingPrereqs.length - 3}` : ""}
+        </div>
+      )}
     </div>
   );
 }

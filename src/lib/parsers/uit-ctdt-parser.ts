@@ -12,7 +12,16 @@ export interface CtdtCourse {
   course_id: string;
   suggested_semester: number; // 1..8
   requirement_type: "general" | "foundation" | "required" | "elective";
+  elective_group_key: string | null;
+  group_required_credits: number | null;
 }
+
+/**
+ * Patterns that signal the next courses in the same semester belong to one
+ * "choose N of M" group. Captured group 1 (when present) is the required
+ * credits; default is 10 (graduation block) when no number is captured.
+ */
+const GROUP_LABEL_RE = /sinh\s+vi[êe]n\s+ch[oọ]n\s+(?:m[oộ]t\s+trong|1\s+trong)\s+(?:ba|hai|\d+)/i;
 
 export interface CtdtParseResult {
   major: string;
@@ -99,6 +108,29 @@ function parseCreditSummary(doc: Document) {
   };
 }
 
+// ── Group-state helper ─────────────────────────────────────────────────────────
+
+interface PendingGroup {
+  key: string;
+  requiredCredits: number;
+}
+
+/**
+ * Inspect a row for a "choose N of M" label. Returns the pending-group
+ * descriptor when found; the caller should attach it to every code row
+ * that follows in the same semester.
+ */
+function detectGroupLabel(row: Element, semester: number): PendingGroup | null {
+  const text = clean(row);
+  if (!GROUP_LABEL_RE.test(text)) return null;
+  // First standalone number in the row → required credits (e.g. "10").
+  const num = text.match(/\b(\d{1,2})\b/);
+  return {
+    key: `sem${semester}_choose_one`,
+    requiredCredits: num ? parseInt(num[1]) : 10,
+  };
+}
+
 // ── Main parser ────────────────────────────────────────────────────────────────
 
 export function parseUitCtdt(html: string, major: string, intakeYear: number): CtdtParseResult {
@@ -106,6 +138,22 @@ export function parseUitCtdt(html: string, major: string, intakeYear: number): C
   const errors: string[] = [];
   const courses: CtdtCourse[] = [];
   const summary = parseCreditSummary(doc);
+
+  // Per-semester pending group: once we hit a "Sinh viên chọn 1 trong N" row,
+  // every subsequent course code in the same semester inherits that group key
+  // until the semester changes.
+  const pendingGroupBySemester = new Map<number, PendingGroup>();
+  function pushCourse(code: string, semester: number, rawType: string): void {
+    if (courses.find((c) => c.course_id === code)) return;
+    const pending = pendingGroupBySemester.get(semester) ?? null;
+    courses.push({
+      course_id: code,
+      suggested_semester: semester,
+      requirement_type: mapRequirementType(rawType),
+      elective_group_key: pending?.key ?? null,
+      group_required_credits: pending?.requiredCredits ?? null,
+    });
+  }
 
   // ── Strategy A: Drupal view-grouping blocks ────────────────────────────────
   // <div class="view-grouping">
@@ -120,12 +168,13 @@ export function parseUitCtdt(html: string, major: string, intakeYear: number): C
       if (!semNum || semNum < 1 || semNum > 8) continue;
 
       for (const row of group.querySelectorAll("tr")) {
+        const groupHit = detectGroupLabel(row, semNum);
+        if (groupHit) pendingGroupBySemester.set(semNum, groupHit);
+
         const tds = Array.from(row.querySelectorAll("td"));
         for (const td of tds) {
           const code = clean(td).trim();
           if (!COURSE_CODE_RE.test(code)) continue;
-          if (courses.find((c) => c.course_id === code)) continue;
-          // Determine requirement_type from sibling tds
           let rawType = "";
           for (const sibling of tds) {
             const t = clean(sibling).toUpperCase().normalize("NFC");
@@ -133,7 +182,7 @@ export function parseUitCtdt(html: string, major: string, intakeYear: number): C
               rawType = clean(sibling); break;
             }
           }
-          courses.push({ course_id: code, suggested_semester: semNum, requirement_type: mapRequirementType(rawType) });
+          pushCourse(code, semNum, rawType);
         }
       }
     }
@@ -145,16 +194,17 @@ export function parseUitCtdt(html: string, major: string, intakeYear: number): C
     const rows = Array.from(doc.querySelectorAll("tr"));
 
     for (const row of rows) {
-      // Check if this row IS a semester heading
       const semNum = isSemesterRow(row);
       if (semNum !== null) { currentSemester = semNum; continue; }
       if (currentSemester === 0) continue;
+
+      const groupHit = detectGroupLabel(row, currentSemester);
+      if (groupHit) pendingGroupBySemester.set(currentSemester, groupHit);
 
       const tds = Array.from(row.querySelectorAll("td"));
       for (const td of tds) {
         const code = clean(td).trim();
         if (!COURSE_CODE_RE.test(code)) continue;
-        if (courses.find((c) => c.course_id === code)) continue;
         let rawType = "";
         for (const sibling of tds) {
           const t = clean(sibling).toUpperCase().normalize("NFC");
@@ -162,7 +212,7 @@ export function parseUitCtdt(html: string, major: string, intakeYear: number): C
             rawType = clean(sibling); break;
           }
         }
-        courses.push({ course_id: code, suggested_semester: currentSemester, requirement_type: mapRequirementType(rawType) });
+        pushCourse(code, currentSemester, rawType);
       }
     }
   }
@@ -178,10 +228,13 @@ export function parseUitCtdt(html: string, major: string, intakeYear: number): C
         currentSemester = semNum; continue;
       }
       if (el.tagName === "TD" && currentSemester > 0) {
+        const row = el.closest("tr");
+        if (row) {
+          const groupHit = detectGroupLabel(row, currentSemester);
+          if (groupHit) pendingGroupBySemester.set(currentSemester, groupHit);
+        }
         const code = text.trim();
         if (!COURSE_CODE_RE.test(code)) continue;
-        if (courses.find((c) => c.course_id === code)) continue;
-        const row = el.closest("tr");
         const tds = row ? Array.from(row.querySelectorAll("td")) : [];
         let rawType = "";
         for (const td of tds) {
@@ -190,7 +243,7 @@ export function parseUitCtdt(html: string, major: string, intakeYear: number): C
             rawType = clean(td); break;
           }
         }
-        courses.push({ course_id: code, suggested_semester: currentSemester, requirement_type: mapRequirementType(rawType) });
+        pushCourse(code, currentSemester, rawType);
       }
     }
   }

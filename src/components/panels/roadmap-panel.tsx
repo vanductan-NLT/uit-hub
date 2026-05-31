@@ -15,6 +15,7 @@ import {
   buildPassedIds,
   buildTakenIds,
   getSuggestedCourses,
+  getFulfilledGroupExclusions,
   estimateRemainingTime,
 } from "@/lib/course-utils";
 import { useCurriculum } from "@/hooks/use-curriculum";
@@ -66,9 +67,21 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
     return ids;
   }, [milestones, allCourses]);
 
+  const combinedExcludeIds = useMemo(() => {
+    if (!curriculum) return milestoneExcludeIds;
+    const passed = userCourses
+      .filter((c) => passedIds.has(c.course_id))
+      .map((c) => ({ id: c.course_id, credits: c.course.credits }));
+    const groupExclude = getFulfilledGroupExclusions(curriculum.courses, passed);
+    if (groupExclude.size === 0) return milestoneExcludeIds;
+    const merged = new Set(milestoneExcludeIds);
+    for (const id of groupExclude) merged.add(id);
+    return merged;
+  }, [curriculum, userCourses, passedIds, milestoneExcludeIds]);
+
   const suggestionResult = useMemo(
-    () => getSuggestedCourses(allCourses, takenIds, passedIds, curriculumCourseIds, curriculumSemesterMap, milestoneExcludeIds),
-    [allCourses, takenIds, passedIds, curriculumCourseIds, curriculumSemesterMap, milestoneExcludeIds]
+    () => getSuggestedCourses(allCourses, takenIds, passedIds, curriculumCourseIds, curriculumSemesterMap, combinedExcludeIds),
+    [allCourses, takenIds, passedIds, curriculumCourseIds, curriculumSemesterMap, combinedExcludeIds]
   );
   const suggestions = suggestionResult.courses;
   const suggestionReason = suggestionResult.reason;

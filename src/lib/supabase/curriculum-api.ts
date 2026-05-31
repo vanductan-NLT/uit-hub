@@ -118,6 +118,8 @@ export async function upsertCurriculum(
     course_id: c.course_id,
     requirement_type: c.requirement_type,
     suggested_semester: c.suggested_semester,
+    elective_group_key: c.elective_group_key,
+    group_required_credits: c.group_required_credits,
   }));
 
   for (let i = 0; i < rows.length; i += BATCH) {
