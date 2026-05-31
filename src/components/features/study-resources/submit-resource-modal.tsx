@@ -49,6 +49,7 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
   const [metadata, setMetadata] = useState<UrlMetadata | null>(null);
   const [metadataLoading, setMetadataLoading] = useState(false);
   const userEditedTitleRef = useRef(false);
+  const userEditedDescriptionRef = useRef(false);
 
   useEffect(() => {
     if (mode !== "url") return;
@@ -72,6 +73,7 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
         setMetadata(data);
         if (!userEditedTitleRef.current && data.title) setTitle(data.title);
         if (!source.trim() && data.siteName) setSource(data.siteName);
+        if (!userEditedDescriptionRef.current && data.description) setDescription(data.description);
       } catch {
         // Fetch failure is non-fatal — the user can still fill the form manually.
       } finally {
@@ -186,16 +188,6 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
             ))}
           </select>
 
-          <input
-            placeholder="Tiêu đề *"
-            value={title}
-            onChange={(e) => {
-              userEditedTitleRef.current = true;
-              setTitle(e.target.value);
-            }}
-            className="es-input"
-          />
-
           {/* URL / File toggle */}
           <div style={{ display: "flex", gap: 6 }}>
             <button
@@ -301,6 +293,16 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
           )}
 
           <input
+            placeholder={mode === "url" ? "Tiêu đề * (tự điền khi paste link)" : "Tiêu đề *"}
+            value={title}
+            onChange={(e) => {
+              userEditedTitleRef.current = true;
+              setTitle(e.target.value);
+            }}
+            className="es-input"
+          />
+
+          <input
             placeholder="Nguồn (YouTube, GitHub, UIT Drive...)"
             value={source}
             onChange={(e) => setSource(e.target.value)}
@@ -310,7 +312,10 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
           <textarea
             placeholder="Mô tả ngắn (tùy chọn)"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              userEditedDescriptionRef.current = true;
+              setDescription(e.target.value);
+            }}
             className="es-input"
             rows={2}
             style={{ resize: "vertical" }}
