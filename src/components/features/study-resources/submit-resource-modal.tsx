@@ -50,14 +50,20 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
   const [metadataLoading, setMetadataLoading] = useState(false);
   const userEditedTitleRef = useRef(false);
   const userEditedDescriptionRef = useRef(false);
+  const userEditedSourceRef = useRef(false);
 
   useEffect(() => {
     if (mode !== "url") return;
+    // Drop stale auto-filled values immediately so a failed fetch can't leave
+    // the previous URL's title / description / thumbnail visible.
+    setMetadata(null);
+    if (!userEditedTitleRef.current) setTitle("");
+    if (!userEditedDescriptionRef.current) setDescription("");
+    if (!userEditedSourceRef.current) setSource("");
+
     const trimmed = url.trim();
-    if (!trimmed || !/^https?:\/\//i.test(trimmed)) {
-      setMetadata(null);
-      return;
-    }
+    if (!trimmed || !/^https?:\/\//i.test(trimmed)) return;
+
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       setMetadataLoading(true);
@@ -65,15 +71,12 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
         const res = await fetch(`/api/url-metadata?url=${encodeURIComponent(trimmed)}`, {
           signal: controller.signal,
         });
-        if (!res.ok) {
-          setMetadata(null);
-          return;
-        }
+        if (!res.ok) return;
         const data: UrlMetadata = await res.json();
         setMetadata(data);
         if (!userEditedTitleRef.current && data.title) setTitle(data.title);
-        if (!source.trim() && data.siteName) setSource(data.siteName);
         if (!userEditedDescriptionRef.current && data.description) setDescription(data.description);
+        if (!userEditedSourceRef.current && data.siteName) setSource(data.siteName);
       } catch {
         // Fetch failure is non-fatal — the user can still fill the form manually.
       } finally {
@@ -84,7 +87,7 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
       controller.abort();
       clearTimeout(timer);
     };
-  }, [url, mode, source]);
+  }, [url, mode]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = e.target.files?.[0] ?? null;
@@ -225,9 +228,9 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
                 value={url}
                 onChange={(e) => {
                   setUrl(e.target.value);
-                  if (!source.trim()) {
+                  if (!userEditedSourceRef.current) {
                     const parsed = parseSourceFromUrl(e.target.value);
-                    if (parsed) setSource(parsed);
+                    setSource(parsed ?? "");
                   }
                 }}
                 className="es-input"
@@ -305,7 +308,10 @@ export default function SubmitResourceModal({ userId, courses, onClose, onSubmit
           <input
             placeholder="Nguồn (YouTube, GitHub, UIT Drive...)"
             value={source}
-            onChange={(e) => setSource(e.target.value)}
+            onChange={(e) => {
+              userEditedSourceRef.current = true;
+              setSource(e.target.value);
+            }}
             className="es-input"
           />
 
