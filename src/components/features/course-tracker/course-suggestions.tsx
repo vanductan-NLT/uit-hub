@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import type { Course } from "@/types/database";
+import type { SuggestionReason } from "@/lib/course-utils";
 
 interface CourseSuggestionsProps {
   suggestions: Course[];
+  reason?: SuggestionReason;
+  onImport?: () => void;
 }
 
 type Filter = "all" | "required" | "general" | "elective";
@@ -18,9 +21,33 @@ const FILTER_LABELS: Record<Filter, string> = {
 
 const PAGE_SIZE = 6;
 
-export default function CourseSuggestions({ suggestions }: CourseSuggestionsProps) {
+export default function CourseSuggestions({ suggestions, reason, onImport }: CourseSuggestionsProps) {
   const [filter, setFilter] = useState<Filter>("all");
   const [showAll, setShowAll] = useState(false);
+
+  if (reason === "no_curriculum") {
+    return (
+      <div className="es-card">
+        <div className="es-section-hdr" style={{ marginBottom: 12 }}>
+          <div className="es-section-title">Gợi ý HK tới</div>
+        </div>
+        <div style={{ fontSize: 13, color: "var(--es-muted)", textAlign: "center", padding: "16px 8px", lineHeight: 1.6 }}>
+          Chưa có chương trình đào tạo (CTĐT).
+          <br />
+          Nhập CTĐT để hệ thống gợi ý các môn của ngành và học kỳ kế tiếp.
+        </div>
+        {onImport && (
+          <button
+            className="es-btn es-btn-primary es-btn-sm"
+            onClick={onImport}
+            style={{ width: "100%", marginTop: 4 }}
+          >
+            Nhập CTĐT
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const filtered = filter === "all" ? suggestions : suggestions.filter((c) => c.course_type === filter);
   const visible = showAll ? filtered : filtered.slice(0, PAGE_SIZE);

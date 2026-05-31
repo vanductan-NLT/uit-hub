@@ -50,6 +50,14 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
     () => curriculum ? new Set(curriculum.courses.map((c) => c.course_id)) : undefined,
     [curriculum]
   );
+  const curriculumSemesterMap = useMemo(() => {
+    if (!curriculum) return undefined;
+    const m = new Map<string, number>();
+    for (const c of curriculum.courses) {
+      if (c.suggested_semester !== null) m.set(c.course_id, c.suggested_semester);
+    }
+    return m;
+  }, [curriculum]);
   const milestoneExcludeIds = useMemo(() => {
     const ids = new Set<string>();
     const isMet = (key: string) => milestones.find((m) => m.key === key)?.is_completed ?? false;
@@ -58,10 +66,12 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
     return ids;
   }, [milestones, allCourses]);
 
-  const suggestions = useMemo(
-    () => getSuggestedCourses(allCourses, takenIds, passedIds, curriculumCourseIds, milestoneExcludeIds),
-    [allCourses, takenIds, passedIds, curriculumCourseIds, milestoneExcludeIds]
+  const suggestionResult = useMemo(
+    () => getSuggestedCourses(allCourses, takenIds, passedIds, curriculumCourseIds, curriculumSemesterMap, milestoneExcludeIds),
+    [allCourses, takenIds, passedIds, curriculumCourseIds, curriculumSemesterMap, milestoneExcludeIds]
   );
+  const suggestions = suggestionResult.courses;
+  const suggestionReason = suggestionResult.reason;
   const { avgCreditsPerSem, remainingSemesters } = useMemo(
     () => estimateRemainingTime(userCourses, passedCredits),
     [userCourses, passedCredits]
@@ -239,7 +249,11 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
                     ) : null}
                   </div>
 
-                  <CourseSuggestions suggestions={suggestions} />
+                  <CourseSuggestions
+                    suggestions={suggestions}
+                    reason={suggestionReason}
+                    onImport={() => setShowDkhpImport(true)}
+                  />
                 </div>
               </div>
             ) : (

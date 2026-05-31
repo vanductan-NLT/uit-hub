@@ -23,20 +23,36 @@ export function getMissingPrereqs(
     .filter((c): c is Course => c !== undefined);
 }
 
+export type SuggestionReason = "ok" | "no_curriculum" | "completed";
+
+export interface SuggestionResult {
+  courses: Course[];
+  reason: SuggestionReason;
+}
+
+/**
+ * Suggest courses for the next semester.
+ *
+ * Without a curriculum we cannot tell which courses belong to the user's major
+ * — the global course pool spans every department, and most rows have empty
+ * prerequisites so a naive filter returns hundreds of vacuously-eligible items.
+ * In that case we return an empty list with reason="no_curriculum" so the UI
+ * can prompt the user to import their CTĐT instead of showing noise.
+ */
 export function getSuggestedCourses(
   allCourses: Course[],
   takenIds: Set<string>,
   passedIds: Set<string>,
-  /**
-   * When provided (curriculum imported), only courses in this set are eligible.
-   * Without it we fall back to all courses — but most have empty prerequisites,
-   * which causes vacuous-true explosions (~450 suggestions). Always pass this
-   * when the user's CTĐT is available.
-   */
   curriculumCourseIds?: Set<string>,
+  /** course_id -> suggested_semester from the curriculum (1..8). */
+  curriculumSemesterMap?: Map<string, number>,
   /** Course IDs to exclude because they are tracked via milestones (gdqp, gdtc). */
   excludeIds?: Set<string>
-): Course[] {
+): SuggestionResult {
+  if (!curriculumCourseIds || curriculumCourseIds.size === 0) {
+    return { courses: [], reason: "no_curriculum" };
+  }
+
   // Recursively mark all ancestors of taken courses as superseded —
   // e.g. ENG03 taken → ENG02 superseded → ENG01 superseded
   const courseMap = new Map(allCourses.map((c) => [c.id, c]));
@@ -55,23 +71,36 @@ export function getSuggestedCourses(
     if (takenIds.has(c.id)) markSuperseded(c.id);
   }
 
-  // Candidate pool: restrict to curriculum when available to avoid vacuous-true explosion
-  const candidates = curriculumCourseIds
-    ? allCourses.filter((c) => curriculumCourseIds.has(c.id))
-    : allCourses;
+  // Highest curriculum semester among passed courses → next semester is +1.
+  // If the user hasn't passed anything yet, target semester 1.
+  let maxPassedSemester = 0;
+  if (curriculumSemesterMap) {
+    for (const id of passedIds) {
+      const s = curriculumSemesterMap.get(id);
+      if (s && s > maxPassedSemester) maxPassedSemester = s;
+    }
+  }
+  const semesterCap = maxPassedSemester + 1;
+
+  const candidates = allCourses.filter((c) => curriculumCourseIds.has(c.id));
 
   const typeOrder: Record<string, number> = { required: 0, general: 1, elective: 2 };
-  return candidates
-    .filter((c) =>
-      !takenIds.has(c.id) &&
-      !supersededIds.has(c.id) &&
-      !(excludeIds?.has(c.id)) &&
-      c.prerequisites.every((pid) => passedIds.has(pid))
-    )
+  const courses = candidates
+    .filter((c) => {
+      if (takenIds.has(c.id) || supersededIds.has(c.id) || excludeIds?.has(c.id)) return false;
+      if (!c.prerequisites.every((pid) => passedIds.has(pid))) return false;
+      // Cap by curriculum semester to avoid showing every distant-semester
+      // course just because its prerequisite list happens to be empty.
+      const sem = curriculumSemesterMap?.get(c.id);
+      if (sem !== undefined && sem > semesterCap) return false;
+      return true;
+    })
     .sort((a, b) => {
       const td = (typeOrder[a.course_type] ?? 3) - (typeOrder[b.course_type] ?? 3);
       return td !== 0 ? td : a.id.localeCompare(b.id);
     });
+
+  return { courses, reason: courses.length === 0 ? "completed" : "ok" };
 }
 
 export function estimateRemainingTime(
