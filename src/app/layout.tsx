@@ -24,6 +24,9 @@ export const metadata: Metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  // Extend under the iOS notch/home-indicator so env(safe-area-inset-*) reports
+  // real values — required for the sidebar footer to clear Safari's bottom bar.
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({

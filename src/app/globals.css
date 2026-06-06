@@ -370,7 +370,9 @@
   background: var(--es-sidebar-bg);
   border-right: 1px solid var(--es-sidebar-border);
   display: flex; flex-direction: column;
-  height: 100vh; overflow: hidden; /* Prevent sidebar itself from scrolling */
+  /* dvh tracks the *visible* viewport on iOS so the footer never hides behind
+     Safari's collapsing bottom bar. */
+  height: 100dvh; overflow: hidden; /* Prevent sidebar itself from scrolling */
   position: relative;
   transition: width 0.22s cubic-bezier(0.4,0,0.2,1);
 }
@@ -476,7 +478,14 @@
 }
 
 /* User section */
-.es-sidebar-user-section { margin-top: auto; border-top: 1px solid var(--es-sidebar-border); background: var(--es-sidebar-bg); }
+.es-sidebar-user-section {
+  margin-top: auto;
+  border-top: 1px solid var(--es-sidebar-border);
+  background: var(--es-sidebar-bg);
+  /* Lift the profile/theme/logout controls above the iPhone home indicator so
+     they stay tappable. max() keeps a sane gap on devices without an inset. */
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
 .es-sidebar-user {
   padding: 12px 16px;
   display: flex; align-items: center; gap: 10px;
@@ -1301,7 +1310,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
+    height: 100dvh; /* visible viewport — footer clears Safari's bottom bar */
     overflow: hidden;
     z-index: 200;
     transform: translateX(-100%);
