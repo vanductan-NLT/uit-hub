@@ -89,6 +89,9 @@ export interface UserProfile {
   target_graduation_year: number | null;
   total_credits_required: number;
   training_type: "chinh-quy" | "tu-xa";
+  // Curriculum (CTĐT) the user imported — authoritative link so the roadmap
+  // never has to rebuild "{MAJOR}-K{intake}" and silently miss.
+  curriculum_id: string | null;
   role: "student" | "admin" | "owner";
   created_at: string;
   updated_at: string;

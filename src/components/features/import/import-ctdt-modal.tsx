@@ -3,13 +3,17 @@
 import { useRef, useState } from "react";
 import { parseUitCtdt, type CtdtParseResult } from "@/lib/parsers/uit-ctdt-parser";
 import { upsertCurriculum } from "@/lib/supabase/curriculum-api";
+import { intakeYearFromStudentId } from "@/lib/validation-utils";
 
 interface Props {
   onSuccess: () => void;
   onClose: () => void;
+  /** User whose profile gets bound to the imported curriculum. */
+  userId?: string;
   /** Pre-fill from user profile */
   defaultMajor?: string | null;
   defaultIntakeYear?: number | null;
+  defaultStudentId?: string | null;
   defaultTrainingType?: "chinh-quy" | "tu-xa" | null;
 }
 
@@ -22,8 +26,12 @@ function buildCtdtUrl(year: number, he: HeDaoTao): string {
   return `https://student.uit.edu.vn/${seg}/ctdt-khoa-${year}`;
 }
 
-export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defaultIntakeYear, defaultTrainingType }: Props) {
+export default function ImportCtdtModal({ onSuccess, onClose, userId, defaultMajor, defaultIntakeYear, defaultStudentId, defaultTrainingType }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Derive intake from MSSV when the profile doesn't have it stored, so the
+  // curriculum id matches the student's actual cohort instead of a guess.
+  const fallbackIntake = intakeYearFromStudentId(defaultStudentId ?? "") ?? new Date().getFullYear() - 4;
 
   // Profile mode: all 3 values come from profile → no selectors shown
   const hasProfile = !!(defaultMajor && defaultIntakeYear);
@@ -31,7 +39,7 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
   const [major, setMajor] = useState(
     defaultMajor && MAJORS.includes(defaultMajor) ? defaultMajor : "CNTT"
   );
-  const [intakeYear, setIntakeYear] = useState(defaultIntakeYear ?? new Date().getFullYear() - 4);
+  const [intakeYear, setIntakeYear] = useState(defaultIntakeYear ?? fallbackIntake);
   const [he, setHe] = useState<HeDaoTao>(defaultTrainingType ?? "chinh-quy");
 
   const [result, setResult] = useState<CtdtParseResult | null>(null);
@@ -58,7 +66,7 @@ export default function ImportCtdtModal({ onSuccess, onClose, defaultMajor, defa
     if (!result) return;
     setImporting(true);
     try {
-      const res = await upsertCurriculum(result);
+      const res = await upsertCurriculum(result, userId);
       if (res.errors.length > 0) setParseError(res.errors.join(" · "));
       setDone({ curriculumId: res.curriculumId, coursesLinked: res.coursesLinked });
       onSuccess();

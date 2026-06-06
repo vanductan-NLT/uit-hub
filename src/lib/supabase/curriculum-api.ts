@@ -79,9 +79,14 @@ export interface CtdtImportResult {
 /**
  * Upsert a parsed CTĐT result into curricula + curriculum_courses + graduation_requirements.
  * curriculumId format: "{MAJOR}-K{intakeYear-2000}" e.g. "CNTT-K19"
+ *
+ * When userId is provided, the importing user is bound to this curriculum
+ * (user_profiles.curriculum_id) so the roadmap loads it by id directly instead
+ * of rebuilding the key from the profile — which silently missed on any mismatch.
  */
 export async function upsertCurriculum(
-  data: CtdtParseResult
+  data: CtdtParseResult,
+  userId?: string
 ): Promise<CtdtImportResult> {
   const supabase = createAdminClient();
   const errors: string[] = [];
@@ -148,6 +153,16 @@ export async function upsertCurriculum(
     .upsert(defaults, { onConflict: "curriculum_id,key" });
 
   if (rErr) errors.push(`Graduation requirements: ${rErr.message}`);
+
+  // 4. Bind the importing user to this curriculum so the roadmap can load it
+  //    by id — the lookup no longer depends on profile major/intake matching.
+  if (userId) {
+    const { error: pErr } = await supabase
+      .from("user_profiles")
+      .update({ curriculum_id: curriculumId, updated_at: new Date().toISOString() })
+      .eq("id", userId);
+    if (pErr) errors.push(`Profile curriculum link: ${pErr.message}`);
+  }
 
   return { curriculumId, coursesLinked, errors };
 }

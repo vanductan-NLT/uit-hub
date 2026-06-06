@@ -8,6 +8,8 @@ interface CourseSuggestionsProps {
   suggestions: Course[];
   reason?: SuggestionReason;
   onImport?: () => void;
+  /** Number of courses recognized in the imported CTĐT — used for a reassuring hint. */
+  curriculumCount?: number;
 }
 
 type Filter = "all" | "required" | "general" | "elective";
@@ -21,7 +23,7 @@ const FILTER_LABELS: Record<Filter, string> = {
 
 const PAGE_SIZE = 6;
 
-export default function CourseSuggestions({ suggestions, reason, onImport }: CourseSuggestionsProps) {
+export default function CourseSuggestions({ suggestions, reason, onImport, curriculumCount }: CourseSuggestionsProps) {
   const [filter, setFilter] = useState<Filter>("all");
   const [showAll, setShowAll] = useState(false);
 
@@ -83,8 +85,12 @@ export default function CourseSuggestions({ suggestions, reason, onImport }: Cou
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ fontSize: 13, color: "var(--es-muted)", textAlign: "center", padding: "12px 0" }}>
-          Chưa có môn nào đủ điều kiện
+        <div style={{ fontSize: 13, color: "var(--es-muted)", textAlign: "center", padding: "12px 8px", lineHeight: 1.6 }}>
+          {reason === "completed"
+            ? "🎉 Bạn đã học hết các môn trong chương trình!"
+            : curriculumCount
+              ? `Đã nhận diện ${curriculumCount} môn trong CTĐT — chưa có môn phù hợp cho học kỳ tới (đã hoàn thành tiên quyết hoặc đã học).`
+              : "Chưa có môn nào đủ điều kiện cho học kỳ tới."}
         </div>
       ) : (
         <>

@@ -63,7 +63,7 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
   }
 
   const { gpa10, gpa4, passedCredits, userCourses } = useCourses(userId);
-  const { curriculum } = useCurriculum(profile?.major, profile?.intake_year, curriculumRefreshKey);
+  const { curriculum } = useCurriculum(profile?.major, profile?.intake_year, curriculumRefreshKey, profile?.curriculum_id);
 
   useEffect(() => {
     getUserProfile(userId).then((p) => {

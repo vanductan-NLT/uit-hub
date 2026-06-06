@@ -105,16 +105,18 @@ export function getSuggestedCourses(
     if (takenIds.has(c.id)) markSuperseded(c.id);
   }
 
-  // Highest curriculum semester among passed courses → next semester is +1.
-  // If the user hasn't passed anything yet, target semester 1.
-  let maxPassedSemester = 0;
+  // Highest curriculum semester among courses the user has already engaged
+  // with (passed OR currently in-progress) → next semester is +1. Using taken
+  // (not just passed) means a student who imported only their current semester
+  // still gets suggestions for the upcoming one, instead of being pinned to HK1.
+  let maxSemester = 0;
   if (curriculumSemesterMap) {
-    for (const id of passedIds) {
+    for (const id of takenIds) {
       const s = curriculumSemesterMap.get(id);
-      if (s && s > maxPassedSemester) maxPassedSemester = s;
+      if (s && s > maxSemester) maxSemester = s;
     }
   }
-  const semesterCap = maxPassedSemester + 1;
+  const semesterCap = maxSemester + 1;
 
   const candidates = allCourses.filter((c) => curriculumCourseIds.has(c.id));
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import DashboardPanel from "@/components/panels/dashboard-panel";
@@ -62,7 +62,8 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
 
   const { toasts, toast, removeToast } = useToast();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  useEffect(() => { getUserProfile(userId).then(setUserProfile); }, [userId]);
+  const refreshProfile = useCallback(() => { getUserProfile(userId).then(setUserProfile); }, [userId]);
+  useEffect(() => { refreshProfile(); }, [refreshProfile]);
   const totalCreditsRequired = userProfile?.total_credits_required ?? 131;
 
   const { userCourses, allCourses, loading: coursesLoading, gpa4, passedCredits, addCourse, refetch } = useCourses(userId);
@@ -256,7 +257,7 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
               semester={currentSemester}
             />
           )}
-          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} major={userProfile?.major} intakeYear={userProfile?.intake_year} curriculumRefreshKey={curriculumRefreshKey} />}
+          {active === "roadmap" && <RoadmapPanel userId={userId} userEmail={userEmail} totalCreditsRequired={totalCreditsRequired} major={userProfile?.major} intakeYear={userProfile?.intake_year} curriculumId={userProfile?.curriculum_id} curriculumRefreshKey={curriculumRefreshKey} onImportCtdt={() => setShowImportCtdt(true)} />}
           {active === "gpa" && <GpaPanel userId={userId} onNav={(p) => navigate(p as Panel)} />}
           {active === "exam" && <ExamPanel userId={userId} userCourses={userCourses} allCourses={allCourses} currentSemester={currentSemester} onToast={toast} />}
           {active === "resources" && <ResourcesPanel userId={userId} inProgressCourses={inProgressCourses} allCourses={allCourses} />}
@@ -314,10 +315,12 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
       )}
       {showImportCtdt && (
         <ImportCtdtModal
-          onSuccess={() => { refetch(); setCurriculumRefreshKey((k) => k + 1); }}
+          onSuccess={() => { refetch(); refreshProfile(); setCurriculumRefreshKey((k) => k + 1); }}
           onClose={() => setShowImportCtdt(false)}
+          userId={userId}
           defaultMajor={userProfile?.major}
           defaultIntakeYear={userProfile?.intake_year}
+          defaultStudentId={userProfile?.student_id}
           defaultTrainingType={userProfile?.training_type}
         />
       )}

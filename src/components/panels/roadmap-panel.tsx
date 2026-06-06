@@ -28,14 +28,17 @@ interface RoadmapPanelProps {
   totalCreditsRequired?: number;
   major?: string | null;
   intakeYear?: number | null;
+  curriculumId?: string | null;
   curriculumRefreshKey?: number;
+  /** Open the CTĐT (curriculum) import flow. */
+  onImportCtdt?: () => void;
 }
 
 const TARGETS = { general: 30, required: 70, elective: 31 };
 
-export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131, major, intakeYear, curriculumRefreshKey = 0 }: RoadmapPanelProps) {
+export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired = 131, major, intakeYear, curriculumId, curriculumRefreshKey = 0, onImportCtdt }: RoadmapPanelProps) {
   const { userCourses, allCourses, loading, error, gpa10, gpa4, passedCredits, addCourse, editCourse, removeCourse, refetch } = useCourses(userId);
-  const { curriculum } = useCurriculum(major, intakeYear, curriculumRefreshKey);
+  const { curriculum } = useCurriculum(major, intakeYear, curriculumRefreshKey, curriculumId);
   const [milestones, setMilestones] = useState<UserMilestone[]>([]);
   useEffect(() => { getUserMilestones(userId).then(setMilestones); }, [userId]);
   const [showModal, setShowModal] = useState(false);
@@ -125,7 +128,7 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
         <div className="es-topbar-left">
           <div className="es-topbar-title">Lộ trình môn học</div>
           <div className="es-topbar-sub">
-            {loading ? "Đang tải..." : `${userCourses.length} môn đã nhập · ngành ${userId ? "CNTT" : ""}`}
+            {loading ? "Đang tải..." : `${userCourses.length} môn đã nhập${major ? ` · ngành ${major}` : ""}`}
           </div>
         </div>
         <div className="es-topbar-right">
@@ -265,7 +268,8 @@ export default function RoadmapPanel({ userId, userEmail, totalCreditsRequired =
                   <CourseSuggestions
                     suggestions={suggestions}
                     reason={suggestionReason}
-                    onImport={() => setShowDkhpImport(true)}
+                    curriculumCount={curriculum?.courses.length}
+                    onImport={onImportCtdt ?? (() => setShowDkhpImport(true))}
                   />
                 </div>
               </div>

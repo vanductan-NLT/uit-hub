@@ -168,10 +168,12 @@ export default function AppShellLayout({ userId, userEmail, avatarUrl, children 
       )}
       {showImportCtdt && (
         <ImportCtdtModal
-          onSuccess={() => { refetch(); setCurriculumRefreshKey((k) => k + 1); }}
+          onSuccess={() => { refetch(); getUserProfile(userId).then(setUserProfile); setCurriculumRefreshKey((k) => k + 1); }}
           onClose={() => setShowImportCtdt(false)}
+          userId={userId}
           defaultMajor={userProfile?.major}
           defaultIntakeYear={userProfile?.intake_year}
+          defaultStudentId={userProfile?.student_id}
           defaultTrainingType={userProfile?.training_type}
         />
       )}
