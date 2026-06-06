@@ -38,6 +38,10 @@ export default function ImportFromDkhp({ userId, allCourses, userCourses, onAdd,
     reader.onload = (e) => {
       try {
         const parsed = parseUitDkhp(e.target?.result as string);
+        if (parsed.error) {
+          setParseError(parsed.error);
+          return;
+        }
         if (parsed.courses.length === 0) {
           setParseError("Không tìm thấy môn học. Hãy dùng file HTML từ trang Thông tin ĐKHP trên student.uit.edu.vn.");
           return;

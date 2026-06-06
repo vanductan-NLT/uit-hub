@@ -70,6 +70,9 @@ function detectColumns(headerRow: Element): Record<string, number> {
   const nameIdx   = find("tiếng việt", "tên mh (tiếng v", "tên môn học", "course name");
   const nameEnIdx = find("tiếng anh", "english", "name (en");
   const groupIdx  = find("loại mh", "loại môn", "course type", "category");
+  // "mã cũ" = the course's previous code (renamed across curriculum revisions);
+  // captured so searching by an old code still resolves to the current course.
+  const oldCodeIdx = find("mã cũ", "old code");
   // "học trước" = hard prerequisites (must have passed); "tiên quyết" = co-req advisory
   const prereqIdx = find("học trước");
   const equivIdx  = find("tương đương", "equivalent");
@@ -78,14 +81,15 @@ function detectColumns(headerRow: Element): Record<string, number> {
 
   // Fall back to known stable indices if keyword detection misses columns
   return {
-    idIdx:     idIdx     >= 0 ? idIdx     : 1,
-    nameIdx:   nameIdx   >= 0 ? nameIdx   : 2,
-    nameEnIdx: nameEnIdx >= 0 ? nameEnIdx : 3,
-    groupIdx:  groupIdx  >= 0 ? groupIdx  : 6,
-    prereqIdx: prereqIdx >= 0 ? prereqIdx : 10,
-    equivIdx:  equivIdx  >= 0 ? equivIdx  : 8,
-    tcltIdx:   tcltIdx   >= 0 ? tcltIdx   : 11,
-    tcthIdx:   tcthIdx   >= 0 ? tcthIdx   : 12,
+    idIdx:      idIdx      >= 0 ? idIdx      : 1,
+    nameIdx:    nameIdx    >= 0 ? nameIdx    : 2,
+    nameEnIdx:  nameEnIdx  >= 0 ? nameEnIdx  : 3,
+    groupIdx:   groupIdx   >= 0 ? groupIdx   : 6,
+    oldCodeIdx: oldCodeIdx >= 0 ? oldCodeIdx : 7,
+    prereqIdx:  prereqIdx  >= 0 ? prereqIdx  : 10,
+    equivIdx:   equivIdx   >= 0 ? equivIdx   : 8,
+    tcltIdx:    tcltIdx    >= 0 ? tcltIdx    : 11,
+    tcthIdx:    tcthIdx    >= 0 ? tcthIdx    : 12,
   };
 }
 
@@ -119,7 +123,7 @@ export function parseUitCourseCatalog(html: string): CatalogParseResult {
   // Data rows start after the header
   const dataStartIdx = rows.indexOf(headerRow as HTMLTableRowElement) + 1;
 
-  const { idIdx, nameIdx, nameEnIdx, groupIdx, prereqIdx, equivIdx, tcltIdx, tcthIdx } = cols;
+  const { idIdx, nameIdx, nameEnIdx, groupIdx, oldCodeIdx, prereqIdx, equivIdx, tcltIdx, tcthIdx } = cols;
   const courses: CatalogCourse[] = [];
 
   for (let i = dataStartIdx; i < rows.length; i++) {
@@ -139,7 +143,10 @@ export function parseUitCourseCatalog(html: string): CatalogParseResult {
     if (!name) { skipped++; continue; }
 
     const prerequisites = splitCodesFromCell(tds[prereqIdx]);
-    const equivalents   = splitCodesFromCell(tds[equivIdx]);
+    // Merge the official equivalents with the "Mã cũ" (old code) column, deduped
+    // and excluding the course's own id — both let an old code find this course.
+    const oldCodes      = oldCodeIdx >= 0 ? splitCodesFromCell(tds[oldCodeIdx]) : [];
+    const equivalents   = [...new Set([...splitCodesFromCell(tds[equivIdx]), ...oldCodes])].filter((e) => e !== id);
 
     courses.push({
       id,

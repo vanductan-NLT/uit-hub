@@ -5,13 +5,24 @@ import type { Course, UserCourseWithCourse, UserProfile } from "@/types/database
 
 export async function getAllCourses(): Promise<Course[]> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("courses")
-    .select("*")
-    .eq("is_active", true)
-    .order("id");
-  if (error) throw new Error(error.message);
-  return data as Course[];
+  // Supabase caps a single select at 1000 rows. The active catalog already
+  // exceeds that, so a plain select silently drops the courses that sort last
+  // (e.g. SS009, SS010) — making them unsearchable. Page through every row.
+  const PAGE = 1000;
+  const all: Course[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("courses")
+      .select("*")
+      .eq("is_active", true)
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(error.message);
+    const batch = (data ?? []) as Course[];
+    all.push(...batch);
+    if (batch.length < PAGE) break;
+  }
+  return all;
 }
 
 // ── USER COURSES ──────────────────────────────────────────
@@ -95,6 +106,7 @@ export interface UpsertUserProfileInput {
   target_graduation_year?: number | null;
   total_credits_required?: number;
   training_type?: "chinh-quy" | "tu-xa";
+  curriculum_id?: string | null;
 }
 
 export async function upsertUserProfile(input: UpsertUserProfileInput): Promise<UserProfile> {

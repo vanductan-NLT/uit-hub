@@ -52,17 +52,23 @@ export default function AddCourseModal({
     [selected, passedIds, allCoursesMap]
   );
 
+  // Keep already-taken courses in the results (marked "Đã thêm") instead of
+  // hiding them — otherwise a course the student already imported (e.g. SS004)
+  // looks "missing" when they search for it. Also match equivalent codes so an
+  // old code resolves to its current course.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return allCourses
-      .filter((c) => !takenCourseIds.has(c.id))
       .filter(
         (c) =>
           c.id.toLowerCase().includes(q) ||
           c.name.toLowerCase().includes(q) ||
-          (c.name_en?.toLowerCase().includes(q) ?? false)
+          (c.name_en?.toLowerCase().includes(q) ?? false) ||
+          (c.equivalents?.some((e) => e.toLowerCase().includes(q)) ?? false)
       )
+      // Surface not-yet-taken courses first, taken ones after.
+      .sort((a, b) => Number(takenCourseIds.has(a.id)) - Number(takenCourseIds.has(b.id)))
       .slice(0, 8);
   }, [query, allCourses, takenCourseIds]);
 
@@ -153,25 +159,39 @@ export default function AddCourseModal({
                   zIndex: 50, maxHeight: 240, overflowY: "auto",
                 }}
               >
-                {filtered.map((c) => (
-                  <button
-                    type="button"
-                    key={c.id}
-                    onClick={() => selectCourse(c)}
-                    style={{
-                      width: "100%", textAlign: "left", padding: "10px 14px",
-                      background: "none", border: "none", cursor: "pointer",
-                      borderBottom: "1px solid var(--es-border)", fontFamily: "inherit",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                  >
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{c.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--es-muted)", marginTop: 1, fontFamily: "var(--font-mono-var), monospace" }}>
-                      {c.id} · {c.credits}TC
-                    </div>
-                  </button>
-                ))}
+                {filtered.map((c) => {
+                  const taken = takenCourseIds.has(c.id);
+                  return (
+                    <button
+                      type="button"
+                      key={c.id}
+                      onClick={() => !taken && selectCourse(c)}
+                      disabled={taken}
+                      style={{
+                        width: "100%", textAlign: "left", padding: "10px 14px",
+                        background: "none", border: "none",
+                        cursor: taken ? "not-allowed" : "pointer",
+                        opacity: taken ? 0.55 : 1,
+                        borderBottom: "1px solid var(--es-border)", fontFamily: "inherit",
+                        display: "flex", alignItems: "center", gap: 8,
+                      }}
+                      onMouseEnter={(e) => { if (!taken) e.currentTarget.style.background = "var(--bg)"; }}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{c.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--es-muted)", marginTop: 1, fontFamily: "var(--font-mono-var), monospace" }}>
+                          {c.id} · {c.credits}TC
+                        </div>
+                      </div>
+                      {taken && (
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 7px", borderRadius: 99, background: "var(--es-border)", color: "var(--ink2)", flexShrink: 0, whiteSpace: "nowrap" }}>
+                          Đã thêm
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

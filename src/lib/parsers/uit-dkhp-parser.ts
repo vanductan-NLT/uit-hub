@@ -11,6 +11,8 @@ export interface DkhpParseResult {
   academic_year: string;
   courses: DkhpCourse[];
   peCourses: string[]; // PE course IDs detected (0-credit GDTC courses)
+  /** Set when the file is recognizably the wrong page (e.g. an exam schedule). */
+  error?: string;
 }
 
 function parseSemester(titleText: string): { semester: string; academic_year: string } {
@@ -29,16 +31,52 @@ function cleanText(el: Element): string {
   return (el.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
+/**
+ * Resolve the name + credits column indices from the header row.
+ * - Returns "exam" when the table is clearly an exam schedule (Ca/Tiết thi,
+ *   Thứ thi, Ngày thi…) — the caller rejects the file instead of mis-parsing.
+ * - Returns detected indices when the ĐKHP headers are found.
+ * - Falls back to the stable fixed indices (name=3, credits=4) when headers
+ *   can't be read, so a valid ĐKHP file never breaks on header-text variation.
+ */
+function detectDkhpColumns(table: Element): { nameIdx: number; creditsIdx: number } | "exam" {
+  const headerCells = Array.from(table.querySelectorAll("thead th, thead td, tr:first-child th, tr:first-child td"))
+    .map((c) => cleanText(c).toLowerCase());
+
+  const looksLikeExam = headerCells.some((h) =>
+    h.includes("ca/tiết") || h.includes("ca/ti") || h.includes("tiết thi") || h.includes("thứ thi") || h.includes("ngày thi") || h.includes("phòng thi")
+  );
+  if (looksLikeExam) return "exam";
+
+  const nameIdx = headerCells.findIndex((h) => h.includes("tên môn") || h.includes("tên mh"));
+  const creditsIdx = headerCells.findIndex((h) => h === "tc" || h.includes("số tc") || h.includes("tín chỉ"));
+  return { nameIdx: nameIdx >= 0 ? nameIdx : 3, creditsIdx: creditsIdx >= 0 ? creditsIdx : 4 };
+}
+
 export function parseUitDkhp(html: string): DkhpParseResult {
   const doc = new DOMParser().parseFromString(html, "text/html");
 
   // Extract semester from title div
   const titleEl = doc.querySelector(".title_thongtindangky");
+  const titleText = (titleEl?.textContent ?? "") + " " + (doc.title ?? "");
   const { semester, academic_year } = parseSemester(titleEl?.textContent ?? "");
+
+  // Reject an exam-schedule file fed into the ĐKHP importer (the column layout
+  // differs, so positional parsing would store "Ca 2"/"Tiết 678" as course names).
+  if (/L[IỊ]CH\s+THI/i.test(titleText)) {
+    return { semester, academic_year, courses: [], peCourses: [], error: "Đây là file Lịch thi, không phải ĐKHP. Hãy dùng mục \"Import lịch thi\"." };
+  }
 
   // Target data table specifically — NOT the sticky-header table which comes first inside the form
   const table = doc.querySelector("table.sticky-enabled") ?? doc.querySelector("#uit-tracuu-dkhp-data table:last-of-type");
   if (!table) return { semester, academic_year, courses: [], peCourses: [] };
+
+  // Resolve columns by header; reject an exam-schedule table outright.
+  const cols = detectDkhpColumns(table);
+  if (cols === "exam") {
+    return { semester, academic_year, courses: [], peCourses: [], error: "Đây là file Lịch thi, không phải ĐKHP. Hãy dùng mục \"Import lịch thi\"." };
+  }
+  const { nameIdx, creditsIdx } = cols;
 
   const rows = Array.from(table.querySelectorAll("tr.odd, tr.even"));
   const seen = new Set<string>();
@@ -51,8 +89,8 @@ export function parseUitDkhp(html: string): DkhpParseResult {
 
     const course_id = cleanText(tds[1]);
     const classCode = cleanText(tds[2]); // e.g. CS112.Q21 or CS112.Q21.1
-    const course_name = cleanText(tds[3]);
-    const credits = parseInt(cleanText(tds[4]), 10);
+    const course_name = cleanText(tds[nameIdx]);
+    const credits = parseInt(cleanText(tds[creditsIdx]), 10);
 
     if (!course_id) continue;
 
