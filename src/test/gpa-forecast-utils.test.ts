@@ -32,6 +32,7 @@ import {
   calculateRequiredCK,
   forecastCumulativeGPA4,
   calculateRequiredAvgScore,
+  distributeRequiredScores,
   sortByRisk,
 } from "@/lib/gpa-forecast-utils";
 
@@ -413,5 +414,62 @@ describe("sortByRisk", () => {
     const sorted = sortByRisk([noComp, normal]);
     expect(sorted[0].id).toBe("nm");
     expect(sorted[1].id).toBe("nc");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// distributeRequiredScores — fair per-course CK distribution
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("distributeRequiredScores", () => {
+  const COMPONENTS = [
+    { name: "Quá trình", weight: 0.3 },
+    { name: "Cuối kỳ", weight: 0.7 },
+  ];
+
+  it("does not demand >10 from a weak course when the goal is globally feasible", () => {
+    // Completed: 8.0 × 3TC. Target GPA4=3.2 → requiredAvg = 8.0 across in-progress.
+    const completed = makeUserCourse(
+      { id: "c1", status: "completed", score: 8.0 },
+      { id: "cc1", credits: 3, components: COMPONENTS }
+    );
+    // Course A: weak progress (Quá trình 3.0) — independently it would need CK >10.
+    const a = makeUserCourse(
+      { id: "a", component_scores: { "Quá trình": 3.0 } },
+      { id: "ca", credits: 3, components: COMPONENTS }
+    );
+    // Course B: strong progress (Quá trình 9.0) — has headroom to absorb the slack.
+    const b = makeUserCourse(
+      { id: "b", component_scores: { "Quá trình": 9.0 } },
+      { id: "cb", credits: 3, components: COMPONENTS }
+    );
+
+    const res = distributeRequiredScores(3.2, [completed], [a, b]);
+
+    expect(res.isImpossible).toBe(false);
+    expect(res.isAlreadyMet).toBe(false);
+    // The old independent method WOULD overshoot for course A (documents the bug).
+    expect(calculateRequiredCK(a.course, { "Quá trình": 3.0 }, res.requiredAvg)).toBeGreaterThan(10);
+    // Fair distribution keeps every course achievable.
+    for (const pc of res.perCourse) {
+      expect(pc.feasible).toBe(true);
+      expect(pc.requiredCK ?? 0).toBeLessThanOrEqual(10.01);
+    }
+    // Credit-weighted average of targets meets the required average.
+    const ipCredits = res.perCourse.reduce((s, p) => s + p.course.course.credits, 0);
+    const wavg = res.perCourse.reduce((s, p) => s + p.targetScore * p.course.course.credits, 0) / ipCredits;
+    expect(wavg).toBeCloseTo(res.requiredAvg, 1);
+  });
+
+  it("flags courses infeasible when even CK=10 everywhere can't reach the goal", () => {
+    // Completed 0 × 3TC, target 4.0 → requiredAvg = 20 → impossible.
+    const completed = makeUserCourse(
+      { id: "c1", status: "completed", score: 0 },
+      { id: "cc1", credits: 3, components: COMPONENTS }
+    );
+    const a = makeUserCourse({ id: "a", component_scores: {} }, { id: "ca", credits: 3, components: COMPONENTS });
+    const res = distributeRequiredScores(4.0, [completed], [a]);
+    expect(res.isImpossible).toBe(true);
+    expect(res.perCourse[0].feasible).toBe(false);
   });
 });

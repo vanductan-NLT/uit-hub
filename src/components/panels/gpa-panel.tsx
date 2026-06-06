@@ -136,38 +136,39 @@ export default function GpaPanel({ userId, onNav }: Props) {
                 </div>
               </div>
 
-              {/* Reverse GPA calculator */}
+              {/* Score editors per course — fills the left column under the summary */}
+              <div className="es-card">
+                <div className="es-section-hdr">
+                  <div>
+                    <div className="es-section-title">Nhập điểm thành phần</div>
+                    <div className="es-section-sub">Cập nhật để dự báo chính xác hơn · Lưu tự động</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
+                  {sortedInProgress.map((c) => (
+                    <CourseScoreEditor
+                      key={c.id}
+                      course={c}
+                      onUpdate={(scores) => updateComponentScores(c.id, scores)}
+                      onStudyPlan={() => onNav("exam")}
+                    />
+                  ))}
+                </div>
+                <div className="es-divider" />
+                <div style={{ fontSize: 12, color: "var(--es-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span>💡</span>
+                  <span>Trọng số từng thành phần theo quy định môn học. Nhập xong từng ô → tự lưu.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: target slider (reverse GPA) — slider lives here on the right */}
+            <div>
               <GpaTargetCalculator
                 completedCourses={completedCourses}
                 inProgressCourses={inProgressCourses}
                 currentGPA4={gpa4}
               />
-
-            </div>
-
-            {/* Right: score editors per course */}
-            <div className="es-card">
-              <div className="es-section-hdr">
-                <div>
-                  <div className="es-section-title">Nhập điểm thành phần</div>
-                  <div className="es-section-sub">Cập nhật để dự báo chính xác hơn · Lưu tự động</div>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
-                {sortedInProgress.map((c) => (
-                  <CourseScoreEditor
-                    key={c.id}
-                    course={c}
-                    onUpdate={(scores) => updateComponentScores(c.id, scores)}
-                    onStudyPlan={() => onNav("exam")}
-                  />
-                ))}
-              </div>
-              <div className="es-divider" />
-              <div style={{ fontSize: 12, color: "var(--es-muted)", display: "flex", alignItems: "center", gap: 6 }}>
-                <span>💡</span>
-                <span>Trọng số từng thành phần theo quy định môn học. Nhập xong từng ô → tự lưu.</span>
-              </div>
             </div>
           </div>
         )}

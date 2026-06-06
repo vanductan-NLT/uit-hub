@@ -1,4 +1,4 @@
-import type { Course, UserCourseWithCourse } from "@/types/database";
+import type { Course, CourseComponent, UserCourseWithCourse } from "@/types/database";
 import { calculateGPA4 } from "@/hooks/use-courses";
 
 // UIT letter grade thresholds (scale 10)
@@ -153,4 +153,101 @@ export function calculateRequiredAvgScore(
     isAlreadyMet: requiredAvg <= 0,
     isImpossible: requiredAvg > 10,
   };
+}
+
+export interface PerCourseTarget {
+  course: UserCourseWithCourse;
+  /** Fair target final score (thang 10) for this course. */
+  targetScore: number;
+  /** CK score needed to reach targetScore, or null if the course has no CK component. */
+  requiredCK: number | null;
+  /** False when even CK=10 can't reach this course's share. */
+  feasible: boolean;
+}
+
+export interface DistributionResult {
+  requiredAvg: number;
+  isAlreadyMet: boolean;
+  isImpossible: boolean;
+  perCourse: PerCourseTarget[];
+}
+
+/** Achievable final-score range for a course by varying only its CK component. */
+function courseScoreRange(
+  course: Course,
+  componentScores: Record<string, number | null>
+): { ck: CourseComponent | undefined; partialWithoutCK: number; min: number; max: number } {
+  const ck = findCKComponent(course);
+  let partialWithoutCK = 0;
+  for (const comp of course.components) {
+    if (ck && comp.name === ck.name) continue;
+    const val = componentScores[comp.name];
+    if (val !== null && val !== undefined) partialWithoutCK += val * comp.weight;
+  }
+  const w = ck?.weight ?? 0;
+  return { ck, partialWithoutCK, min: partialWithoutCK, max: partialWithoutCK + 10 * w };
+}
+
+/**
+ * Distribute the required average across in-progress courses *fairly* instead of
+ * demanding the same score from every course.
+ *
+ * The old approach asked each course independently to hit the global requiredAvg,
+ * so a course with weak progress showed an impossible ">10" while others sat well
+ * below their ceiling. Here we water-fill: pick a single target level L and set
+ * each course to clamp(L, min_i, max_i); courses that can't reach L are capped at
+ * their max and the slack is absorbed by courses with headroom (a higher L). Only
+ * when even CK=10 everywhere can't reach the goal is it globally impossible.
+ */
+export function distributeRequiredScores(
+  targetGPA4: number,
+  completedCourses: UserCourseWithCourse[],
+  inProgressCourses: UserCourseWithCourse[]
+): DistributionResult {
+  const { requiredAvg, isAlreadyMet, isImpossible } = calculateRequiredAvgScore(
+    targetGPA4, completedCourses, inProgressCourses
+  );
+
+  // Weighted points the in-progress block must contribute (credit·score units).
+  const targetGPA10 = targetGPA4 * 2.5;
+  const scored = completedCourses.filter((c) => c.score !== null && c.status === "completed");
+  const completedWeightedSum = scored.reduce((s, c) => s + (c.score ?? 0) * c.course.credits, 0);
+  const completedCredits = scored.reduce((s, c) => s + c.course.credits, 0);
+  const ipCredits = inProgressCourses.reduce((s, c) => s + c.course.credits, 0);
+  const needed = targetGPA10 * (completedCredits + ipCredits) - completedWeightedSum;
+
+  const ranges = inProgressCourses.map((c) => ({
+    c,
+    credits: c.course.credits,
+    ...courseScoreRange(c.course, c.component_scores ?? {}),
+  }));
+
+  // Total weighted score across courses at level L (each clamped to its range).
+  const totalAt = (L: number) =>
+    ranges.reduce((s, r) => s + Math.min(Math.max(L, r.min), r.max) * r.credits, 0);
+
+  // Binary search the level L that meets `needed` (totalAt is monotonic in L).
+  let lo = 0, hi = 10;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (totalAt(mid) < needed) lo = mid; else hi = mid;
+  }
+  const level = hi;
+
+  const perCourse: PerCourseTarget[] = ranges.map((r) => {
+    const targetScore = Math.min(Math.max(level, r.min), r.max);
+    const w = r.ck?.weight ?? 0;
+    const requiredCK = w > 0
+      ? Math.round(Math.min(Math.max((targetScore - r.partialWithoutCK) / w, 0), 10.01) * 100) / 100
+      : null;
+    return {
+      course: r.c,
+      targetScore: Math.round(targetScore * 100) / 100,
+      requiredCK,
+      // Feasible unless the course is maxed out yet the goal still isn't met.
+      feasible: !(isImpossible || (totalAt(10) < needed && targetScore >= r.max - 1e-6)),
+    };
+  });
+
+  return { requiredAvg, isAlreadyMet, isImpossible, perCourse };
 }

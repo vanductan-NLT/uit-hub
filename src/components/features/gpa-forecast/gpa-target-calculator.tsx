@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { calculateRequiredAvgScore, calculateRequiredCK, GRADE_THRESHOLDS } from "@/lib/gpa-forecast-utils";
+import { distributeRequiredScores, GRADE_THRESHOLDS } from "@/lib/gpa-forecast-utils";
 import type { UserCourseWithCourse } from "@/types/database";
 
 interface Props {
@@ -30,21 +30,20 @@ export default function GpaTargetCalculator({ completedCourses, inProgressCourse
     Math.round(defaultTarget * 20) / 20 // snap to 0.05 grid
   );
 
-  const { requiredAvg, isAlreadyMet, isImpossible } = useMemo(
-    () => calculateRequiredAvgScore(targetGPA4, completedCourses, inProgressCourses),
+  const { requiredAvg, isAlreadyMet, isImpossible, perCourse: distributed } = useMemo(
+    () => distributeRequiredScores(targetGPA4, completedCourses, inProgressCourses),
     [targetGPA4, completedCourses, inProgressCourses]
   );
 
+  // Fair per-course CK targets — each course gets its own balanced share, so a
+  // weak course no longer shows ">10" while others have headroom to spare.
   const perCourse = useMemo(
-    () =>
-      inProgressCourses.map((c) => {
-        const scores = c.component_scores ?? {};
-        const ckNeeded = isAlreadyMet || isImpossible
-          ? null
-          : calculateRequiredCK(c.course, scores, requiredAvg);
-        return { c, ckNeeded };
-      }),
-    [inProgressCourses, requiredAvg, isAlreadyMet, isImpossible]
+    () => distributed.map((d) => ({
+      c: d.course,
+      ckNeeded: isAlreadyMet || isImpossible ? null : d.requiredCK,
+      feasible: d.feasible,
+    })),
+    [distributed, isAlreadyMet, isImpossible]
   );
 
   const statusColor = isImpossible ? "var(--duo-red)" : isAlreadyMet ? "var(--duo-green)" : scoreColor(requiredAvg);
@@ -121,8 +120,8 @@ export default function GpaTargetCalculator({ completedCourses, inProgressCourse
       {!isAlreadyMet && !isImpossible && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: "var(--es-muted)", marginBottom: 2 }}>Điểm CK cần đạt mỗi môn</div>
-          {perCourse.map(({ c, ckNeeded }) => {
-            const ckDisplay = ckNeeded === null ? "—" : ckNeeded > 10 ? ">10 ⚠️" : ckNeeded.toFixed(1);
+          {perCourse.map(({ c, ckNeeded, feasible }) => {
+            const ckDisplay = ckNeeded === null ? "—" : !feasible ? ">10 ⚠️" : ckNeeded.toFixed(1);
             const ckColor   = ckNeeded === null ? "var(--es-muted)" : scoreColor(ckNeeded ?? 0);
             return (
               <div key={c.id} style={{
