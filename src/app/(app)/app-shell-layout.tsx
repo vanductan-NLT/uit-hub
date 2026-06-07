@@ -15,7 +15,6 @@ import ImportHubModal from "@/components/features/import/import-hub-modal";
 import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
 import ImportFromHtml from "@/components/features/course-tracker/import-from-html";
 import ImportExamHtml from "@/components/features/exam-schedule/import-exam-html";
-import ImportCatalogModal from "@/components/features/import/import-catalog-modal";
 import ImportCtdtModal from "@/components/features/import/import-ctdt-modal";
 import type { UserProfile } from "@/types/database";
 
@@ -42,7 +41,6 @@ export default function AppShellLayout({ userId, userEmail, avatarUrl, children 
   const [showImportDkhp, setShowImportDkhp] = useState(false);
   const [showImportHtml, setShowImportHtml] = useState(false);
   const [showImportExam, setShowImportExam] = useState(false);
-  const [showImportCatalog, setShowImportCatalog] = useState(false);
   const [showImportCtdt, setShowImportCtdt] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
 
@@ -125,9 +123,6 @@ export default function AppShellLayout({ userId, userEmail, avatarUrl, children 
           onSelectDkhp={() => setShowImportDkhp(true)}
           onSelectHtml={() => setShowImportHtml(true)}
           onSelectExam={() => setShowImportExam(true)}
-          onSelectCatalog={() => setShowImportCatalog(true)}
-          onSelectCtdt={() => setShowImportCtdt(true)}
-          isAdmin={userProfile?.role === "admin"}
           onClose={() => setShowImportHub(false)}
         />
       )}
@@ -158,12 +153,6 @@ export default function AppShellLayout({ userId, userEmail, avatarUrl, children 
           allCourses={allCourses}
           onSuccess={refetch}
           onClose={() => setShowImportExam(false)}
-        />
-      )}
-      {showImportCatalog && (
-        <ImportCatalogModal
-          onSuccess={refetch}
-          onClose={() => setShowImportCatalog(false)}
         />
       )}
       {showImportCtdt && (

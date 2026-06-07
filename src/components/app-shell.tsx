@@ -16,7 +16,6 @@ import ImportHubModal from "@/components/features/import/import-hub-modal";
 import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
 import ImportFromHtml from "@/components/features/course-tracker/import-from-html";
 import ImportExamHtml from "@/components/features/exam-schedule/import-exam-html";
-import ImportCatalogModal from "@/components/features/import/import-catalog-modal";
 import ImportCtdtModal from "@/components/features/import/import-ctdt-modal";
 import FeedbackButton from "@/components/features/feedback/feedback-button";
 import { getUserProfile } from "@/lib/supabase/courses-api";
@@ -54,7 +53,6 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
   const [showImportDkhp, setShowImportDkhp] = useState(false);
   const [showImportHtml, setShowImportHtml] = useState(false);
   const [showImportExam, setShowImportExam] = useState(false);
-  const [showImportCatalog, setShowImportCatalog] = useState(false);
   const [showImportCtdt, setShowImportCtdt] = useState(false);
   const [curriculumRefreshKey, setCurriculumRefreshKey] = useState(0);
   const router = useRouter();
@@ -271,9 +269,6 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
           onSelectDkhp={() => setShowImportDkhp(true)}
           onSelectHtml={() => setShowImportHtml(true)}
           onSelectExam={() => setShowImportExam(true)}
-          onSelectCatalog={() => setShowImportCatalog(true)}
-          onSelectCtdt={() => setShowImportCtdt(true)}
-          isAdmin={userProfile?.role === "admin"}
           onClose={() => setShowImportHub(false)}
         />
       )}
@@ -307,12 +302,6 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
         />
       )}
 
-      {showImportCatalog && (
-        <ImportCatalogModal
-          onSuccess={refetch}
-          onClose={() => setShowImportCatalog(false)}
-        />
-      )}
       {showImportCtdt && (
         <ImportCtdtModal
           onSuccess={() => { refetch(); refreshProfile(); setCurriculumRefreshKey((k) => k + 1); }}

@@ -1,19 +1,14 @@
 "use client";
 
 /**
- * ImportHubModal — global entry point for all 3 import flows.
- * Acts as a dispatcher: closes itself then fires the appropriate callback
- * so the parent can mount the relevant sub-modal.
+ * ImportHubModal — entry point for the 3 user-facing import flows.
+ * Admin data (catalog, CTĐT) is managed in /admin panel instead.
  */
 
 interface Props {
-  onSelectDkhp: () => void;     // Lịch học kỳ → ImportFromDkhp
-  onSelectHtml: () => void;     // Bảng điểm   → ImportFromHtml
-  onSelectExam: () => void;     // Lịch thi     → ImportExamHtml
-  // Admin-only flows
-  onSelectCatalog?: () => void; // Danh mục môn học → ImportCatalogModal
-  onSelectCtdt?: () => void;    // CTĐT khoá       → ImportCtdtModal
-  isAdmin?: boolean;
+  onSelectDkhp: () => void;
+  onSelectHtml: () => void;
+  onSelectExam: () => void;
   onClose: () => void;
 }
 
@@ -47,23 +42,18 @@ const OPTIONS = [
   },
 ] as const;
 
-type OptionId = (typeof OPTIONS)[number]["id"] | "catalog" | "ctdt";
+type OptionId = (typeof OPTIONS)[number]["id"];
 
 export default function ImportHubModal({
   onSelectDkhp, onSelectHtml, onSelectExam,
-  onSelectCatalog, onSelectCtdt,
-  isAdmin = false,
   onClose,
 }: Props) {
   function dispatch(id: OptionId) {
     onClose();
-    // Small delay so hub unmounts cleanly before sub-modal mounts
     setTimeout(() => {
-      if (id === "dkhp")    onSelectDkhp();
-      else if (id === "html")    onSelectHtml();
-      else if (id === "exam")    onSelectExam();
-      else if (id === "catalog") onSelectCatalog?.();
-      else if (id === "ctdt")    onSelectCtdt?.();
+      if (id === "dkhp")      onSelectDkhp();
+      else if (id === "html") onSelectHtml();
+      else if (id === "exam") onSelectExam();
     }, 60);
   }
 
@@ -107,39 +97,6 @@ export default function ImportHubModal({
             <OptionCard key={opt.id} opt={opt} onSelect={() => dispatch(opt.id)} />
           ))}
         </div>
-
-        {/* Admin-only data import */}
-        {isAdmin && (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--es-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
-              🛡️ Admin · Dữ liệu hệ thống
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={() => dispatch("catalog")}
-                style={{
-                  flex: 1, padding: "10px 14px", borderRadius: "var(--r-xl)",
-                  border: "1.5px solid var(--es-border)", background: "var(--white)",
-                  cursor: "pointer", textAlign: "left", fontFamily: "inherit",
-                }}
-              >
-                <div style={{ fontWeight: 700, fontSize: 13, color: "var(--ink)" }}>📚 Danh mục môn học</div>
-                <div style={{ fontSize: 11, color: "var(--es-muted)" }}>daa.uit.edu.vn · tiên quyết + tương đương</div>
-              </button>
-              <button
-                onClick={() => dispatch("ctdt")}
-                style={{
-                  flex: 1, padding: "10px 14px", borderRadius: "var(--r-xl)",
-                  border: "1.5px solid var(--es-border)", background: "var(--white)",
-                  cursor: "pointer", textAlign: "left", fontFamily: "inherit",
-                }}
-              >
-                <div style={{ fontWeight: 700, fontSize: 13, color: "var(--ink)" }}>🎓 CTĐT theo khoá</div>
-                <div style={{ fontSize: 11, color: "var(--es-muted)" }}>student.uit.edu.vn · lộ trình 8 kỳ</div>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Tip */}
         <div
