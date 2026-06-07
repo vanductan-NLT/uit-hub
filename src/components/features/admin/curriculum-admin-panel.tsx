@@ -57,7 +57,7 @@ export default function CurriculumAdminPanel() {
   const [intakeYear, setIntakeYear] = useState(new Date().getFullYear() - 1);
   const [url, setUrl] = useState("");
   const [he, setHe] = useState<HeDaoTao>("chinh-quy");
-  const [detected, setDetected] = useState<{ major?: string; year?: number }>({});
+  const [detected, setDetected] = useState<{ major?: string; year?: number; he?: HeDaoTao }>({});
 
   const [result, setResult] = useState<CtdtParseResult | null>(null);
   const [busy, setBusy] = useState(false);
