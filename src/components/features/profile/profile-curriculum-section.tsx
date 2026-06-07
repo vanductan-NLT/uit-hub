@@ -1,6 +1,7 @@
 "use client";
 
 import { useCurriculum } from "@/hooks/use-curriculum";
+import { khoaLabel } from "@/lib/validation-utils";
 
 interface Props {
   major: string | null | undefined;
@@ -24,7 +25,7 @@ export default function ProfileCurriculumSection({ major, intakeYear, onImport, 
           <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 2 }}>
             {!major || !intakeYear
               ? "Cập nhật ngành và năm nhập học để liên kết CTĐT"
-              : `${major} · K${String(intakeYear).slice(-2)} · student.uit.edu.vn`}
+              : `${major} · ${khoaLabel(intakeYear)} · student.uit.edu.vn`}
           </div>
         </div>
         <button

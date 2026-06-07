@@ -7,14 +7,14 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Curriculum, CurriculumCourse, GraduationRequirement } from "@/types/database";
 
+// Re-export the shared (server+client safe) id builder so existing imports of
+// `buildCurriculumId` from this registry keep working.
+export { buildCurriculumId } from "@/lib/data/curriculum-id";
+import { buildCurriculumId } from "@/lib/data/curriculum-id";
+
 export interface CurriculumWithDetails extends Curriculum {
   courses: CurriculumCourse[];
   graduation_requirements: GraduationRequirement[];
-}
-
-/** Build curriculum ID from major + intake year e.g. "CNTT" + 2019 → "CNTT-K19" */
-export function buildCurriculumId(major: string, intakeYear: number): string {
-  return `${major.toUpperCase()}-K${String(intakeYear).slice(-2)}`;
 }
 
 /** Fetch full curriculum (courses + graduation requirements) for a given ID. */

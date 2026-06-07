@@ -4,10 +4,12 @@ import { getCurriculum, getCurriculumForUser, type CurriculumWithDetails } from 
 /**
  * Fetch the CTĐT (curriculum) for a user.
  *
- * Prefers the curriculum id stored on the profile (set at import time) — this
- * is the authoritative link and never mismatches. Falls back to reconstructing
- * the key from major + intake year for users who imported before the link
- * existed. Returns null when no curriculum has been imported yet.
+ * Resolves by the LIVE profile fields (major + intake year) first, so editing
+ * major/MSSV immediately loads the matching curriculum instead of a stale one.
+ * Since curricula are keyed by (major, year), this also auto-shares any
+ * curriculum another same-cohort user already imported. The stored
+ * `curriculumId` is only a fallback for legacy rows missing major/intake year.
+ * Returns null when no matching curriculum exists yet (UI prompts an import).
  */
 export function useCurriculum(
   major: string | null | undefined,
@@ -20,16 +22,18 @@ export function useCurriculum(
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!curriculumId && (!major || !intakeYear)) {
-      setCurriculum(null);
-      return;
+    if (!major || !intakeYear) {
+      if (!curriculumId) {
+        setCurriculum(null);
+        return;
+      }
     }
     let cancelled = false;
     setLoading(true);
     setError(null);
-    const load = curriculumId
-      ? getCurriculum(curriculumId)
-      : getCurriculumForUser(major as string, intakeYear as number);
+    const load = (major && intakeYear)
+      ? getCurriculumForUser(major, intakeYear)
+      : getCurriculum(curriculumId as string);
     load
       .then((data) => { if (!cancelled) setCurriculum(data); })
       .catch((e: Error) => { if (!cancelled) setError(e.message); })

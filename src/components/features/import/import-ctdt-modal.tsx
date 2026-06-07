@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { parseUitCtdt, type CtdtParseResult } from "@/lib/parsers/uit-ctdt-parser";
 import { upsertCurriculum } from "@/lib/supabase/curriculum-api";
-import { intakeYearFromStudentId } from "@/lib/validation-utils";
+import { intakeYearFromStudentId, khoaLabel, khoaNumberFromYear } from "@/lib/validation-utils";
 
 interface Props {
   onSuccess: () => void;
@@ -123,7 +123,7 @@ export default function ImportCtdtModal({ onSuccess, onClose, userId, defaultMaj
               }}>
                 {[
                   { label: "Ngành", val: major },
-                  { label: "Khoá", val: `K${String(intakeYear).slice(-2)} (${intakeYear})` },
+                  { label: "Khoá", val: khoaLabel(intakeYear) },
                   { label: "Hệ đào tạo", val: heLabel },
                 ].map(({ label, val }) => (
                   <div key={label}>
@@ -168,7 +168,7 @@ export default function ImportCtdtModal({ onSuccess, onClose, userId, defaultMaj
                         onClick={(e) => e.stopPropagation()}>
                         {ctdtUrl.replace("https://student.uit.edu.vn/", "")} ↗
                       </a>
-                      {" "}→ Ctrl+S → <strong>Webpage, HTML Only</strong>
+                      {" "}→ chọn ngành <strong>{major}</strong> → Ctrl+S → <strong>Webpage, HTML Only</strong>
                     </span>
                   ),
                 },
@@ -242,7 +242,7 @@ export default function ImportCtdtModal({ onSuccess, onClose, userId, defaultMaj
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button className="es-btn es-btn-outline" onClick={onClose}>Huỷ</button>
               <button className="es-btn es-btn-primary" onClick={handleImport} disabled={!result || importing}>
-                {importing ? "Đang import..." : `📥 Import ${major} K${String(intakeYear).slice(-2)}`}
+                {importing ? "Đang import..." : `📥 Import ${major} K${khoaNumberFromYear(intakeYear)}`}
               </button>
             </div>
           </>

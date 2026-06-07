@@ -6,9 +6,10 @@ import type { Course } from "@/types/database";
 import ResourceManager from "@/components/features/admin/resource-manager";
 import StudentList from "@/components/features/admin/student-list";
 import FeedbackList from "@/components/features/admin/feedback-list";
+import CurriculumAdminPanel from "@/components/features/admin/curriculum-admin-panel";
 import type { AppRole } from "@/lib/role-utils";
 
-type Tab = "resources" | "students" | "feedback";
+type Tab = "resources" | "curriculum" | "students" | "feedback";
 
 export default function AdminShell({ userId, userEmail, currentUserRole }: { userId: string; userEmail: string; currentUserRole: AppRole }) {
   const [activeTab, setActiveTab] = useState<Tab>("resources");
@@ -45,6 +46,12 @@ export default function AdminShell({ userId, userEmail, currentUserRole }: { use
             📚 Quản lý tài nguyên
           </button>
           <button
+            className={`es-filter-btn${activeTab === "curriculum" ? " active" : ""}`}
+            onClick={() => setActiveTab("curriculum")}
+          >
+            🎓 CTĐT
+          </button>
+          <button
             className={`es-filter-btn${activeTab === "students" ? " active" : ""}`}
             onClick={() => setActiveTab("students")}
           >
@@ -59,6 +66,7 @@ export default function AdminShell({ userId, userEmail, currentUserRole }: { use
         </div>
 
         {activeTab === "resources" && <ResourceManager userId={userId} allCourses={allCourses} />}
+        {activeTab === "curriculum" && <CurriculumAdminPanel />}
         {activeTab === "students" && <StudentList currentUserRole={currentUserRole} />}
         {activeTab === "feedback" && <FeedbackList />}
       </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { getUserMilestones, upsertMilestone } from "@/lib/supabase/milestone-api";
 import type { UserCourseWithCourse, UserMilestone } from "@/types/database";
 import type { CurriculumWithDetails } from "@/lib/data/curriculum-registry";
+import { khoaLabel } from "@/lib/validation-utils";
 
 interface Props {
   userId: string;
@@ -119,7 +120,7 @@ export default function GraduationEligibilityCard({ userId, userCourses, gpa4, c
           <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>🎓 Điều kiện tốt nghiệp</span>
           {curriculum && (
             <span style={{ fontSize: 12, color: "var(--es-muted)", background: "var(--es-bg-alt, #f8f9fa)", padding: "2px 8px", borderRadius: "var(--r-full)" }}>
-              {curriculum.major} · K{String(curriculum.intake_year_from).slice(-2)}
+              {curriculum.major} · {khoaLabel(curriculum.intake_year_from)}
             </span>
           )}
         </div>

@@ -111,6 +111,10 @@ export interface UpsertUserProfileInput {
 
 export async function upsertUserProfile(input: UpsertUserProfileInput): Promise<UserProfile> {
   const supabase = createClient();
+  // Note: we intentionally do NOT recompute curriculum_id here. The read path
+  // (use-curriculum) resolves by the live major + intake year, so a stale id is
+  // already ignored. Writing a derived id would risk a foreign-key violation
+  // when that curriculum hasn't been imported yet (e.g. during onboarding).
   const { data, error } = await supabase
     .from("user_profiles")
     .upsert({ ...input, updated_at: new Date().toISOString() }, { onConflict: "id" })

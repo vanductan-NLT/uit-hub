@@ -4,9 +4,27 @@ import {
   inferGraduationYear,
   validateStudentId,
   validateFullName,
+  khoaNumberFromYear,
+  khoaLabel,
 } from "@/lib/validation-utils";
 
 describe("validation-utils", () => {
+  describe("khoaNumberFromYear", () => {
+    // UIT convention: khóa number = enrollment year − 2005 (NOT year − 2000).
+    it("maps enrollment year to UIT khóa number", () => {
+      expect(khoaNumberFromYear(2024)).toBe(19); // K19
+      expect(khoaNumberFromYear(2025)).toBe(20); // K20
+      expect(khoaNumberFromYear(2023)).toBe(18); // K18
+    });
+  });
+
+  describe("khoaLabel", () => {
+    it("formats khóa label as K{n} (year)", () => {
+      expect(khoaLabel(2024)).toBe("K19 (2024)");
+      expect(khoaLabel(2025)).toBe("K20 (2025)");
+    });
+  });
+
   describe("intakeYearFromStudentId", () => {
     it("should correctly parse intake year from valid student ID", () => {
       expect(intakeYearFromStudentId("22521234")).toBe(2022);

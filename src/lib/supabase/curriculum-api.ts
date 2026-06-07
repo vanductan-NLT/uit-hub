@@ -68,6 +68,44 @@ export async function upsertCatalogCourses(
   return { upserted, errors };
 }
 
+// ── Fetch a public UIT CTĐT page (server-side) ─────────────────────────────────
+
+export interface FetchCtdtResult {
+  html: string | null;
+  error: string | null;
+}
+
+/**
+ * Server-side fetch of a public UIT CTĐT page so admins can paste a per-major
+ * URL instead of saving the HTML by hand. Per-major pages are public (no auth),
+ * so a plain fetch works. Only student.uit.edu.vn URLs are allowed.
+ */
+export async function fetchCtdtFromUrl(url: string): Promise<FetchCtdtResult> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { html: null, error: "URL không hợp lệ." };
+  }
+  if (parsed.protocol !== "https:" || parsed.hostname !== "student.uit.edu.vn") {
+    return { html: null, error: "Chỉ chấp nhận link từ student.uit.edu.vn." };
+  }
+
+  try {
+    const res = await fetch(parsed.toString(), {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; UITHubBot/1.0)" },
+    });
+    if (!res.ok) return { html: null, error: `Không tải được trang (HTTP ${res.status}).` };
+    // Guard against a trusted-host redirect landing somewhere else (SSRF).
+    if (new URL(res.url).hostname !== "student.uit.edu.vn") {
+      return { html: null, error: "Trang đã chuyển hướng ra ngoài student.uit.edu.vn." };
+    }
+    return { html: await res.text(), error: null };
+  } catch (e) {
+    return { html: null, error: e instanceof Error ? e.message : "Tải trang thất bại." };
+  }
+}
+
 // ── Curriculum (CTĐT) upsert ───────────────────────────────────────────────────
 
 export interface CtdtImportResult {

@@ -34,6 +34,18 @@ export function intakeYearFromStudentId(raw: string): number | null {
   return m ? 2000 + Number(m[1]) : null;
 }
 
+// UIT khóa number is the enrollment year minus 2005 (K19 = 2024, K20 = 2025) —
+// confirmed by UIT's own CTĐT pages ("Áp dụng từ Khoá 19 - 2024"). This is the
+// display convention only; it is NOT the curriculum id format.
+export function khoaNumberFromYear(intakeYear: number): number {
+  return intakeYear - 2005;
+}
+
+// Friendly khóa label for the UI, e.g. 2024 → "K19 (2024)".
+export function khoaLabel(intakeYear: number): string {
+  return `K${khoaNumberFromYear(intakeYear)} (${intakeYear})`;
+}
+
 /**
  * Inferred graduation year based on major and intake year.
  * KHMT, TTNT, ATTT: 3.5 years.
