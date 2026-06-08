@@ -6,7 +6,7 @@ import CourseScoreEditor from "@/components/features/gpa-forecast/course-score-e
 import GpaTargetCalculator from "@/components/features/gpa-forecast/gpa-target-calculator";
 import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
 import ErrorState from "@/components/ui/error-state";
-import { forecastCumulativeGPA4, sortByRisk, calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
+import { sortByRisk, calculateRequiredCK, calculatePartialScore } from "@/lib/gpa-forecast-utils";
 
 interface Props {
   userId: string;
@@ -27,11 +27,6 @@ export default function GpaPanel({ userId, onNav }: Props) {
   );
   const sortedInProgress = useMemo(() => sortByRisk(inProgressCourses), [inProgressCourses]);
 
-  const forecastGPA4 = useMemo(
-    () => forecastCumulativeGPA4(completedCourses, inProgressCourses),
-    [completedCourses, inProgressCourses]
-  );
-
   const riskyCount = useMemo(
     () =>
       inProgressCourses.filter((c) => {
@@ -45,9 +40,6 @@ export default function GpaPanel({ userId, onNav }: Props) {
       }).length,
     [inProgressCourses]
   );
-
-  const delta = (forecastGPA4 - gpa4).toFixed(2);
-  const deltaPositive = forecastGPA4 >= gpa4;
 
   if (loading) {
     return (
@@ -117,22 +109,10 @@ export default function GpaPanel({ userId, onNav }: Props) {
                   <div className="es-gpa-number">{gpa4.toFixed(2)}</div>
                   <div className="es-gpa-max">/4.0</div>
                 </div>
-                <div style={{ marginBottom: 12 }}>
+                <div>
                   <div className="es-prog-wrap" style={{ height: 8 }}>
                     <div className="es-prog-fill green" style={{ width: `${(gpa4 / 4) * 100}%` }} />
                   </div>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {[
-                    { label: "Dự báo cuối HK", val: forecastGPA4.toFixed(2), bg: "var(--green-lt)", color: "var(--green)" },
-                    { label: "Thay đổi", val: `${deltaPositive ? "+" : ""}${delta}`, bg: deltaPositive ? "var(--blue-lt)" : "var(--amber-lt)", color: deltaPositive ? "var(--blue)" : "var(--amber)" },
-                    { label: "Cần cải thiện", val: `+${Math.max(0, 3.6 - forecastGPA4).toFixed(2)}`, bg: "var(--amber-lt)", color: "var(--amber)" },
-                  ].map((item, i) => (
-                    <div key={item.label} className={`animate-spring-in stagger-${i + 1}`} style={{ flex: 1, textAlign: "center", padding: 8, background: item.bg, borderRadius: "var(--r-sm)", border: `1px solid ${item.color}` }}>
-                      <div style={{ fontSize: 11, color: item.color, fontWeight: 600 }}>{item.label}</div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: item.color }}>{item.val}</div>
-                    </div>
-                  ))}
                 </div>
               </div>
 
