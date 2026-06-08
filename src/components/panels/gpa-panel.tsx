@@ -19,10 +19,6 @@ export default function GpaPanel({ userId, onNav }: Props) {
   const [showDkhpImport, setShowDkhpImport] = useState(false);
   const [gpaScale, setGpaScale] = useState<4 | 10>(4);
 
-  const completedCourses = useMemo(
-    () => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"),
-    [userCourses]
-  );
   const inProgressCourses = useMemo(
     () => userCourses.filter((c) => c.status === "in_progress"),
     [userCourses]
