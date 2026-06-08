@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useCourses } from "@/hooks/use-courses";
+
 import CourseScoreEditor from "@/components/features/gpa-forecast/course-score-editor";
 import GpaTargetCalculator from "@/components/features/gpa-forecast/gpa-target-calculator";
 import ImportFromDkhp from "@/components/features/course-tracker/import-from-dkhp";
@@ -14,8 +15,9 @@ interface Props {
 }
 
 export default function GpaPanel({ userId, onNav }: Props) {
-  const { userCourses, allCourses, loading, error, gpa4, updateComponentScores, addCourse, refetch } = useCourses(userId);
+  const { userCourses, allCourses, loading, error, gpa4, gpa10, updateComponentScores, addCourse, refetch } = useCourses(userId);
   const [showDkhpImport, setShowDkhpImport] = useState(false);
+  const [gpaScale, setGpaScale] = useState<4 | 10>(4);
 
   const completedCourses = useMemo(
     () => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"),
@@ -101,17 +103,42 @@ export default function GpaPanel({ userId, onNav }: Props) {
               <div className="es-card" style={{ marginBottom: 14 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: "var(--es-muted)" }}>GPA tích lũy hiện tại</span>
-                  <span className={`es-badge ${gpa4 >= 3.2 ? "es-badge-green" : gpa4 >= 2.8 ? "es-badge-amber" : "es-badge-red"}`}>
-                    {gpa4 >= 3.6 ? "Xuất sắc" : gpa4 >= 3.2 ? "Giỏi" : gpa4 >= 2.8 ? "Khá" : gpa4 >= 2.0 ? "Trung bình" : "Yếu"}
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {/* Scale toggle pill */}
+                    <div style={{ display: "flex", background: "var(--es-border)", borderRadius: "var(--r-full)", padding: 2 }}>
+                      {([4, 10] as const).map((scale) => (
+                        <button
+                          key={scale}
+                          onClick={() => setGpaScale(scale)}
+                          style={{
+                            fontSize: 10, fontWeight: 700, padding: "2px 7px",
+                            borderRadius: "var(--r-full)", border: "none", cursor: "pointer",
+                            background: gpaScale === scale ? "var(--blue)" : "transparent",
+                            color: gpaScale === scale ? "#fff" : "var(--es-muted)",
+                            transition: "background 0.15s, color 0.15s",
+                          }}
+                        >
+                          /{scale}
+                        </button>
+                      ))}
+                    </div>
+                    <span className={`es-badge ${gpa4 >= 3.2 ? "es-badge-green" : gpa4 >= 2.8 ? "es-badge-amber" : "es-badge-red"}`}>
+                      {gpa4 >= 3.6 ? "Xuất sắc" : gpa4 >= 3.2 ? "Giỏi" : gpa4 >= 2.8 ? "Khá" : gpa4 >= 2.0 ? "Trung bình" : "Yếu"}
+                    </span>
+                  </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 6, marginBottom: 4 }}>
-                  <div className="es-gpa-number">{gpa4.toFixed(2)}</div>
-                  <div className="es-gpa-max">/4.0</div>
+                  <div className="es-gpa-number">
+                    {gpaScale === 4 ? gpa4.toFixed(2) : gpa10.toFixed(2)}
+                  </div>
+                  <div className="es-gpa-max">/{gpaScale}</div>
                 </div>
                 <div>
                   <div className="es-prog-wrap" style={{ height: 8 }}>
-                    <div className="es-prog-fill green" style={{ width: `${(gpa4 / 4) * 100}%` }} />
+                    <div
+                      className="es-prog-fill green"
+                      style={{ width: `${gpaScale === 4 ? (gpa4 / 4) * 100 : (gpa10 / 10) * 100}%` }}
+                    />
                   </div>
                 </div>
               </div>
