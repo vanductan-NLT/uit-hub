@@ -64,7 +64,7 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
   useEffect(() => { refreshProfile(); }, [refreshProfile]);
   const totalCreditsRequired = userProfile?.total_credits_required ?? 131;
 
-  const { userCourses, allCourses, loading: coursesLoading, gpa4, passedCredits, addCourse, refetch } = useCourses(userId);
+  const { userCourses, allCourses, loading: coursesLoading, gpa4, gpa10, passedCredits, addCourse, refetch } = useCourses(userId);
   const inProgressCourses = useMemo(() => userCourses.filter((c) => c.status === "in_progress"), [userCourses]);
   const completedCourses = useMemo(() => userCourses.filter((c) => c.status === "completed" || c.status === "exempted"), [userCourses]);
 
@@ -247,6 +247,7 @@ export default function AppShell({ userId, userEmail, avatarUrl }: { userId: str
               avatarUrl={avatarUrl}
               loading={coursesLoading}
               gpa4={gpa4}
+              gpa10={gpa10}
               passedCredits={passedCredits}
               totalCreditsRequired={totalCreditsRequired}
               inProgressCourses={inProgressCourses}

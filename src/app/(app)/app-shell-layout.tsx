@@ -51,7 +51,7 @@ export default function AppShellLayout({ userId, userEmail, avatarUrl, children 
   useEffect(() => { getUserProfile(userId).then(setUserProfile); }, [userId]);
   useEffect(() => { getNearestExamDays(userId).then(setNearestExamDays); }, [userId]);
 
-  const { userCourses, allCourses, loading: coursesLoading, gpa4, passedCredits, addCourse, refetch } = useCourses(userId);
+  const { userCourses, allCourses, loading: coursesLoading, gpa4, gpa10, passedCredits, addCourse, refetch } = useCourses(userId);
   const totalCreditsRequired = userProfile?.total_credits_required ?? 131;
 
   const inProgressCourses = useMemo(() => userCourses.filter((c) => c.status === "in_progress"), [userCourses]);
@@ -92,7 +92,7 @@ export default function AppShellLayout({ userId, userEmail, avatarUrl, children 
   const ctx: AppContextValue = {
     userId, userEmail, avatarUrl, displayName, initials, mssv,
     userProfile, totalCreditsRequired,
-    userCourses, allCourses, coursesLoading, gpa4, passedCredits,
+    userCourses, allCourses, coursesLoading, gpa4, gpa10, passedCredits,
     inProgressCourses, completedCourses, currentSemester, riskyCount,
     nearestExamDays, curriculumRefreshKey,
     addCourse: addCourseWithGuard, refetch,

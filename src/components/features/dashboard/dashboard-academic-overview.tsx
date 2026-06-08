@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { UserCourseWithCourse } from "@/types/database";
 
 interface RiskyCourse {
@@ -9,6 +10,7 @@ interface RiskyCourse {
 
 interface Props {
   gpa4: number;
+  gpa10: number;
   passedCredits: number;
   totalCreditsRequired: number;
   completedCourses: UserCourseWithCourse[];
@@ -34,9 +36,10 @@ function gradeInfo(gpa4: number) {
 }
 
 export default function DashboardAcademicOverview({
-  gpa4, passedCredits, totalCreditsRequired,
+  gpa4, gpa10, passedCredits, totalCreditsRequired,
   completedCourses, inProgressCourses, riskyCourses, nearestExamDays, onNav,
 }: Props) {
+  const [gpaScale, setGpaScale] = useState<4 | 10>(4);
   const grade = gradeInfo(gpa4);
   const milestone = MILESTONES.find((m) => gpa4 < m.target) ?? null;
   const milestoneProgress = milestone
@@ -56,13 +59,40 @@ export default function DashboardAcademicOverview({
         {/* GPA chip */}
         <div
           className="es-card"
-          style={{ flex: "0 0 auto", padding: "12px 16px", cursor: "pointer", minWidth: 120 }}
+          style={{ flex: "0 0 auto", padding: "12px 16px", cursor: "pointer", minWidth: 130 }}
           onClick={() => onNav("gpa")}
         >
-          <div style={{ fontSize: 10, color: "var(--es-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>GPA tích lũy</div>
+          {/* Header row: label + scale toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+            <div style={{ fontSize: 10, color: "var(--es-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>GPA tích lũy</div>
+            {/* Scale toggle pill */}
+            <div
+              style={{ display: "flex", background: "var(--es-border)", borderRadius: "var(--r-full)", padding: 2, gap: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {([4, 10] as const).map((scale) => (
+                <button
+                  key={scale}
+                  onClick={() => setGpaScale(scale)}
+                  style={{
+                    fontSize: 9, fontWeight: 700, padding: "2px 6px",
+                    borderRadius: "var(--r-full)", border: "none", cursor: "pointer",
+                    background: gpaScale === scale ? "var(--blue)" : "transparent",
+                    color: gpaScale === scale ? "#fff" : "var(--es-muted)",
+                    transition: "background 0.15s, color 0.15s",
+                  }}
+                >
+                  /{scale}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* GPA number */}
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ fontSize: 32, fontWeight: 900, color: "var(--ink)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{gpa4.toFixed(2)}</span>
-            <span style={{ fontSize: 12, color: "var(--es-muted)" }}>/4.0</span>
+            <span style={{ fontSize: 32, fontWeight: 900, color: "var(--ink)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+              {gpaScale === 4 ? gpa4.toFixed(2) : gpa10.toFixed(2)}
+            </span>
+            <span style={{ fontSize: 12, color: "var(--es-muted)" }}>/{gpaScale}</span>
           </div>
           <span style={{ display: "inline-block", marginTop: 6, fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: "var(--r-full)", color: grade.color, background: grade.bg }}>
             {grade.label}

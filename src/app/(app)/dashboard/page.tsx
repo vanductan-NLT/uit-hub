@@ -8,7 +8,7 @@ import DashboardPanel from "@/components/panels/dashboard-panel";
 export default function DashboardPage() {
   const router = useRouter();
   const {
-    displayName, avatarUrl, coursesLoading, gpa4, passedCredits,
+    displayName, avatarUrl, coursesLoading, gpa4, gpa10, passedCredits,
     totalCreditsRequired, inProgressCourses, completedCourses,
     nearestExamDays, currentSemester,
   } = useApp();
@@ -20,6 +20,7 @@ export default function DashboardPage() {
       avatarUrl={avatarUrl}
       loading={coursesLoading}
       gpa4={gpa4}
+      gpa10={gpa10}
       passedCredits={passedCredits}
       totalCreditsRequired={totalCreditsRequired}
       inProgressCourses={inProgressCourses}

@@ -46,6 +46,7 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [gpaScale, setGpaScale] = useState<4 | 10>(4);
 
   // edit form state
   const [fullName, setFullName] = useState("");
@@ -198,19 +199,47 @@ export default function ProfilePanel({ userId, userEmail, avatarUrl, curriculumR
 
               {/* GPA stats */}
               <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                {[
-                  { label: "GPA hệ 10", val: gpa10.toFixed(2), color: "var(--blue)", accent: "var(--blue)" },
-                  { label: "GPA hệ 4", val: gpa4.toFixed(2), color: "var(--green)", accent: "var(--duo-green)" },
-                  { label: "Tín chỉ tích lũy", val: `${passedCredits}`, color: "var(--ink)", accent: "var(--duo-orange)" },
-                ].map((item, i) => (
-                  <div key={item.label} className={`animate-spring-in stagger-${i + 1}`} style={{
-                    flex: 1, textAlign: "center", padding: "10px 6px",
-                    background: "var(--es-bg-alt, #f8f9fa)", borderRadius: "var(--r-sm)",
-                  }}>
-                    <div style={{ fontSize: 11, color: "var(--es-muted)", fontWeight: 600, marginBottom: 2 }}>{item.label}</div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: item.color }}>{item.val}</div>
+                {/* GPA — togglable scale */}
+                <div style={{
+                  flex: 1, textAlign: "center", padding: "10px 6px",
+                  background: "var(--es-bg-alt, #f8f9fa)", borderRadius: "var(--r-sm)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, color: "var(--es-muted)", fontWeight: 600 }}>GPA</span>
+                    {/* Scale toggle */}
+                    <div style={{ display: "flex", background: "var(--es-border)", borderRadius: "var(--r-full)", padding: 2, gap: 0 }}>
+                      {([4, 10] as const).map((scale) => (
+                        <button
+                          key={scale}
+                          onClick={() => setGpaScale(scale)}
+                          style={{
+                            fontSize: 9, fontWeight: 700, padding: "2px 6px",
+                            borderRadius: "var(--r-full)", border: "none", cursor: "pointer",
+                            background: gpaScale === scale ? "var(--blue)" : "transparent",
+                            color: gpaScale === scale ? "#fff" : "var(--es-muted)",
+                            transition: "background 0.15s, color 0.15s",
+                          }}
+                        >
+                          /{scale}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                  <div style={{ fontSize: 22, fontWeight: 700, color: "var(--blue)", lineHeight: 1 }}>
+                    {gpaScale === 4 ? gpa4.toFixed(2) : gpa10.toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--es-muted)", marginTop: 2 }}>
+                    / {gpaScale}
+                  </div>
+                </div>
+                {/* Credits */}
+                <div className="animate-spring-in stagger-2" style={{
+                  flex: 1, textAlign: "center", padding: "10px 6px",
+                  background: "var(--es-bg-alt, #f8f9fa)", borderRadius: "var(--r-sm)",
+                }}>
+                  <div style={{ fontSize: 11, color: "var(--es-muted)", fontWeight: 600, marginBottom: 2 }}>Tín chỉ tích lũy</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)" }}>{passedCredits}</div>
+                </div>
               </div>
 
               {/* Credit progress */}

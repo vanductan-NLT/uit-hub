@@ -24,6 +24,7 @@ export interface AppContextValue {
   allCourses: Course[];
   coursesLoading: boolean;
   gpa4: number;
+  gpa10: number;
   passedCredits: number;
   inProgressCourses: UserCourseWithCourse[];
   completedCourses: UserCourseWithCourse[];

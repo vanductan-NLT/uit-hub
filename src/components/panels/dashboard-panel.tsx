@@ -12,6 +12,7 @@ interface Props {
   avatarUrl?: string;
   loading: boolean;
   gpa4: number;
+  gpa10: number;
   passedCredits: number;
   totalCreditsRequired: number;
   inProgressCourses: UserCourseWithCourse[];
@@ -33,7 +34,7 @@ function getInitials(name: string) {
 }
 
 export default function DashboardPanel({
-  onNav, displayName, avatarUrl, loading, gpa4, passedCredits, totalCreditsRequired,
+  onNav, displayName, avatarUrl, loading, gpa4, gpa10, passedCredits, totalCreditsRequired,
   inProgressCourses, completedCourses, nearestExamDays, semester,
 }: Props) {
   const dateStr = semester ?? "HK hiện tại";
@@ -116,6 +117,7 @@ export default function DashboardPanel({
             {/* ── 2. Academic status: GPA + progress + alerts ── */}
             <DashboardAcademicOverview
               gpa4={gpa4}
+              gpa10={gpa10}
               passedCredits={passedCredits}
               totalCreditsRequired={totalCreditsRequired}
               completedCourses={completedCourses}
