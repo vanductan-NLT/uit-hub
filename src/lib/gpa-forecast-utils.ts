@@ -1,16 +1,15 @@
 import type { Course, CourseComponent, UserCourseWithCourse } from "@/types/database";
 import { calculateGPA4 } from "@/hooks/use-courses";
 
-// UIT letter grade thresholds (scale 10)
+// UIT letter grade thresholds (scale 10) — official UIT table signed 14/04/2025
 export const GRADE_THRESHOLDS = [
   { label: "A+", minScore: 9.0 },
-  { label: "A",  minScore: 8.5 },
-  { label: "B+", minScore: 8.0 },
-  { label: "B",  minScore: 7.0 },
-  { label: "C+", minScore: 6.5 },
-  { label: "C",  minScore: 5.5 },
-  { label: "D+", minScore: 5.0 },
-  { label: "D",  minScore: 4.0 },
+  { label: "A",  minScore: 8.0 },
+  { label: "B+", minScore: 7.0 },
+  { label: "B",  minScore: 6.0 },
+  { label: "C",  minScore: 5.0 },
+  { label: "D+", minScore: 4.0 },
+  { label: "D",  minScore: 3.0 },
 ] as const;
 
 export type GradeLabel = (typeof GRADE_THRESHOLDS)[number]["label"];

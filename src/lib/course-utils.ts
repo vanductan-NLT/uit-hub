@@ -146,7 +146,7 @@ export function estimateRemainingTime(
 ): { avgCreditsPerSem: number; remainingSemesters: number | null } {
   const semsWithPass = new Set(
     userCourses
-      .filter((c) => c.semester && (c.status === "exempted" || (c.score !== null && c.score >= 5.0)))
+      .filter((c) => c.semester && (c.status === "exempted" || (c.score !== null && c.score >= 4.0)))
       .map((c) => c.semester!)
   );
   const semCount = semsWithPass.size;

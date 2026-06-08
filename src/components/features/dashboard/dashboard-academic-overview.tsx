@@ -43,7 +43,7 @@ export default function DashboardAcademicOverview({
     ? Math.min(100, Math.round(((gpa4 - milestone.from) / (milestone.target - milestone.from)) * 100))
     : 100;
   const creditPct = totalCreditsRequired > 0 ? Math.round((passedCredits / totalCreditsRequired) * 100) : 0;
-  const aGradeCount = completedCourses.filter((c) => c.score !== null && (c.score as number) >= 8.5).length;
+  const aGradeCount = completedCourses.filter((c) => c.score !== null && (c.score as number) >= 8.0).length;
   const showExam = nearestExamDays !== null && nearestExamDays >= 0 && nearestExamDays <= 30;
   const examUrgent = nearestExamDays !== null && nearestExamDays <= 3;
   const examColor = examUrgent ? "var(--red)" : nearestExamDays !== null && nearestExamDays! <= 7 ? "var(--amber)" : "var(--blue)";

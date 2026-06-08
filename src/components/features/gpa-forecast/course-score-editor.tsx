@@ -63,7 +63,7 @@ export default function CourseScoreEditor({ course, onUpdate, onStudyPlan }: Pro
   const partial = calculatePartialScore(course.course, parsedScores);
   const ckEntered = parsedScores["Cuối kỳ"] !== null;
   const requiredCKforB = ckEntered ? null : calculateRequiredCK(course.course, parsedScores, 7.0);
-  const requiredCKforA = ckEntered ? null : calculateRequiredCK(course.course, parsedScores, 8.5);
+  const requiredCKforA = ckEntered ? null : calculateRequiredCK(course.course, parsedScores, 8.0);
   const riskScore = getRiskScore({ ...course, component_scores: parsedScores });
   const riskBadge = getRiskBadge(riskScore, course.course.credits);
   const forecastBadge = getForecastBadge(requiredCKforB);

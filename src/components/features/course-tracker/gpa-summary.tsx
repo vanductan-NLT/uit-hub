@@ -16,9 +16,9 @@ export default function GpaSummary({
   const creditPct = Math.min(100, Math.round((passedCredits / totalRequired) * 100));
 
   const gpaColor =
-    gpa10 >= 8.5 ? "var(--green)" :
-    gpa10 >= 7.0 ? "var(--blue)" :
-    gpa10 >= 5.5 ? "var(--amber)" :
+    gpa10 >= 8.0 ? "var(--green)" :
+    gpa10 >= 6.0 ? "var(--blue)" :
+    gpa10 >= 5.0 ? "var(--amber)" :
     gpa10 > 0 ? "var(--red)" : "var(--es-muted)";
 
   return (

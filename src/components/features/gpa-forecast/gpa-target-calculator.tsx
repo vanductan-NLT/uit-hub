@@ -17,9 +17,9 @@ function gradeLabel(score: number): string {
 
 function scoreColor(score: number): string {
   if (score > 10) return "var(--duo-red)";
-  if (score >= 8.5) return "var(--duo-green)";
-  if (score >= 7.0) return "var(--blue)";
-  if (score >= 5.5) return "var(--amber)";
+  if (score >= 8.0) return "var(--duo-green)";
+  if (score >= 6.0) return "var(--blue)";
+  if (score >= 5.0) return "var(--amber)";
   return "var(--duo-red)";
 }
 
@@ -47,7 +47,7 @@ export default function GpaTargetCalculator({ completedCourses, inProgressCourse
   );
 
   const statusColor = isImpossible ? "var(--duo-red)" : isAlreadyMet ? "var(--duo-green)" : scoreColor(requiredAvg);
-  const statusBg   = isImpossible ? "var(--duo-red-lt)" : isAlreadyMet ? "var(--duo-green-lt)" : requiredAvg > 8.5 ? "var(--amber-lt)" : "var(--blue-lt)";
+  const statusBg   = isImpossible ? "var(--duo-red-lt)" : isAlreadyMet ? "var(--duo-green-lt)" : requiredAvg > 8.0 ? "var(--amber-lt)" : "var(--blue-lt)";
 
   return (
     <div className="es-card" style={{ marginBottom: 14 }}>
@@ -85,7 +85,7 @@ export default function GpaTargetCalculator({ completedCourses, inProgressCourse
         border: `1px solid ${statusColor}`,
       }}>
         <div style={{ fontSize: 24 }}>
-          {isAlreadyMet ? "✅" : isImpossible ? "🚫" : requiredAvg >= 8.5 ? "💪" : "📊"}
+          {isAlreadyMet ? "✅" : isImpossible ? "🚫" : requiredAvg >= 8.0 ? "💪" : "📊"}
         </div>
         <div style={{ flex: 1 }}>
           {isAlreadyMet ? (

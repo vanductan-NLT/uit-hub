@@ -113,7 +113,7 @@ export default function StudentList({ currentUserRole }: { currentUserRole: AppR
                     <td>{s.total_credits}/{s.total_credits_required}</td>
                     <td>
                       {s.gpa10 != null ? (
-                        <span className={`es-grade-pill ${s.gpa10 >= 8.5 ? "grade-a" : s.gpa10 >= 7.0 ? "grade-b" : "grade-c"}`}>
+                        <span className={`es-grade-pill ${s.gpa10 >= 8.0 ? "grade-a" : s.gpa10 >= 6.0 ? "grade-b" : "grade-c"}`}>
                           {s.gpa10.toFixed(2)}
                         </span>
                       ) : "—"}

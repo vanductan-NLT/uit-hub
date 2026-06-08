@@ -12,8 +12,8 @@ interface CourseListProps {
 
 function getGradePillClass(score: number | null): string {
   if (score === null) return "";
-  if (score >= 8.5) return "grade-a";
-  if (score >= 7.0) return "grade-b";
+  if (score >= 8.0) return "grade-a";
+  if (score >= 6.0) return "grade-b";
   return "grade-c";
 }
 
