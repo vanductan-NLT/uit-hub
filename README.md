@@ -1,6 +1,4 @@
-# SE104
-
-UIT SE104 course project.
+UIT-hub.
 
 ## Tech Stack
 
