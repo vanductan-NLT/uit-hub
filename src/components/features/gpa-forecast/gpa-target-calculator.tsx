@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { distributeRequiredScores, GRADE_THRESHOLDS } from "@/lib/gpa-forecast-utils";
+import { useState } from "react";
+import { calculateRequiredCK, GRADE_THRESHOLDS } from "@/lib/gpa-forecast-utils";
 import type { UserCourseWithCourse } from "@/types/database";
 
 interface Props {
-  completedCourses: UserCourseWithCourse[];
   inProgressCourses: UserCourseWithCourse[];
-  currentGPA4: number;
 }
 
 function gradeLabel(score: number): string {
@@ -23,131 +21,96 @@ function scoreColor(score: number): string {
   return "var(--duo-red)";
 }
 
-export default function GpaTargetCalculator({ completedCourses, inProgressCourses, currentGPA4 }: Props) {
-  // Default target = current GPA rounded up to nearest 0.1, capped at 4.0
-  const defaultTarget = Math.min(4.0, Math.ceil(currentGPA4 * 10) / 10 + 0.1);
-  const [targetGPA4, setTargetGPA4] = useState(
-    Math.round(defaultTarget * 20) / 20 // snap to 0.05 grid
-  );
+const SLIDER_LABELS = ["5.0 (C)", "6.0 (B)", "7.0 (B+)", "8.0 (A)", "9.0 (A+)", "10.0"];
 
-  const { requiredAvg, isAlreadyMet, isImpossible, perCourse: distributed } = useMemo(
-    () => distributeRequiredScores(targetGPA4, completedCourses, inProgressCourses),
-    [targetGPA4, completedCourses, inProgressCourses]
-  );
+export default function GpaTargetCalculator({ inProgressCourses }: Props) {
+  const [targetScore, setTargetScore] = useState(7.0);
 
-  // Fair per-course CK targets — each course gets its own balanced share, so a
-  // weak course no longer shows ">10" while others have headroom to spare.
-  const perCourse = useMemo(
-    () => distributed.map((d) => ({
-      c: d.course,
-      ckNeeded: isAlreadyMet || isImpossible ? null : d.requiredCK,
-      feasible: d.feasible,
-    })),
-    [distributed, isAlreadyMet, isImpossible]
-  );
-
-  const statusColor = isImpossible ? "var(--duo-red)" : isAlreadyMet ? "var(--duo-green)" : scoreColor(requiredAvg);
-  const statusBg   = isImpossible ? "var(--duo-red-lt)" : isAlreadyMet ? "var(--duo-green-lt)" : requiredAvg > 8.0 ? "var(--amber-lt)" : "var(--blue-lt)";
+  const label = gradeLabel(targetScore);
+  const labelColor = scoreColor(targetScore);
 
   return (
     <div className="es-card" style={{ marginBottom: 14 }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <div>
-          <div className="es-section-title">🎯 Tính ngược GPA mục tiêu</div>
-          <div className="es-section-sub">Tôi cần đạt GPA bao nhiêu cuối học kỳ?</div>
+          <div className="es-section-title">🎯 Điểm tôi muốn đạt</div>
+          <div className="es-section-sub">Cần điểm CK bao nhiêu để đạt mục tiêu?</div>
         </div>
         <div style={{
-          fontSize: 22, fontWeight: 800, color: "var(--blue)",
-          minWidth: 52, textAlign: "right", fontVariantNumeric: "tabular-nums",
+          fontSize: 22, fontWeight: 800, color: labelColor,
+          minWidth: 64, textAlign: "right", fontVariantNumeric: "tabular-nums",
         }}>
-          {targetGPA4.toFixed(2)}
+          {targetScore.toFixed(1)}
+          <span style={{ fontSize: 13, fontWeight: 600, marginLeft: 4 }}>{label}</span>
         </div>
       </div>
 
       {/* Slider */}
-      <div style={{ marginBottom: 14 }}>
+      <div style={{ marginBottom: 16 }}>
         <input
-          type="range" min={2.0} max={4.0} step={0.05}
-          value={targetGPA4}
-          onChange={(e) => setTargetGPA4(parseFloat(e.target.value))}
-          style={{ width: "100%", accentColor: "var(--blue)", cursor: "pointer" }}
+          type="range" min={5.0} max={10.0} step={0.5}
+          value={targetScore}
+          onChange={(e) => setTargetScore(parseFloat(e.target.value))}
+          style={{ width: "100%", accentColor: labelColor, cursor: "pointer" }}
         />
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--es-muted)", marginTop: 2 }}>
-          <span>2.0 (TB)</span><span>2.5 (Khá)</span><span>3.2 (Giỏi)</span><span>3.6 (XS)</span><span>4.0</span>
-        </div>
-      </div>
-
-      {/* Result summary */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-        borderRadius: "var(--r)", background: statusBg, marginBottom: 12,
-        border: `1px solid ${statusColor}`,
-      }}>
-        <div style={{ fontSize: 24 }}>
-          {isAlreadyMet ? "✅" : isImpossible ? "🚫" : requiredAvg >= 8.0 ? "💪" : "📊"}
-        </div>
-        <div style={{ flex: 1 }}>
-          {isAlreadyMet ? (
-            <>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--duo-green)" }}>Đã đạt mục tiêu rồi!</div>
-              <div style={{ fontSize: 12, color: "var(--es-muted)" }}>GPA hiện tại ({currentGPA4.toFixed(2)}) đã ≥ {targetGPA4.toFixed(2)}</div>
-            </>
-          ) : isImpossible ? (
-            <>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--duo-red)" }}>Không thể đạt được</div>
-              <div style={{ fontSize: 12, color: "var(--es-muted)" }}>Cần điểm trung bình &gt; 10 — hãy điều chỉnh mục tiêu xuống</div>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: 14, fontWeight: 700, color: statusColor }}>
-                Cần trung bình{" "}
-                <span style={{ fontSize: 18 }}>{requiredAvg.toFixed(2)}</span>
-                /10 mỗi môn
-                <span style={{ fontSize: 12, fontWeight: 500, marginLeft: 6, color: "var(--es-muted)" }}>
-                  (tương đương {gradeLabel(requiredAvg)})
-                </span>
-              </div>
-              <div style={{ fontSize: 12, color: "var(--es-muted)", marginTop: 1 }}>
-                Để đạt GPA {targetGPA4.toFixed(2)} sau học kỳ này
-              </div>
-            </>
-          )}
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--es-muted)", marginTop: 2 }}>
+          {SLIDER_LABELS.map((l) => <span key={l}>{l}</span>)}
         </div>
       </div>
 
       {/* Per-course CK requirements */}
-      {!isAlreadyMet && !isImpossible && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--es-muted)", marginBottom: 2 }}>Điểm CK cần đạt mỗi môn</div>
-          {perCourse.map(({ c, ckNeeded, feasible }) => {
-            const ckDisplay = ckNeeded === null ? "—" : !feasible ? ">10 ⚠️" : ckNeeded.toFixed(1);
-            const ckColor   = ckNeeded === null ? "var(--es-muted)" : scoreColor(ckNeeded ?? 0);
-            return (
-              <div key={c.id} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "7px 10px", borderRadius: "var(--r-sm)",
-                background: "var(--es-bg-alt)",
-                border: "1px solid var(--es-border)",
-                fontSize: 13,
-              }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 }}>
-                  <span style={{ fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {c.course.name}
-                  </span>
-                  <span style={{ fontSize: 11, color: "var(--es-muted)" }}>{c.course_id} · {c.course.credits} TC</span>
-                </div>
-                <div style={{
-                  fontSize: 16, fontWeight: 800, color: ckColor,
-                  flexShrink: 0, marginLeft: 12, minWidth: 36, textAlign: "right",
-                }}>
-                  {ckDisplay}
-                </div>
-              </div>
-            );
-          })}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--es-muted)", marginBottom: 2 }}>
+          Điểm CK cần đạt để được <strong style={{ color: labelColor }}>{label} ({targetScore.toFixed(1)}/10)</strong>
         </div>
-      )}
+        {inProgressCourses.map((uc) => {
+          const scores = uc.component_scores ?? {};
+          const ckEntered = (scores["Cuối kỳ"] ?? null) !== null;
+          const ckNeeded = ckEntered ? null : calculateRequiredCK(uc.course, scores, targetScore);
+
+          let ckDisplay: string;
+          let ckColor: string;
+          if (ckEntered) {
+            ckDisplay = "Đã có điểm CK";
+            ckColor = "var(--es-muted)";
+          } else if (ckNeeded === null) {
+            ckDisplay = "—";
+            ckColor = "var(--es-muted)";
+          } else if (ckNeeded > 10) {
+            ckDisplay = "Không thể ⚠️";
+            ckColor = "var(--duo-red)";
+          } else {
+            ckDisplay = `≥ ${ckNeeded.toFixed(1)}`;
+            ckColor = scoreColor(ckNeeded);
+          }
+
+          return (
+            <div key={uc.id} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "7px 10px", borderRadius: "var(--r-sm)",
+              background: "var(--es-bg-alt)",
+              border: "1px solid var(--es-border)",
+              fontSize: 13,
+            }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 }}>
+                <span style={{ fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {uc.course.name}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--es-muted)" }}>{uc.course_id} · {uc.course.credits} TC</span>
+              </div>
+              <div style={{
+                fontSize: ckEntered ? 11 : 16,
+                fontWeight: ckEntered ? 500 : 800,
+                color: ckColor,
+                flexShrink: 0, marginLeft: 12, textAlign: "right",
+              }}>
+                {ckDisplay}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

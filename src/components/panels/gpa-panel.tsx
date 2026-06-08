@@ -145,9 +145,7 @@ export default function GpaPanel({ userId, onNav }: Props) {
             {/* Right: target slider (reverse GPA) — slider lives here on the right */}
             <div>
               <GpaTargetCalculator
-                completedCourses={completedCourses}
                 inProgressCourses={inProgressCourses}
-                currentGPA4={gpa4}
               />
             </div>
           </div>
